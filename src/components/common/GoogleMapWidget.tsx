@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Navigation, AlertCircle } from 'lucide-react';
+import { MapPin, Navigation, AlertCircle, UserCheck } from 'lucide-react';
 
 interface GoogleMapWidgetProps {
   latitude: number | null;
@@ -8,6 +8,8 @@ interface GoogleMapWidgetProps {
   severity?: string;
   height?: string;
   showNavigateBtn?: boolean;
+  volunteerLatitude?: number | null;
+  volunteerLongitude?: number | null;
 }
 
 export const GoogleMapWidget: React.FC<GoogleMapWidgetProps> = ({
@@ -17,6 +19,8 @@ export const GoogleMapWidget: React.FC<GoogleMapWidgetProps> = ({
   severity = 'CRITICAL',
   height = 'h-52',
   showNavigateBtn = true,
+  volunteerLatitude = null,
+  volunteerLongitude = null,
 }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
   const hasCoordinates =
@@ -24,6 +28,12 @@ export const GoogleMapWidget: React.FC<GoogleMapWidgetProps> = ({
     longitude !== null &&
     !isNaN(Number(latitude)) &&
     !isNaN(Number(longitude));
+
+  const hasVolunteerCoordinates =
+    volunteerLatitude !== null &&
+    volunteerLongitude !== null &&
+    !isNaN(Number(volunteerLatitude)) &&
+    !isNaN(Number(volunteerLongitude));
 
   const handleOpenGoogleMapsNavigation = () => {
     if (!hasCoordinates) return;
@@ -42,9 +52,11 @@ export const GoogleMapWidget: React.FC<GoogleMapWidgetProps> = ({
     );
   }
 
-  // Use Google Maps Embed API if key is provided, or fallback to standard Google Maps iframe embed
+  // Use directions embed if volunteer coordinates exist & key is provided, or place embed centered on accident
   const mapEmbedUrl = apiKey
-    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${latitude},${longitude}&zoom=15`
+    ? hasVolunteerCoordinates
+      ? `https://www.google.com/maps/embed/v1/directions?key=${apiKey}&origin=${volunteerLatitude},${volunteerLongitude}&destination=${latitude},${longitude}&mode=driving`
+      : `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${latitude},${longitude}&zoom=15`
     : `https://maps.google.com/maps?q=${latitude},${longitude}&z=15&output=embed`;
 
   return (
@@ -67,6 +79,15 @@ export const GoogleMapWidget: React.FC<GoogleMapWidgetProps> = ({
           <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
           <span>{severity} ACCIDENT LOCATION</span>
         </div>
+
+        {/* Live Moving Volunteer Marker Overlay */}
+        {hasVolunteerCoordinates && (
+          <div className="absolute top-11 left-3 bg-secondary text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-md flex items-center gap-1.5 z-10 transition-all duration-500">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>Responder: {volunteerLatitude.toFixed(4)}, {volunteerLongitude.toFixed(4)}</span>
+          </div>
+        )}
 
         {/* Floating Navigate Button Overlay */}
         {showNavigateBtn && (

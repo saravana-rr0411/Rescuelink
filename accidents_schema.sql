@@ -1,11 +1,13 @@
 -- ========================================================
 -- RescueLink Accidents Schema & Row Level Security (RLS)
--- (Updated for Volunteer Assignment & Column Definition)
+-- (Updated with Volunteer Live Tracking Columns)
 -- ========================================================
 
--- 1. Add `volunteer_id` column to public.accidents
+-- 1. Add `volunteer_id`, `volunteer_latitude`, `volunteer_longitude` columns to public.accidents
 ALTER TABLE public.accidents 
-  ADD COLUMN IF NOT EXISTS volunteer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS volunteer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS volunteer_latitude DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS volunteer_longitude DOUBLE PRECISION;
 
 -- 2. Create the `accidents` table if not exists
 CREATE TABLE IF NOT EXISTS public.accidents (
@@ -19,6 +21,8 @@ CREATE TABLE IF NOT EXISTS public.accidents (
   severity TEXT NOT NULL,
   description TEXT,
   status TEXT NOT NULL DEFAULT 'Reported',
+  volunteer_latitude DOUBLE PRECISION,
+  volunteer_longitude DOUBLE PRECISION,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

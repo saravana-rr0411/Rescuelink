@@ -17,6 +17,8 @@ interface AccidentRecord {
   severity: string;
   description: string | null;
   status: string;
+  volunteer_latitude?: number | null;
+  volunteer_longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +37,30 @@ export const VolunteerDashboardScreen: React.FC = () => {
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Helper to request and obtain current volunteer GPS coordinates
+  const getVolunteerPosition = (): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (!('geolocation' in navigator)) {
+        console.warn('[RescueLink GPS] Geolocation API not supported by browser.');
+        resolve(null);
+        return;
+      }
+      console.log('[RescueLink GPS] Requesting volunteer GPS location permission...');
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          console.log('[RescueLink GPS] Volunteer GPS permission granted. Current coordinates:', coords);
+          resolve(coords);
+        },
+        (err) => {
+          console.warn('[RescueLink GPS] Volunteer GPS permission declined or failed:', err.message);
+          resolve(null);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  };
 
   // 1. Fetch both unassigned reported accidents and assigned volunteer missions on open
   useEffect(() => {
@@ -146,6 +172,55 @@ export const VolunteerDashboardScreen: React.FC = () => {
     };
   }, [user]);
 
+  // 3. Continuous Live Volunteer Location Tracking while responding to active missions
+  useEffect(() => {
+    if (!user || assignedMissions.length === 0) return;
+
+    console.log('[RescueLink GPS Tracking] Starting continuous live GPS updates for active responder missions...');
+
+    const trackingInterval = setInterval(async () => {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const currentLat = pos.coords.latitude;
+            const currentLng = pos.coords.longitude;
+            console.log('[RescueLink GPS Live] Current volunteer coordinates:', { latitude: currentLat, longitude: currentLng });
+
+            // Update volunteer_latitude & volunteer_longitude in public.accidents for all active assigned missions
+            for (const mission of assignedMissions) {
+              const { error: updateErr } = await supabase
+                .from('accidents')
+                .update({
+                  volunteer_latitude: currentLat,
+                  volunteer_longitude: currentLng,
+                })
+                .eq('id', mission.id);
+
+              if (updateErr) {
+                console.error(`[RescueLink GPS Live] Supabase location update error for accident ID ${mission.id}:`, updateErr);
+              } else {
+                console.log(`[RescueLink GPS Live] Supabase location update succeeded for accident ID ${mission.id}:`, {
+                  volunteer_latitude: currentLat,
+                  volunteer_longitude: currentLng,
+                });
+              }
+            }
+          },
+          (err) => {
+            console.warn('[RescueLink GPS Live] Geolocation error:', err.message);
+          },
+          { enableHighAccuracy: true }
+        );
+      }
+    }, 6000);
+
+    // Stop tracking automatically when Emergency Resolved or volunteer unmounts/leaves
+    return () => {
+      console.log('[RescueLink GPS Tracking] Stopping volunteer live location tracking (Missions resolved or screen unmounted).');
+      clearInterval(trackingInterval);
+    };
+  }, [user, assignedMissions]);
+
   // Helper to format ISO timestamp into user-friendly time
   const formatReportedTime = (isoString: string): string => {
     if (!isoString) return 'Just now';
@@ -168,7 +243,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
     });
   };
 
-  // 1. Accept Emergency Request
+  // 1. Accept Emergency Request with GPS Location Capturing
   const handleAcceptMission = async (accidentId: string) => {
     if (!user) {
       setErrorMessage('You must be logged in as a responder to accept alerts.');
@@ -182,12 +257,23 @@ export const VolunteerDashboardScreen: React.FC = () => {
     try {
       console.log('[RescueLink Volunteer] Accepting emergency request for accident ID:', accidentId);
 
+      // Request GPS permission & get volunteer current location
+      const pos = await getVolunteerPosition();
+
+      const updatePayload: any = {
+        status: 'Volunteer Assigned',
+        volunteer_id: user.id,
+      };
+
+      if (pos) {
+        updatePayload.volunteer_latitude = pos.lat;
+        updatePayload.volunteer_longitude = pos.lng;
+        console.log('[RescueLink GPS] Saving initial volunteer GPS coordinates:', pos);
+      }
+
       const { data, error } = await supabase
         .from('accidents')
-        .update({
-          status: 'Volunteer Assigned',
-          volunteer_id: user.id,
-        })
+        .update(updatePayload)
         .eq('id', accidentId)
         .select()
         .single();
@@ -200,7 +286,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
         return;
       }
 
-      console.log('[RescueLink Volunteer] Successfully assigned volunteer to accident:', data);
+      console.log('[RescueLink Volunteer] Successfully assigned volunteer & saved GPS coordinates to public.accidents:', data);
       setSuccessMessage('You have accepted this emergency request.');
 
       setIncidents((prev) => prev.filter((item) => item.id !== accidentId));
@@ -351,7 +437,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
                 <CheckCircle className="w-4 h-4" />
                 <span>Your Active Assigned Missions ({assignedMissions.length})</span>
               </h2>
-              <span className="text-[10px] font-bold bg-tertiary text-white px-2 py-0.5 rounded-full">Realtime Active</span>
+              <span className="text-[10px] font-bold bg-tertiary text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                Live GPS Active
+              </span>
             </div>
 
             <div className="space-y-4">

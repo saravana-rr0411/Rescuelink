@@ -5,6 +5,7 @@ import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, Ch
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { GoogleMapWidget } from '../components/common/GoogleMapWidget';
+import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 
 interface AccidentRecord {
   id: string;
@@ -17,6 +18,8 @@ interface AccidentRecord {
   severity: string;
   description: string | null;
   status: string;
+  volunteer_latitude?: number | null;
+  volunteer_longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -81,7 +84,7 @@ export const EmergencyStatusScreen: React.FC = () => {
     fetchLatestAccident();
   }, [user, locationState?.accidentId]);
 
-  // 2. Supabase Realtime Subscription for Live Status Updates
+  // 2. Supabase Realtime Subscription for Live Status & Volunteer GPS Location Updates
   useEffect(() => {
     if (!accident?.id) return;
 
@@ -98,9 +101,12 @@ export const EmergencyStatusScreen: React.FC = () => {
           filter: `id=eq.${accident.id}`,
         },
         (payload) => {
-          console.log('[RescueLink Realtime] Received live accident status update:', payload.new);
+          console.log('[RescueLink Realtime Update Received] Payload:', payload.new);
           if (payload.new) {
-            setAccident(payload.new as AccidentRecord);
+            const updated = payload.new as AccidentRecord;
+            console.log('[RescueLink Realtime GPS] Volunteer latitude received:', updated.volunteer_latitude ?? 'NULL');
+            console.log('[RescueLink Realtime GPS] Volunteer longitude received:', updated.volunteer_longitude ?? 'NULL');
+            setAccident(updated);
           }
         }
       )
@@ -158,6 +164,26 @@ export const EmergencyStatusScreen: React.FC = () => {
   };
 
   const timelineSteps = accident ? getTimelineSteps(accident.status, accident.created_at) : [];
+
+  // Calculate straight-line Haversine distance when both sets of coordinates exist
+  const hasAccidentCoords = accident?.latitude !== null && accident?.latitude !== undefined && accident?.longitude !== null && accident?.longitude !== undefined;
+  const hasVolunteerCoords = accident?.volunteer_latitude !== null && accident?.volunteer_latitude !== undefined && accident?.volunteer_longitude !== null && accident?.volunteer_longitude !== undefined;
+
+  let calculatedDistanceDisplay: string | null = null;
+
+  if (hasAccidentCoords && hasVolunteerCoords && accident) {
+    const distMeters = calculateHaversineDistance(
+      Number(accident.latitude),
+      Number(accident.longitude),
+      Number(accident.volunteer_latitude),
+      Number(accident.volunteer_longitude)
+    );
+    calculatedDistanceDisplay = formatDistance(distMeters);
+
+    console.log('[RescueLink Haversine Distance] Accident coordinates:', { lat: accident.latitude, lng: accident.longitude });
+    console.log('[RescueLink Haversine Distance] Volunteer coordinates:', { lat: accident.volunteer_latitude, lng: accident.volunteer_longitude });
+    console.log('[RescueLink Haversine Distance] Calculated distance:', calculatedDistanceDisplay, `(${distMeters.toFixed(1)} meters)`);
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -224,6 +250,19 @@ export const EmergencyStatusScreen: React.FC = () => {
                 </div>
               </div>
 
+              {/* Haversine Distance Display in Status Banner */}
+              {calculatedDistanceDisplay && (
+                <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
+                  <span className="text-blue-100 font-bold flex items-center gap-1.5">
+                    <span>🚑</span>
+                    <span>Volunteer Distance</span>
+                  </span>
+                  <span className="font-extrabold text-sm text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+                    {calculatedDistanceDisplay}
+                  </span>
+                </div>
+              )}
+
               <div className="w-full bg-blue-900/40 rounded-full h-2 overflow-hidden">
                 <div className={`h-full transition-all duration-500 ${
                   accident.status === 'Emergency Resolved' ? 'w-full bg-emerald-300' : 'w-[70%] bg-emerald-400'
@@ -231,16 +270,16 @@ export const EmergencyStatusScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Interactive Google Map Box */}
+            {/* Interactive Google Map Box with Live Volunteer Tracking Marker */}
             <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/50 p-4 shadow-level-1 space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-on-surface">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-primary" />
-                  Accident Location Map
+                  Accident & Responder Radar
                 </span>
                 <span className="text-secondary font-semibold flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  Google Maps Active
+                  Realtime Tracking
                 </span>
               </div>
 
@@ -251,6 +290,8 @@ export const EmergencyStatusScreen: React.FC = () => {
                 severity={accident.severity}
                 height="h-56"
                 showNavigateBtn={true}
+                volunteerLatitude={accident.volunteer_latitude}
+                volunteerLongitude={accident.volunteer_longitude}
               />
 
               {/* Photo Preview if attached */}
@@ -278,7 +319,12 @@ export const EmergencyStatusScreen: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-on-surface">Unit 402 - City Emergency Medical</h4>
-                    <p className="text-[11px] text-on-surface-variant">Status: <span className="font-bold text-secondary">{accident.status}</span></p>
+                    <p className="text-[11px] text-on-surface-variant">
+                      Status: <span className="font-bold text-secondary">{accident.status}</span>
+                      {calculatedDistanceDisplay && (
+                        <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} away)</span>
+                      )}
+                    </p>
                   </div>
                 </div>
                 <a
