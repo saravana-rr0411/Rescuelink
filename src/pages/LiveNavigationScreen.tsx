@@ -1702,7 +1702,7 @@ export const LiveNavigationScreen: React.FC = () => {
         const { data, error } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('auth_user_id', user.id)
           .single();
 
         if (data && !error && data.role === 'Volunteer') {

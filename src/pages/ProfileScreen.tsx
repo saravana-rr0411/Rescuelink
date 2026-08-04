@@ -68,12 +68,15 @@ export const ProfileScreen: React.FC = () => {
           populateForm(data);
         } else {
           console.log('[RescueLink Profile] No existing profile row found for user. Auto-creating profile row in public.profiles...');
+          const metaRole = user.user_metadata?.role || user.user_metadata?.user_type;
+          const initialRole = metaRole || 'Citizen';
+
           const fallback: ProfileRecord = {
             auth_user_id: user.id,
             full_name: user.email ? user.email.split('@')[0] : mockUserProfile.name,
             phone_number: mockUserProfile.phone,
             blood_group: 'O-',
-            role: 'Volunteer',
+            role: initialRole,
             emergency_contact_name: mockUserProfile.emergencyContacts[0].name,
             emergency_contact_phone: mockUserProfile.emergencyContacts[0].phone,
             emergency_contact_relation: mockUserProfile.emergencyContacts[0].relation,
@@ -109,10 +112,11 @@ export const ProfileScreen: React.FC = () => {
   }, [user]);
 
   const populateForm = (data: ProfileRecord) => {
+    const metaRole = user?.user_metadata?.role || user?.user_metadata?.user_type;
     setFullName(data.full_name || '');
     setPhoneNumber(data.phone_number || '');
     setBloodGroup(data.blood_group || 'O-');
-    setRole(data.role || 'Citizen');
+    setRole(data.role || metaRole || 'Citizen');
     setContactName(data.emergency_contact_name || '');
     setContactPhone(data.emergency_contact_phone || '');
     setContactRelation(data.emergency_contact_relation || '');

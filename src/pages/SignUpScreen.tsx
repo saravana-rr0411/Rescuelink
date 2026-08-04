@@ -13,7 +13,7 @@ export const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [bloodType, setBloodType] = useState('O-');
-  const [isVolunteer, setIsVolunteer] = useState(true);
+  const [isVolunteer, setIsVolunteer] = useState(false);
   const [contactName, setContactName] = useState('Sarah Johnson');
   const [contactPhone, setContactPhone] = useState('+1 (555) 492-1049');
   const [contactRelation, setContactRelation] = useState('Spouse');
