@@ -4,7 +4,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { GoogleMapWidget } from '../components/common/GoogleMapWidget';
+import { MapWidget } from '../components/common/MapWidget';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 
 interface AccidentRecord {
@@ -283,7 +283,8 @@ export const EmergencyStatusScreen: React.FC = () => {
                 </span>
               </div>
 
-              <GoogleMapWidget
+              <MapWidget
+                accidentId={accident.id}
                 latitude={accident.latitude}
                 longitude={accident.longitude}
                 address={accident.address}

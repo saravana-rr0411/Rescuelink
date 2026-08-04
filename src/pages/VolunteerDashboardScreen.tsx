@@ -4,7 +4,7 @@ import { mockUserProfile } from '../data/mockData';
 import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Ambulance, Hospital, CheckSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { GoogleMapWidget } from '../components/common/GoogleMapWidget';
+import { MapWidget } from '../components/common/MapWidget';
 
 interface AccidentRecord {
   id: string;
@@ -458,8 +458,9 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Interactive Google Map with Marker & Navigation */}
-                  <GoogleMapWidget
+                  {/* Interactive OpenStreetMap Leaflet Map with Marker & Navigation */}
+                  <MapWidget
+                    accidentId={mission.id}
                     latitude={mission.latitude}
                     longitude={mission.longitude}
                     address={mission.address}
@@ -563,8 +564,9 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Interactive Google Map Preview */}
-                    <GoogleMapWidget
+                    {/* Interactive OpenStreetMap Leaflet Map Preview */}
+                    <MapWidget
+                      accidentId={inc.id}
                       latitude={inc.latitude}
                       longitude={inc.longitude}
                       address={inc.address}

@@ -13,10 +13,14 @@ import { FirstAidGuideScreen } from './pages/FirstAidGuideScreen';
 import { GoodSamaritanScreen } from './pages/GoodSamaritanScreen';
 import { VolunteerDashboardScreen } from './pages/VolunteerDashboardScreen';
 import { ProfileScreen } from './pages/ProfileScreen';
+import { LiveNavigationScreen } from './pages/LiveNavigationScreen';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
-  const hideBottomNav = location.pathname === '/login' || location.pathname === '/signup';
+  const hideBottomNav =
+    location.pathname === '/login' ||
+    location.pathname === '/signup' ||
+    location.pathname.startsWith('/navigation');
 
   return (
     <MobileContainer>
@@ -33,6 +37,9 @@ const AppContent: React.FC = () => {
         <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
         <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
         <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
+        <Route path="/navigation" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
+        <Route path="/navigation/:accidentId" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
+        <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
       </Routes>
       {!hideBottomNav && <BottomNavigation />}
