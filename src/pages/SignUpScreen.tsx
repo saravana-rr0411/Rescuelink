@@ -13,7 +13,6 @@ export const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [bloodType, setBloodType] = useState('O-');
-  const [isVolunteer, setIsVolunteer] = useState(false);
   const [contactName, setContactName] = useState('Sarah Johnson');
   const [contactPhone, setContactPhone] = useState('+1 (555) 492-1049');
   const [contactRelation, setContactRelation] = useState('Spouse');
@@ -55,7 +54,6 @@ export const SignUpScreen: React.FC = () => {
           full_name: name,
           phone_number: phone,
           blood_group: bloodType,
-          role: isVolunteer ? 'Volunteer' : 'Citizen',
           emergency_contact_name: contactName,
           emergency_contact_phone: contactPhone,
           emergency_contact_relation: contactRelation,
@@ -86,7 +84,6 @@ export const SignUpScreen: React.FC = () => {
             full_name: name,
             phone_number: phone,
             blood_group: bloodType,
-            role: isVolunteer ? 'Volunteer' : 'Citizen',
             emergency_contact_name: contactName,
             emergency_contact_phone: contactPhone,
             emergency_contact_relation: contactRelation,
@@ -225,22 +222,7 @@ export const SignUpScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Volunteer Network Opt-in */}
-        <div className="bg-tertiary-fixed/30 border border-tertiary/30 p-4 rounded-2xl flex items-start gap-3">
-          <input
-            type="checkbox"
-            id="volunteer-check"
-            checked={isVolunteer}
-            onChange={(e) => setIsVolunteer(e.target.checked)}
-            className="mt-1 w-4 h-4 text-tertiary rounded focus:ring-tertiary cursor-pointer"
-          />
-          <label htmlFor="volunteer-check" className="text-xs cursor-pointer">
-            <span className="font-bold text-tertiary block">Register as Community Volunteer Responder</span>
-            <span className="text-on-surface-variant block mt-0.5 text-[11px]">
-              Receive alerts for medical emergencies within 5 km. Protected by Good Samaritan Law.
-            </span>
-          </label>
-        </div>
+
 
         {/* Emergency Contact */}
         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/50 space-y-3 shadow-level-1">

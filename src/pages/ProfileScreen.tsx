@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
-import { HeartPulse, PhoneCall, Settings, LogOut, Award, Mail, Loader2, Edit2, Save, X, CheckCircle, AlertCircle, Camera } from 'lucide-react';
+import { HeartPulse, PhoneCall, Settings, LogOut, Mail, Loader2, Edit2, Save, X, CheckCircle, AlertCircle, Camera } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -12,7 +12,6 @@ interface ProfileRecord {
   full_name: string;
   phone_number: string;
   blood_group: string;
-  role: string;
   emergency_contact_name: string;
   emergency_contact_phone: string;
   emergency_contact_relation: string;
@@ -37,7 +36,6 @@ export const ProfileScreen: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bloodGroup, setBloodGroup] = useState('O-');
-  const [role, setRole] = useState('Citizen');
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [contactRelation, setContactRelation] = useState('');
@@ -68,15 +66,11 @@ export const ProfileScreen: React.FC = () => {
           populateForm(data);
         } else {
           console.log('[RescueLink Profile] No existing profile row found for user. Auto-creating profile row in public.profiles...');
-          const metaRole = user.user_metadata?.role || user.user_metadata?.user_type;
-          const initialRole = metaRole || 'Citizen';
-
           const fallback: ProfileRecord = {
             auth_user_id: user.id,
             full_name: user.email ? user.email.split('@')[0] : mockUserProfile.name,
             phone_number: mockUserProfile.phone,
             blood_group: 'O-',
-            role: initialRole,
             emergency_contact_name: mockUserProfile.emergencyContacts[0].name,
             emergency_contact_phone: mockUserProfile.emergencyContacts[0].phone,
             emergency_contact_relation: mockUserProfile.emergencyContacts[0].relation,
@@ -112,11 +106,9 @@ export const ProfileScreen: React.FC = () => {
   }, [user]);
 
   const populateForm = (data: ProfileRecord) => {
-    const metaRole = user?.user_metadata?.role || user?.user_metadata?.user_type;
     setFullName(data.full_name || '');
     setPhoneNumber(data.phone_number || '');
     setBloodGroup(data.blood_group || 'O-');
-    setRole(data.role || metaRole || 'Citizen');
     setContactName(data.emergency_contact_name || '');
     setContactPhone(data.emergency_contact_phone || '');
     setContactRelation(data.emergency_contact_relation || '');
@@ -178,7 +170,6 @@ export const ProfileScreen: React.FC = () => {
             full_name: fullName || profile?.full_name || mockUserProfile.name,
             phone_number: phoneNumber || profile?.phone_number || mockUserProfile.phone,
             blood_group: bloodGroup || profile?.blood_group || 'O-',
-            role: role || profile?.role || 'Citizen',
             emergency_contact_name: contactName || profile?.emergency_contact_name || '',
             emergency_contact_phone: contactPhone || profile?.emergency_contact_phone || '',
             emergency_contact_relation: contactRelation || profile?.emergency_contact_relation || '',
@@ -218,7 +209,6 @@ export const ProfileScreen: React.FC = () => {
       full_name: fullName,
       phone_number: phoneNumber,
       blood_group: bloodGroup,
-      role: role,
       emergency_contact_name: contactName,
       emergency_contact_phone: contactPhone,
       emergency_contact_relation: contactRelation,
@@ -257,7 +247,6 @@ export const ProfileScreen: React.FC = () => {
   const displayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : mockUserProfile.name);
   const displayPhone = profile?.phone_number || mockUserProfile.phone;
   const displayBlood = profile?.blood_group || 'O-';
-  const displayRole = profile?.role ? `${profile.role} Responder` : 'Citizen Responder';
   const emergencyContactName = profile?.emergency_contact_name || mockUserProfile.emergencyContacts[0].name;
   const emergencyContactPhone = profile?.emergency_contact_phone || mockUserProfile.emergencyContacts[0].phone;
   const emergencyContactRelation = profile?.emergency_contact_relation || mockUserProfile.emergencyContacts[0].relation;
@@ -329,10 +318,6 @@ export const ProfileScreen: React.FC = () => {
                 <Mail className="w-3 h-3 text-secondary" />
                 <span>{user?.email || displayPhone}</span>
               </p>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-tertiary pt-0.5">
-                <Award className="w-3.5 h-3.5" />
-                <span>{displayRole}</span>
-              </div>
             </div>
           </div>
 
@@ -415,18 +400,6 @@ export const ProfileScreen: React.FC = () => {
                 onChange={(e) => setMedicalConditions(e.target.value)}
                 className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
               />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-on-surface">Responder Role</label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-tertiary"
-              >
-                <option value="Volunteer">Volunteer Responder</option>
-                <option value="Citizen">Citizen</option>
-              </select>
             </div>
 
             <div className="space-y-2 pt-2 border-t border-surface-container-high">

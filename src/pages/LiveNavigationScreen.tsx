@@ -26,7 +26,6 @@ import {
   Flame,
   Navigation as NavigationIcon,
   PhoneForwarded,
-  Loader2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -1667,79 +1666,20 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
 };
 
 // =========================================================================================
-// COMPONENT 3: TOP-LEVEL ROUTER WRAPPER (Strict Early Return Guarantee)
+// COMPONENT 3: TOP-LEVEL ROUTER WRAPPER
 // =========================================================================================
 export const LiveNavigationScreen: React.FC = () => {
-  const locationState = useLocation().state as any;
+  const location = useLocation();
+  const locationState = location.state as any;
   const { accidentId: routeAccidentId } = useParams<{ accidentId?: string }>();
   const activeAccidentId = routeAccidentId || locationState?.accidentId || 'default-accident';
 
   const { user } = useAuth();
-  const [roleLoading, setRoleLoading] = useState<boolean>(true);
-  const [userRole, setUserRole] = useState<'Citizen' | 'Volunteer'>('Citizen');
+  const mode = locationState?.mode || 'citizen';
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const resolveRole = async () => {
-      if (!user) {
-        if (isMounted) setRoleLoading(false);
-        return;
-      }
-
-      // 1. Check user metadata role
-      const metaRole = user.user_metadata?.role || user.user_metadata?.user_type;
-      if (metaRole && String(metaRole).toLowerCase().includes('volunteer')) {
-        if (isMounted) {
-          setUserRole('Volunteer');
-          setRoleLoading(false);
-        }
-        return;
-      }
-
-      // 2. Query public.profiles table
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('auth_user_id', user.id)
-          .single();
-
-        if (data && !error && data.role === 'Volunteer') {
-          if (isMounted) setUserRole('Volunteer');
-        } else {
-          if (isMounted) setUserRole('Citizen');
-        }
-      } catch {
-        if (isMounted) setUserRole('Citizen');
-      } finally {
-        if (isMounted) setRoleLoading(false);
-      }
-    };
-
-    resolveRole();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
-
-  // Loading Splash Screen while resolving authenticated profile role
-  if (roleLoading) {
+  if (mode === 'citizen') {
     return (
-      <div className="w-full h-[calc(100vh-64px)] bg-slate-950 flex flex-col items-center justify-center text-white space-y-4">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
-        <p className="text-xs font-bold tracking-wider text-slate-300 uppercase">
-          Initializing Emergency Navigation...
-        </p>
-      </div>
-    );
-  }
-
-  // STRICT MUTUAL EXCLUSION EARLY RETURN: Only ONE component is EVER mounted per session
-  if (userRole === 'Volunteer') {
-    return (
-      <VolunteerNavigationScreen
+      <CitizenNavigationScreen
         activeAccidentId={activeAccidentId}
         locationState={locationState}
         user={user}
@@ -1748,7 +1688,7 @@ export const LiveNavigationScreen: React.FC = () => {
   }
 
   return (
-    <CitizenNavigationScreen
+    <VolunteerNavigationScreen
       activeAccidentId={activeAccidentId}
       locationState={locationState}
       user={user}

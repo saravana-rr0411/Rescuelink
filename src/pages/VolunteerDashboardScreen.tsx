@@ -467,6 +467,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     severity={mission.severity}
                     height="h-48"
                     showNavigateBtn={true}
+                    mode="volunteer"
                   />
 
                   {mission.description && (
@@ -573,6 +574,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       severity={inc.severity}
                       height="h-44"
                       showNavigateBtn={true}
+                      mode="volunteer"
                     />
 
                     {inc.description && (

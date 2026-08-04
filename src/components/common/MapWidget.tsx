@@ -86,6 +86,7 @@ export interface MapWidgetProps {
   showNavigateBtn?: boolean;
   volunteerLatitude?: number | null;
   volunteerLongitude?: number | null;
+  mode?: 'citizen' | 'volunteer';
 }
 
 export const MapWidget: React.FC<MapWidgetProps> = ({
@@ -98,6 +99,7 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
   showNavigateBtn = true,
   volunteerLatitude = null,
   volunteerLongitude = null,
+  mode = 'citizen',
 }) => {
   const navigate = useNavigate();
 
@@ -125,6 +127,7 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
         severity,
         volunteerLatitude: hasVolunteerCoordinates ? Number(volunteerLatitude) : null,
         volunteerLongitude: hasVolunteerCoordinates ? Number(volunteerLongitude) : null,
+        mode,
       },
     });
   };

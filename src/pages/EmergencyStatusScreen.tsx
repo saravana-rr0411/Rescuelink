@@ -293,6 +293,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 showNavigateBtn={true}
                 volunteerLatitude={accident.volunteer_latitude}
                 volunteerLongitude={accident.volunteer_longitude}
+                mode="citizen"
               />
 
               {/* Photo Preview if attached */}

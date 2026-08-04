@@ -148,21 +148,52 @@ export const HomeScreen: React.FC = () => {
       <Navbar />
 
       <main className="flex-1 px-4 py-4 space-y-6">
-        {/* Banner: Local Status */}
-        <div className="bg-gradient-to-r from-primary to-primary-container text-white p-4 rounded-3xl shadow-level-2 flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-red-200" />
-              <span className="text-xs font-bold uppercase tracking-wider text-red-100">RescueLink Active</span>
-            </div>
-            <h2 className="text-lg font-extrabold leading-snug">14 Responders Nearby</h2>
-            <p className="text-xs text-red-100">Average response time: <span className="font-bold underline">4.2 minutes</span></p>
-          </div>
-          <button 
-            onClick={() => navigate('/volunteer')}
-            className="bg-white text-primary text-xs font-bold px-3 py-2 rounded-xl shadow-sm hover:bg-red-50 transition-colors shrink-0"
+        {/* Dual Primary Entry Points: Citizen Emergency & Volunteer HQ */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Entry Point 1: 🚨 Report Accident (Citizen Flow) */}
+          <button
+            onClick={() => navigate('/report')}
+            className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 rounded-3xl shadow-level-2 hover:shadow-level-3 transition-all text-left flex flex-col justify-between h-36 group"
           >
-            Volunteer Mode
+            <div className="flex items-center justify-between w-full">
+              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white">
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-extrabold bg-white/20 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Citizen
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold leading-tight group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                🚨 Report Accident
+              </h3>
+              <p className="text-[11px] text-red-100 mt-1 font-medium leading-tight">
+                Instant GPS SOS & Emergency Dispatch
+              </p>
+            </div>
+          </button>
+
+          {/* Entry Point 2: 🛡 Volunteer Dashboard (Volunteer Flow) */}
+          <button
+            onClick={() => navigate('/volunteer')}
+            className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-3xl shadow-level-2 hover:shadow-level-3 transition-all text-left flex flex-col justify-between h-36 group border border-slate-700"
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 backdrop-blur-xs flex items-center justify-center text-emerald-400">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Responder
+              </span>
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold leading-tight group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                🛡 Volunteer Dashboard
+              </h3>
+              <p className="text-[11px] text-slate-300 mt-1 font-medium leading-tight">
+                Respond to active local incidents
+              </p>
+            </div>
           </button>
         </div>
 
@@ -231,7 +262,7 @@ export const HomeScreen: React.FC = () => {
               {accidents.map((incident) => (
                 <div
                   key={incident.id}
-                  onClick={() => navigate('/status', { state: { accidentId: incident.id } })}
+                  onClick={() => navigate('/status', { state: { accidentId: incident.id, mode: 'citizen' } })}
                   className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-level-1 hover:shadow-level-2 transition-all cursor-pointer group"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -268,7 +299,7 @@ export const HomeScreen: React.FC = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate('/status', { state: { accidentId: incident.id } });
+                          navigate('/status', { state: { accidentId: incident.id, mode: 'citizen' } });
                         }}
                         className="text-xs font-bold text-primary flex items-center gap-0.5 hover:underline"
                       >
