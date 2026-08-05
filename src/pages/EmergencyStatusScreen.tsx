@@ -124,6 +124,36 @@ export const EmergencyStatusScreen: React.FC = () => {
     };
   }, [accident?.id]);
 
+  // 3. Fetch Volunteer Profile Info when assigned
+  const [volunteerProfile, setVolunteerProfile] = useState<{ full_name: string; phone_number: string } | null>(null);
+
+  useEffect(() => {
+    if (!accident?.volunteer_id) {
+      setVolunteerProfile(null);
+      return;
+    }
+    async function fetchVolunteerProfileInfo() {
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, phone_number')
+          .eq('auth_user_id', accident!.volunteer_id!)
+          .maybeSingle();
+
+        if (data && data.full_name) {
+          setVolunteerProfile(data);
+        } else {
+          setVolunteerProfile({ full_name: 'Assigned Responder', phone_number: '' });
+        }
+      } catch (err) {
+        console.warn('Error fetching volunteer profile:', err);
+      }
+    }
+    fetchVolunteerProfileInfo();
+  }, [accident?.volunteer_id]);
+
+  const hasVolunteer = !!(accident?.volunteer_id && accident.status !== 'Reported');
+
   // Helper to format ISO timestamp into user-friendly time
   const formatReportedTime = (isoString: string): string => {
     if (!isoString) return 'Just now';
@@ -150,33 +180,33 @@ export const EmergencyStatusScreen: React.FC = () => {
     switch (status) {
       case 'Assigned':
       case 'Volunteer Assigned':
-        return 0; // Stage 1: Volunteer Assigned
+        return 1;
       case 'En Route':
       case 'Volunteer En Route':
-        return 1; // Stage 2: Volunteer En Route
+        return 2;
       case 'Arrived at Scene':
       case 'Volunteer Arrived at Scene':
-        return 2; // Stage 3: Volunteer Arrived at Scene
+        return 3;
       case 'Transporting to Hospital':
       case 'Hospital Transfer':
       case 'To Hospital':
-        return 3; // Stage 4: Transporting to Hospital
+        return 4;
       case 'Hospital Reached':
-        return 4; // Stage 5: Hospital Reached
+        return 5;
       case 'Emergency Resolved':
-        return 5; // Stage 6: Emergency Resolved
+        return 6;
       default:
-        return -1; // Pending Volunteer Assignment
+        return 0; // Stage 0: Searching for Volunteer
     }
   };
 
   const getTimelineSteps = (status: string) => {
     const stages = [
+      'Searching for Volunteer',
       'Volunteer Assigned',
       'Volunteer En Route',
       'Volunteer Arrived at Scene',
       'Transporting to Hospital',
-      'Hospital Reached',
       'Emergency Resolved',
     ];
 
@@ -191,22 +221,33 @@ export const EmergencyStatusScreen: React.FC = () => {
 
   const timelineSteps = accident ? getTimelineSteps(accident.status) : [];
 
-  // Realtime ETA calculation via OSRM / Haversine
+  // Realtime ETA calculation via OSRM / Haversine (ONLY active when volunteer assigned)
   const [liveDistanceMeters, setLiveDistanceMeters] = useState<number | null>(null);
   const [liveDurationSeconds, setLiveDurationSeconds] = useState<number | null>(null);
   const citizenPrevPosRef = React.useRef<[number, number] | null>(null);
 
   const storedHosp = getStoredHospital(accident?.id);
-  const isTransporting = accident?.status === 'Transporting to Hospital' || !!storedHosp;
 
-  const targetLat = storedHosp?.latitude ?? (isTransporting ? (accident?.latitude || 0) + 0.0085 : (accident?.latitude || 0));
-  const targetLng = storedHosp?.longitude ?? (isTransporting ? (accident?.longitude || 0) - 0.0062 : (accident?.longitude || 0));
+  // Status Category Guards
+  const isEnRoute = accident?.status === 'Assigned' || accident?.status === 'Volunteer Assigned' || accident?.status === 'En Route' || accident?.status === 'Volunteer En Route';
+  const isArrivedOnScene = accident?.status === 'Arrived at Scene' || accident?.status === 'Volunteer Arrived at Scene';
+  const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!storedHosp);
+  const isHospitalReached = accident?.status === 'Hospital Reached';
+  const isResolved = accident?.status === 'Emergency Resolved';
 
-  const volLat = accident?.volunteer_latitude;
-  const volLng = accident?.volunteer_longitude;
+  // Determine Target Coordinates for OSRM Route & ETA:
+  // If Transporting to Hospital or Hospital Reached -> Destination is the Hospital Coordinates!
+  // Else (En Route / Arrived) -> Destination is the Accident Scene Coordinates!
+  const targetLat = (isTransporting || isHospitalReached) && storedHosp ? storedHosp.latitude : (accident?.latitude || 0);
+  const targetLng = (isTransporting || isHospitalReached) && storedHosp ? storedHosp.longitude : (accident?.longitude || 0);
+
+  const volLat = hasVolunteer ? accident?.volunteer_latitude : null;
+  const volLng = hasVolunteer ? accident?.volunteer_longitude : null;
 
   useEffect(() => {
-    if (!accident || volLat === null || volLat === undefined || volLng === null || volLng === undefined) {
+    if (!hasVolunteer || !accident || volLat === null || volLat === undefined || volLng === null || volLng === undefined) {
+      setLiveDistanceMeters(null);
+      setLiveDurationSeconds(null);
       return;
     }
 
@@ -236,13 +277,13 @@ export const EmergencyStatusScreen: React.FC = () => {
     };
 
     updateLiveETA();
-  }, [volLat, volLng, targetLat, targetLng, accident?.id]);
+  }, [hasVolunteer, volLat, volLng, targetLat, targetLng, accident?.id]);
 
   const getEtaDisplay = (): string => {
-    if (!accident) return 'Pending';
-    if (accident.status === 'Emergency Resolved') return 'Resolved';
-    if (accident.status === 'Hospital Reached') return 'Arrived';
-    if (accident.status === 'Arrived at Scene' && !isTransporting) return 'Arrived';
+    if (!accident || !hasVolunteer) return 'Waiting for Volunteer';
+    if (isResolved) return 'Resolved';
+    if (isHospitalReached) return 'Hospital Reached';
+    if (isArrivedOnScene && !isTransporting) return 'Arrived at Scene';
 
     if (liveDurationSeconds !== null && liveDistanceMeters !== null) {
       return formatETA(liveDurationSeconds, liveDistanceMeters);
@@ -255,20 +296,38 @@ export const EmergencyStatusScreen: React.FC = () => {
     return 'Calculating...';
   };
 
-  // Calculate straight-line Haversine distance when both sets of coordinates exist
+  // Status-driven Distance Display (Volunteer -> Accident BEFORE arrival, Volunteer -> Hospital DURING transport)
   const hasAccidentCoords = accident?.latitude !== null && accident?.latitude !== undefined && accident?.longitude !== null && accident?.longitude !== undefined;
-  const hasVolunteerCoords = accident?.volunteer_latitude !== null && accident?.volunteer_latitude !== undefined && accident?.volunteer_longitude !== null && accident?.volunteer_longitude !== undefined;
+  const hasVolunteerCoords = hasVolunteer && accident?.volunteer_latitude !== null && accident?.volunteer_latitude !== undefined && accident?.volunteer_longitude !== null && accident?.volunteer_longitude !== undefined;
 
   let calculatedDistanceDisplay: string | null = null;
+  let distanceLabel = 'Volunteer Distance to Scene';
 
-  if (hasAccidentCoords && hasVolunteerCoords && accident) {
-    const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
-      Number(accident.latitude),
-      Number(accident.longitude),
-      Number(accident.volunteer_latitude),
-      Number(accident.volunteer_longitude)
-    );
-    calculatedDistanceDisplay = formatDistance(distMeters);
+  if (hasVolunteer && hasVolunteerCoords && accident) {
+    if (isEnRoute && hasAccidentCoords) {
+      // Distance: Volunteer Current Location -> Accident Scene
+      const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
+        Number(accident.volunteer_latitude),
+        Number(accident.volunteer_longitude),
+        Number(accident.latitude),
+        Number(accident.longitude)
+      );
+      calculatedDistanceDisplay = formatDistance(distMeters);
+      distanceLabel = 'Volunteer Distance to Accident';
+    } else if (isTransporting && storedHosp) {
+      // Distance: Volunteer Current Location -> Selected Hospital
+      const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
+        Number(accident.volunteer_latitude),
+        Number(accident.volunteer_longitude),
+        targetLat,
+        targetLng
+      );
+      calculatedDistanceDisplay = formatDistance(distMeters);
+      distanceLabel = 'Remaining Distance to Hospital';
+    } else {
+      // Arrived at Scene / Hospital Reached / Emergency Resolved -> Hide numerical distance to accident
+      calculatedDistanceDisplay = null;
+    }
   }
 
   return (
@@ -305,15 +364,17 @@ export const EmergencyStatusScreen: React.FC = () => {
             <div className={`p-5 rounded-3xl shadow-level-2 space-y-3 relative overflow-hidden text-white transition-all ${
               accident.status === 'Emergency Resolved'
                 ? 'bg-gradient-to-br from-emerald-600 to-teal-800'
-                : 'bg-gradient-to-br from-secondary to-blue-700'
+                : hasVolunteer
+                ? 'bg-gradient-to-br from-secondary to-blue-700'
+                : 'bg-gradient-to-br from-amber-600 to-red-700'
             }`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full text-white backdrop-blur-xs flex items-center gap-1.5">
                   {accident.status === 'Emergency Resolved' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Status: {accident.status}
+                  Status: {hasVolunteer ? accident.status : 'Waiting for Volunteer'}
                 </span>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-100">
-                  <span className={`w-2 h-2 rounded-full ${accident.status === 'Emergency Resolved' ? 'bg-white' : 'bg-emerald-400 animate-ping'}`}></span>
+                  <span className={`w-2 h-2 rounded-full ${accident.status === 'Emergency Resolved' ? 'bg-white' : 'bg-amber-300 animate-ping'}`}></span>
                   <span className="uppercase font-bold bg-red-500 text-white px-2 py-0.5 rounded-full text-[10px]">
                     {accident.severity}
                   </span>
@@ -336,22 +397,49 @@ export const EmergencyStatusScreen: React.FC = () => {
                 </div>
               </div>
 
-              {/* Haversine Distance Display in Status Banner */}
-              {calculatedDistanceDisplay && (
+              {/* Status-Driven Subtext Banner */}
+              {!hasVolunteer ? (
+                <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-amber-100">
+                  <Loader2 className="w-4 h-4 animate-spin text-amber-200 shrink-0" />
+                  <span>Searching for nearby volunteer responders...</span>
+                </div>
+              ) : isArrivedOnScene && !isTransporting ? (
+                <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-blue-100">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span>Volunteer has arrived on scene. Assessing victim & selecting hospital...</span>
+                </div>
+              ) : isTransporting ? (
+                <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
+                  <span className="text-blue-100 font-bold flex items-center gap-1.5">
+                    <span>🏥</span>
+                    <span>{storedHosp?.name || 'Selected Hospital'}</span>
+                  </span>
+                  {calculatedDistanceDisplay && (
+                    <span className="font-extrabold text-sm text-white bg-white/20 px-2.5 py-0.5 rounded-full">
+                      {calculatedDistanceDisplay} remaining
+                    </span>
+                  )}
+                </div>
+              ) : isHospitalReached ? (
+                <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-emerald-100">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                  <span>Emergency transport reached hospital successfully.</span>
+                </div>
+              ) : isEnRoute && calculatedDistanceDisplay ? (
                 <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
                   <span className="text-blue-100 font-bold flex items-center gap-1.5">
                     <span>🚑</span>
-                    <span>Volunteer Distance</span>
+                    <span>{distanceLabel}</span>
                   </span>
                   <span className="font-extrabold text-sm text-white bg-white/20 px-2.5 py-0.5 rounded-full">
                     {calculatedDistanceDisplay}
                   </span>
                 </div>
-              )}
+              ) : null}
 
-              <div className="w-full bg-blue-900/40 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-black/20 rounded-full h-2 overflow-hidden">
                 <div className={`h-full transition-all duration-500 ${
-                  accident.status === 'Emergency Resolved' ? 'w-full bg-emerald-300' : 'w-[70%] bg-emerald-400'
+                  accident.status === 'Emergency Resolved' ? 'w-full bg-emerald-300' : hasVolunteer ? 'w-[70%] bg-emerald-400' : 'w-[25%] bg-amber-300 animate-pulse'
                 }`}></div>
               </div>
             </div>
@@ -373,9 +461,9 @@ export const EmergencyStatusScreen: React.FC = () => {
               const hosp = getStoredHospital(accident.id);
               if (!hosp && accident.status !== 'Transporting to Hospital') return null;
 
-              const hospName = hosp?.name || 'Government Medical College Hospital';
-              const hospAddress = hosp?.address || '120 Healthcare Plaza, Sector 4';
-              const distMeters = hosp?.distanceMeters || 2400;
+              const hospName = hosp?.name || 'Nearest Regional Emergency Center';
+              const hospAddress = hosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
+              const distMeters = hosp?.distanceMeters || 1800;
               const etaSecs = (distMeters / 1000 / 40) * 3600;
 
               return (
@@ -404,16 +492,16 @@ export const EmergencyStatusScreen: React.FC = () => {
               );
             })()}
 
-            {/* Interactive Google Map Box with Live Volunteer Tracking Marker */}
+            {/* Interactive Map Box with Live Accident Marker (Volunteer Marker ONLY rendered after acceptance) */}
             <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/50 p-4 shadow-level-1 space-y-3">
               <div className="flex items-center justify-between text-xs font-bold text-on-surface">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-primary" />
-                  Accident & Responder Radar
+                  Accident Location Radar
                 </span>
                 <span className="text-secondary font-semibold flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  Realtime Tracking
+                  <span className={`w-2 h-2 rounded-full ${hasVolunteer ? 'bg-emerald-500 animate-ping' : 'bg-amber-500 animate-pulse'}`}></span>
+                  {hasVolunteer ? 'Realtime Tracking' : 'Waiting for Volunteer'}
                 </span>
               </div>
 
@@ -424,9 +512,9 @@ export const EmergencyStatusScreen: React.FC = () => {
                 address={accident.address}
                 severity={accident.severity}
                 height="h-56"
-                showNavigateBtn={true}
-                volunteerLatitude={accident.volunteer_latitude}
-                volunteerLongitude={accident.volunteer_longitude}
+                showNavigateBtn={false}
+                volunteerLatitude={hasVolunteer ? accident.volunteer_latitude : null}
+                volunteerLongitude={hasVolunteer ? accident.volunteer_longitude : null}
                 mode="citizen"
               />
 
@@ -444,34 +532,48 @@ export const EmergencyStatusScreen: React.FC = () => {
               )}
             </div>
 
-            {/* Assigned Responder Info Card */}
-            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
-              <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Assigned Paramedic Team</h3>
+            {/* Assigned Responder Info Card (ONLY rendered after a real volunteer accepts) */}
+            {hasVolunteer && (
+              <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Assigned Volunteer Responder</h3>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-full bg-secondary-fixed text-secondary flex items-center justify-center font-bold text-base">
-                    A
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base border border-emerald-300">
+                      {volunteerProfile?.full_name?.charAt(0) || 'V'}
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-on-surface">
+                        {volunteerProfile?.full_name || 'Emergency Responder'}
+                      </h4>
+                      <p className="text-[11px] text-on-surface-variant">
+                        Status: <span className="font-bold text-secondary">{accident.status}</span>
+                        {calculatedDistanceDisplay && (
+                          <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} away)</span>
+                        )}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-on-surface">Unit 402 - City Emergency Medical</h4>
-                    <p className="text-[11px] text-on-surface-variant">
-                      Status: <span className="font-bold text-secondary">{accident.status}</span>
-                      {calculatedDistanceDisplay && (
-                        <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} away)</span>
-                      )}
-                    </p>
-                  </div>
+                  {volunteerProfile?.phone_number ? (
+                    <a
+                      href={`tel:${volunteerProfile.phone_number}`}
+                      className="p-3 bg-emerald-600 text-white rounded-2xl shadow-xs hover:bg-emerald-700 transition-colors"
+                      aria-label="Call Volunteer"
+                    >
+                      <PhoneCall className="w-5 h-5" />
+                    </a>
+                  ) : (
+                    <a
+                      href="tel:108"
+                      className="p-3 bg-secondary text-white rounded-2xl shadow-xs hover:bg-secondary/90 transition-colors"
+                      aria-label="Call Emergency Hotline"
+                    >
+                      <PhoneCall className="w-5 h-5" />
+                    </a>
+                  )}
                 </div>
-                <a
-                  href="tel:911"
-                  className="p-3 bg-secondary text-white rounded-2xl shadow-xs hover:bg-secondary/90 transition-colors"
-                  aria-label="Call Dispatch"
-                >
-                  <PhoneCall className="w-5 h-5" />
-                </a>
               </div>
-            </div>
+            )}
 
             {/* Citizen Emergency Progress Timeline */}
             <div className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-4">

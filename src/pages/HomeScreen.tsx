@@ -281,8 +281,12 @@ export const HomeScreen: React.FC = () => {
                         {incident.address}
                       </h3>
                     </div>
-                    <span className="text-[10px] font-extrabold bg-blue-100 text-blue-900 px-2.5 py-1 rounded-full uppercase">
-                      {incident.status}
+                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${
+                      incident.status === 'Reported' || !incident.volunteer_id
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-blue-100 text-blue-900'
+                    }`}>
+                      {incident.status === 'Reported' || !incident.volunteer_id ? 'Waiting for Volunteer' : incident.status}
                     </span>
                   </div>
 

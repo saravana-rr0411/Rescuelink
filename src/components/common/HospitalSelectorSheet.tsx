@@ -46,23 +46,31 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-slate-950/70 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-lg bg-surface border border-outline-variant/60 rounded-t-3xl sm:rounded-3xl shadow-level-3 overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center pointer-events-none p-0 sm:pb-2">
+      {/* Bottom Sheet Container (Aligned with max-w-md App Viewport) */}
+      <div className="w-full max-w-md bg-white border-t border-x sm:border border-slate-200/80 rounded-t-3xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[60vh] sm:max-h-[55vh] pointer-events-auto animate-in slide-in-from-bottom duration-300">
+        
+        {/* Drag Handle */}
+        <div className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-grab">
+          <div className="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+        </div>
+
         {/* Header */}
-        <div className="p-4 border-b border-surface-container-high flex items-center justify-between bg-primary/5">
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-rose-50/40 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-primary text-white flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 rounded-2xl bg-red-800 text-white flex items-center justify-center shadow-xs">
               <HospitalIcon className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold text-on-surface">Select Destination Hospital</h2>
-              <p className="text-[11px] text-on-surface-variant">Arrived at Scene • Auto-discovered nearby trauma centers</p>
+              <h2 className="text-sm font-extrabold text-slate-900">Select Destination Hospital</h2>
+              <p className="text-[11px] text-slate-500 font-medium">Nearby medical & trauma centers sorted by distance</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors"
+            className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
+            aria-label="Close hospital selector sheet"
           >
             <X className="w-5 h-5" />
           </button>
@@ -71,16 +79,16 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         {/* Content */}
         <div className="p-4 overflow-y-auto space-y-3 flex-1">
           {loading ? (
-            <div className="py-12 text-center space-y-3">
-              <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-              <p className="text-xs font-bold text-on-surface">Querying Nearby Hospitals via OpenStreetMap...</p>
-              <p className="text-[11px] text-on-surface-variant">Calculating distance and travel time from accident scene.</p>
+            <div className="py-10 text-center space-y-3">
+              <Loader2 className="w-8 h-8 text-red-800 animate-spin mx-auto" />
+              <p className="text-xs font-bold text-slate-800">Discovering Nearby Emergency Hospitals...</p>
+              <p className="text-[11px] text-slate-500">Searching surrounding medical facilities around incident location.</p>
             </div>
           ) : hospitals.length === 0 ? (
-            <div className="py-10 text-center space-y-2">
-              <HospitalIcon className="w-8 h-8 text-outline mx-auto" />
-              <p className="text-xs font-bold text-on-surface">No Nearby Hospitals Found</p>
-              <p className="text-[11px] text-on-surface-variant">Check location coordinates or network connectivity.</p>
+            <div className="py-8 text-center space-y-2">
+              <HospitalIcon className="w-8 h-8 text-slate-300 mx-auto" />
+              <p className="text-xs font-bold text-slate-800">No nearby hospitals found.</p>
+              <p className="text-[11px] text-slate-500">No real emergency hospitals discovered within 5 km radius of the accident location.</p>
             </div>
           ) : (
             hospitals.map((hosp) => {
@@ -91,53 +99,50 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               return (
                 <div
                   key={hosp.id}
-                  className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                  className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
                     isSelected
-                      ? 'bg-primary-fixed/20 border-primary ring-2 ring-primary/30 shadow-level-2'
-                      : 'bg-surface-container-lowest border-outline-variant/50 hover:border-primary/40'
+                      ? 'bg-rose-50/50 border-red-700 ring-2 ring-red-700/20 shadow-xs'
+                      : 'bg-white border-slate-200/80 hover:border-red-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="space-y-1 min-w-0">
+                    <div className="space-y-1 min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
-                          ER Emergency Ready
-                        </span>
-                        <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          ⭐ 4.8 Rating
+                          Emergency Ready
                         </span>
                         {hosp.bedsAvailable > 0 && (
-                          <span className="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
                             {hosp.bedsAvailable} Beds Available
                           </span>
                         )}
                       </div>
-                      <h3 className="text-sm font-extrabold text-on-surface truncate">{hosp.name}</h3>
-                      <p className="text-xs text-on-surface-variant flex items-center gap-1 font-medium truncate">
-                        <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <h3 className="text-sm font-extrabold text-slate-900 truncate">{hosp.name}</h3>
+                      <p className="text-xs text-slate-500 flex items-center gap-1 font-medium truncate">
+                        <MapPin className="w-3.5 h-3.5 text-red-700 shrink-0" />
                         <span className="truncate">{hosp.address}</span>
                       </p>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <span className="text-sm font-extrabold text-primary block">
+                      <span className="text-sm font-extrabold text-red-800 block">
                         {formatDistance(hosp.distanceMeters)}
                       </span>
-                      <span className="text-[11px] font-bold text-secondary flex items-center justify-end gap-1">
-                        <Clock className="w-3 h-3" />
+                      <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
+                        <Clock className="w-3 h-3 text-slate-400" />
                         {formatETA(estimatedSeconds)}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2 border-t border-surface-container-high">
+                  <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
                     <a
                       href={`tel:${hosp.phone || '911'}`}
-                      className="px-3 py-1.5 bg-secondary/10 text-secondary border border-secondary/20 hover:bg-secondary/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                     >
                       <Phone className="w-3.5 h-3.5" />
-                      <span>Call Hospital</span>
+                      <span>Call</span>
                     </a>
 
                     <button
@@ -145,7 +150,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                         setSelectedId(hosp.id);
                         onSelectHospital(hosp);
                       }}
-                      className="px-4 py-2 bg-primary text-white text-xs font-extrabold rounded-xl shadow-level-1 hover:bg-primary-hover transition-all flex items-center gap-1.5 active:scale-95"
+                      className="px-4 py-2 bg-red-800 hover:bg-red-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Select Hospital</span>

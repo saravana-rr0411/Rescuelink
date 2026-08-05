@@ -96,11 +96,12 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
   address,
   severity = 'CRITICAL',
   height = 'h-52',
-  showNavigateBtn = true,
+  showNavigateBtn,
   volunteerLatitude = null,
   volunteerLongitude = null,
   mode = 'citizen',
 }) => {
+  const shouldShowNavigateBtn = showNavigateBtn !== undefined ? showNavigateBtn : mode === 'volunteer';
   const navigate = useNavigate();
 
   const hasCoordinates =
@@ -217,7 +218,7 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
         )}
 
         {/* Floating Navigate Button Overlay */}
-        {showNavigateBtn && (
+        {shouldShowNavigateBtn && (
           <button
             onClick={handleOpenNavigation}
             className="absolute bottom-3 right-3 bg-secondary hover:bg-secondary/90 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95 z-[400]"

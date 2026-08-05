@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
-import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Ambulance, Hospital as HospitalIcon, CheckSquare } from 'lucide-react';
+import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
-import { saveStoredHospital, getStoredHospital, cleanDescriptionText, formatETA } from '../utils/routing';
+import { saveStoredHospital, getStoredHospital, cleanDescriptionText, formatETA, getStatusRank } from '../utils/routing';
 import { formatDistance } from '../utils/distance';
 
 interface AccidentRecord {
@@ -278,15 +278,18 @@ export const VolunteerDashboardScreen: React.FC = () => {
       // Request GPS permission & get volunteer current location
       const pos = await getVolunteerPosition();
 
+      if (!pos) {
+        setRespondingId(null);
+        setErrorMessage('GPS permission is required to accept emergency rescue missions. Please enable location access in your browser.');
+        return;
+      }
+
       const updatePayload: any = {
         status: 'Assigned',
         volunteer_id: user.id,
+        volunteer_latitude: pos.lat,
+        volunteer_longitude: pos.lng,
       };
-
-      if (pos) {
-        updatePayload.volunteer_latitude = pos.lat;
-        updatePayload.volunteer_longitude = pos.lng;
-      }
 
       // Atomic Update: Only update if volunteer_id IS NULL
       const { data, error } = await supabase
@@ -329,6 +332,20 @@ export const VolunteerDashboardScreen: React.FC = () => {
   // 2. Update Emergency Status Actions (Ambulance Requested, Ambulance Dispatched, Hospital Notified, Emergency Resolved)
   const handleUpdateStatus = async (accidentId: string, newStatus: string) => {
     if (!user) return;
+
+    const targetMission = assignedMissions.find((m) => m.id === accidentId);
+    if (targetMission) {
+      const currentRank = getStatusRank(targetMission.status);
+      const targetRank = getStatusRank(newStatus);
+
+      // Programmatic Guard: Enforce strict one-way progression!
+      if (targetRank <= currentRank) {
+        console.warn(`[RescueLink Workflow Guard] Rejected backward/duplicate transition from "${targetMission.status}" (rank ${currentRank}) to "${newStatus}" (rank ${targetRank}).`);
+        setErrorMessage(`Cannot move backward from "${targetMission.status}" to "${newStatus}". Workflow is strictly one-way.`);
+        setTimeout(() => setErrorMessage(null), 3000);
+        return;
+      }
+    }
 
     setUpdatingStatusId(accidentId);
     setErrorMessage(null);
@@ -438,41 +455,32 @@ export const VolunteerDashboardScreen: React.FC = () => {
     }
   };
 
-  const statusActions = [
-    { label: 'Arrived at Scene', icon: CheckSquare, color: 'bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200' },
-    { label: 'To Hospital', icon: HospitalIcon, color: 'bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200' },
-    { label: 'Hospital Reached', icon: CheckSquare, color: 'bg-indigo-100 text-indigo-900 border-indigo-300 hover:bg-indigo-200' },
-    { label: 'Ambulance Requested', icon: Ambulance, color: 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200' },
-    { label: 'Ambulance Dispatched', icon: Navigation, color: 'bg-blue-100 text-blue-900 border-blue-300 hover:bg-blue-200' },
-    { label: 'Emergency Resolved', icon: CheckSquare, color: 'bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200' },
-  ];
-
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-slate-50">
       <Navbar title="Volunteer Responder HQ" showBack />
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {/* On Duty Toggle Banner */}
-        <div className={`p-5 rounded-3xl text-white shadow-level-2 transition-all flex items-center justify-between ${
-          isOnDuty ? 'bg-gradient-to-br from-tertiary to-amber-700' : 'bg-surface-container-highest text-on-surface border border-outline-variant'
+        <div className={`p-5 rounded-3xl text-white shadow-sm transition-all flex items-center justify-between ${
+          isOnDuty ? 'bg-gradient-to-r from-red-800 to-rose-900' : 'bg-white text-slate-800 border border-slate-200/80'
         }`}>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Radio className={`w-5 h-5 ${isOnDuty ? 'animate-pulse text-amber-200' : 'text-outline'}`} />
-              <span className={`text-xs font-bold uppercase tracking-wider ${isOnDuty ? 'text-amber-100' : 'text-on-surface-variant'}`}>
+              <Radio className={`w-4 h-4 ${isOnDuty ? 'animate-pulse text-rose-200' : 'text-slate-400'}`} />
+              <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
                 {isOnDuty ? 'ON-DUTY BROADCAST ACTIVE' : 'RESPONDER OFF-DUTY'}
               </span>
             </div>
-            <h2 className="text-lg font-extrabold">{isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode'}</h2>
-            <p className={`text-xs ${isOnDuty ? 'text-amber-100' : 'text-on-surface-variant'}`}>
+            <h2 className="text-base font-extrabold">{isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode'}</h2>
+            <p className={`text-xs ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
               Response Radius: <span className="font-bold">{mockUserProfile.responseRadiusKm} km</span>
             </p>
           </div>
 
           <button
             onClick={() => setIsOnDuty(!isOnDuty)}
-            className={`px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-md transition-all ${
-              isOnDuty ? 'bg-white text-tertiary hover:bg-amber-50' : 'bg-tertiary text-white'
+            className={`px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 ${
+              isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
             }`}
           >
             {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
@@ -481,40 +489,40 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
         {/* Impact Stats Grid */}
         <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/40 text-center space-y-0.5">
-            <div className="w-7 h-7 rounded-full bg-tertiary-fixed text-tertiary flex items-center justify-center mx-auto">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-rose-50 text-red-700 flex items-center justify-center mx-auto">
               <Award className="w-4 h-4" />
             </div>
-            <p className="text-base font-extrabold text-on-surface">12</p>
-            <p className="text-[10px] text-on-surface-variant font-medium">Missions</p>
+            <p className="text-base font-extrabold text-slate-900">12</p>
+            <p className="text-[10px] text-slate-500 font-medium">Missions</p>
           </div>
 
-          <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/40 text-center space-y-0.5">
-            <div className="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center mx-auto">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto">
               <HeartPulse className="w-4 h-4" />
             </div>
-            <p className="text-base font-extrabold text-on-surface">4.1m</p>
-            <p className="text-[10px] text-on-surface-variant font-medium">Avg Response</p>
+            <p className="text-base font-extrabold text-slate-900">4.1m</p>
+            <p className="text-[10px] text-slate-500 font-medium">Avg Response</p>
           </div>
 
-          <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/40 text-center space-y-0.5">
-            <div className="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center mx-auto">
+          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
+            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center mx-auto">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <p className="text-base font-extrabold text-on-surface">Lvl 2</p>
-            <p className="text-[10px] text-on-surface-variant font-medium">Certified</p>
+            <p className="text-base font-extrabold text-slate-900">Lvl 2</p>
+            <p className="text-[10px] text-slate-500 font-medium">Certified</p>
           </div>
         </div>
 
         {errorMessage && (
-          <div className="p-3 bg-red-100 text-red-800 text-xs font-semibold rounded-xl flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+          <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-2xl flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-3 bg-emerald-100 text-emerald-900 text-xs font-semibold rounded-xl flex items-center gap-2">
+          <div className="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold rounded-2xl flex items-center gap-2">
             <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" />
             <span>{successMessage}</span>
           </div>
@@ -524,27 +532,27 @@ export const VolunteerDashboardScreen: React.FC = () => {
         {assignedMissions.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-tertiary uppercase tracking-wider flex items-center gap-1.5">
-                <CheckCircle className="w-4 h-4" />
+              <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
                 <span>Your Active Assigned Missions ({assignedMissions.length})</span>
               </h2>
-              <span className="text-[10px] font-bold bg-tertiary text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                 Live GPS Active
               </span>
             </div>
 
             <div className="space-y-4">
               {assignedMissions.map((mission) => (
-                <div key={mission.id} className="bg-surface-container-lowest border-2 border-tertiary/40 rounded-3xl p-4 shadow-level-2 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div key={mission.id} className="bg-white border-2 border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full uppercase">
-                        Current Status: {mission.status}
+                      <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                        Status: {mission.status}
                       </span>
-                      <h3 className="font-extrabold text-sm text-on-surface mt-1">{mission.address}</h3>
+                      <h3 className="font-extrabold text-sm text-slate-900 mt-2">{mission.address}</h3>
                     </div>
-                    <span className="text-[10px] bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-bold uppercase">
+                    <span className="text-[10px] bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
                       {mission.severity}
                     </span>
                   </div>
@@ -562,7 +570,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   />
 
                   {mission.description && (
-                    <p className="text-xs text-on-surface-variant">
+                    <p className="text-xs text-slate-600 font-medium leading-relaxed">
                       {cleanDescriptionText(mission.description)}
                     </p>
                   )}
@@ -572,25 +580,25 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     const hosp = getStoredHospital(mission.id);
                     if (!hosp && mission.status !== 'Transporting to Hospital') return null;
 
-                    const name = hosp?.name || 'Government Medical College Hospital';
-                    const address = hosp?.address || '120 Healthcare Plaza, Sector 4';
-                    const distMeters = hosp?.distanceMeters || 2400;
+                    const name = hosp?.name || 'Nearest Regional Emergency Center';
+                    const address = hosp?.address || (mission.latitude && mission.longitude ? `GPS (${mission.latitude.toFixed(4)}, ${mission.longitude.toFixed(4)})` : mission.address);
+                    const distMeters = hosp?.distanceMeters || 1800;
                     const etaSecs = (distMeters / 1000 / 40) * 3600;
 
                     return (
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-900 to-indigo-900 text-white space-y-2 border border-blue-700/70 shadow-md">
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white space-y-2.5 border border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-black uppercase text-blue-100 bg-blue-800/90 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1">
-                            <HospitalIcon className="w-3.5 h-3.5" />
+                          <span className="text-[10px] font-extrabold uppercase text-blue-200 bg-blue-900/80 px-2.5 py-0.5 rounded-full border border-blue-700 flex items-center gap-1">
+                            <HospitalIcon className="w-3.5 h-3.5 text-blue-300" />
                             Selected Hospital
                           </span>
-                          <span className="text-[11px] font-bold text-blue-200">Destination</span>
+                          <span className="text-[11px] font-bold text-slate-300">Destination</span>
                         </div>
                         <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 pt-0.5">
                           <span>🏥</span>
                           <span>{name}</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-blue-100 font-semibold pt-1 border-t border-blue-700/60">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-slate-200 font-semibold pt-2 border-t border-slate-800">
                           <span className="truncate">📍 {address}</span>
                           <span>📏 {formatDistance(distMeters)}</span>
                           <span>⏱ {formatETA(etaSecs)}</span>
@@ -601,35 +609,76 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
                   {/* Scene Photo Preview if present */}
                   {mission.photo_url && (
-                    <div className="rounded-xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-32">
+                    <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-32">
                       <img src={mission.photo_url} alt="Scene Evidence" className="w-full h-28 object-cover" />
                     </div>
                   )}
 
-                  {/* Status Action Buttons */}
-                  <div className="pt-2 border-t border-surface-container-high space-y-2">
-                    <p className="text-[11px] font-bold text-on-surface uppercase tracking-wider">Update Incident Status:</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {statusActions.map((act) => {
-                        const Icon = act.icon;
-                        const isCurrent = mission.status === act.label;
-                        const isUpdating = updatingStatusId === mission.id;
-                        return (
-                          <button
-                            key={act.label}
-                            type="button"
-                            disabled={isUpdating}
-                            onClick={() => handleUpdateStatus(mission.id, act.label)}
-                            className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-2 ${act.color} ${
-                              isCurrent ? 'ring-2 ring-tertiary font-extrabold shadow-sm' : 'opacity-90'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 shrink-0" />
-                            <span className="text-[11px] leading-tight text-left">{act.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                  {/* Status Action Buttons (Strictly One-Way Progression) */}
+                  <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      {mission.status === 'Emergency Resolved' ? 'Mission Status:' : 'Next Mission Action:'}
+                    </p>
+
+                    {/* Stage 1: En Route -> Next is Arrived at Scene */}
+                    {getStatusRank(mission.status) <= 1 && (
+                      <button
+                        type="button"
+                        disabled={updatingStatusId === mission.id}
+                        onClick={() => handleUpdateStatus(mission.id, 'Arrived at Scene')}
+                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                      >
+                        <CheckSquare className="w-4 h-4" />
+                        <span>Arrived at Scene</span>
+                      </button>
+                    )}
+
+                    {/* Stage 2: Arrived at Scene -> Next is Select Destination Hospital */}
+                    {getStatusRank(mission.status) === 2 && (
+                      <button
+                        type="button"
+                        disabled={updatingStatusId === mission.id}
+                        onClick={() => setHospitalSheetMission(mission)}
+                        className="w-full p-3 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                      >
+                        <HospitalIcon className="w-4 h-4" />
+                        <span>Select Destination Hospital</span>
+                      </button>
+                    )}
+
+                    {/* Stage 3: Transporting to Hospital -> Next is Hospital Reached */}
+                    {getStatusRank(mission.status) === 3 && (
+                      <button
+                        type="button"
+                        disabled={updatingStatusId === mission.id}
+                        onClick={() => handleUpdateStatus(mission.id, 'Hospital Reached')}
+                        className="w-full p-3 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                      >
+                        <CheckSquare className="w-4 h-4" />
+                        <span>Hospital Reached</span>
+                      </button>
+                    )}
+
+                    {/* Stage 4: Hospital Reached -> Next is Emergency Resolved */}
+                    {getStatusRank(mission.status) === 4 && (
+                      <button
+                        type="button"
+                        disabled={updatingStatusId === mission.id}
+                        onClick={() => handleUpdateStatus(mission.id, 'Emergency Resolved')}
+                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                      >
+                        <CheckSquare className="w-4 h-4" />
+                        <span>Complete Mission (Emergency Resolved)</span>
+                      </button>
+                    )}
+
+                    {/* Stage 5: Emergency Resolved -> No action buttons remain */}
+                    {getStatusRank(mission.status) === 5 && (
+                      <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-emerald-600" />
+                        <span>Emergency Resolved</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -640,31 +689,31 @@ export const VolunteerDashboardScreen: React.FC = () => {
         {/* SECTION 2: Active Emergency Broadcast List (Unassigned Reported Incidents with Google Maps) */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-bold text-on-surface uppercase tracking-wider">
+            <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
               Nearby Active Alerts ({incidents.length})
             </h2>
-            <span className="text-[11px] font-semibold text-tertiary flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+            <span className="text-[11px] font-bold text-red-700 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
               Live Broadcast Feed
             </span>
           </div>
 
           {!isOnDuty ? (
-            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/50 text-center space-y-2">
-              <Radio className="w-8 h-8 text-outline mx-auto" />
-              <p className="text-xs font-bold text-on-surface">You are currently Off-Duty</p>
-              <p className="text-[11px] text-on-surface-variant">Toggle duty switch above to receive emergency alerts.</p>
+            <div className="bg-white p-6 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
+              <Radio className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-xs font-bold text-slate-800">You are currently Off-Duty</p>
+              <p className="text-[11px] text-slate-500">Toggle duty switch above to receive emergency alerts.</p>
             </div>
           ) : loading ? (
-            <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/50 text-center space-y-2">
-              <Loader2 className="w-6 h-6 text-tertiary animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-on-surface-variant">Loading active emergency alerts...</p>
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
+              <Loader2 className="w-6 h-6 text-red-700 animate-spin mx-auto" />
+              <p className="text-xs font-semibold text-slate-500">Loading active emergency alerts...</p>
             </div>
           ) : incidents.length === 0 ? (
-            <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/50 text-center space-y-2">
-              <Radio className="w-8 h-8 text-outline mx-auto" />
-              <p className="text-xs font-bold text-on-surface">No emergency requests available.</p>
-              <p className="text-[11px] text-on-surface-variant">Monitoring live broadcast channel for new reported incidents.</p>
+            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
+              <Radio className="w-8 h-8 text-slate-400 mx-auto" />
+              <p className="text-xs font-bold text-slate-800">No emergency requests available.</p>
+              <p className="text-[11px] text-slate-500">Monitoring live broadcast channel for new reported incidents.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -675,21 +724,21 @@ export const VolunteerDashboardScreen: React.FC = () => {
                 return (
                   <div
                     key={inc.id}
-                    className={`bg-surface-container-lowest border rounded-3xl p-4 shadow-level-1 space-y-3 ${
-                      isAssignedToOther ? 'border-amber-300 opacity-90' : 'border-outline-variant/50'
+                    className={`bg-white border rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-all ${
+                      isAssignedToOther ? 'border-amber-200 bg-amber-50/30 opacity-90' : 'border-slate-200/80 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
+                    <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[10px] font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-full uppercase">
+                        <span className="text-[10px] font-extrabold bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
                           {inc.severity} PRIORITY
                         </span>
-                        <h3 className="font-bold text-sm text-on-surface mt-1">
+                        <h3 className="font-extrabold text-sm text-slate-900 mt-1.5">
                           Emergency SOS Incident
                         </h3>
                       </div>
-                      <span className="text-xs text-on-surface-variant font-medium flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-secondary" />
+                      <span className="text-xs text-slate-500 font-medium flex items-center gap-1 shrink-0">
+                        <Clock className="w-3.5 h-3.5 text-slate-400" />
                         {formatReportedTime(inc.created_at)}
                       </span>
                     </div>
@@ -707,7 +756,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     />
 
                     {inc.description && cleanDescriptionText(inc.description) && (
-                      <p className="text-xs text-on-surface-variant">
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
                         {cleanDescriptionText(inc.description)}
                       </p>
                     )}
@@ -715,32 +764,32 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     {/* Accident Photo if available */}
                     {inc.photo_url && (
                       <div className="space-y-1 pt-1">
-                        <span className="text-[10px] font-bold text-on-surface-variant uppercase flex items-center gap-1">
-                          <Camera className="w-3.5 h-3.5 text-secondary" />
+                        <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
+                          <Camera className="w-3.5 h-3.5 text-slate-400" />
                           Incident Scene Photo
                         </span>
-                        <div className="rounded-2xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-40">
+                        <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-40">
                           <img src={inc.photo_url} alt="Accident Evidence" className="w-full h-36 object-cover" />
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-xs text-on-surface-variant font-medium pt-2 border-t border-surface-container-high">
-                      <span className="flex items-center gap-1 truncate pr-2">
-                        <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <div className="flex items-center justify-between text-xs text-slate-600 font-medium pt-2.5 border-t border-slate-100">
+                      <span className="flex items-center gap-1.5 truncate pr-2">
+                        <MapPin className="w-3.5 h-3.5 text-red-700 shrink-0" />
                         <span className="truncate">{inc.address}</span>
                       </span>
 
                       {isAssignedToOther ? (
-                        <div className="px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shrink-0">
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                        <div className="px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 shrink-0">
+                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                           <span>Already accepted by another volunteer.</span>
                         </div>
                       ) : (
                         <button
                           onClick={() => handleAcceptMission(inc.id)}
                           disabled={isAccepting}
-                          className="px-3.5 py-1.5 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center gap-1 bg-tertiary text-white hover:bg-tertiary/90 disabled:opacity-70 shrink-0"
+                          className="px-4 py-2 rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 bg-red-800 text-white hover:bg-red-900 active:scale-95 disabled:opacity-70 shrink-0"
                         >
                           {isAccepting ? (
                             <>
@@ -768,8 +817,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
         <HospitalSelectorSheet
           isOpen={!!hospitalSheetMission}
           onClose={() => setHospitalSheetMission(null)}
-          accidentLatitude={hospitalSheetMission.latitude || 9.5851}
-          accidentLongitude={hospitalSheetMission.longitude || 77.9579}
+          accidentLatitude={hospitalSheetMission.latitude ?? 0}
+          accidentLongitude={hospitalSheetMission.longitude ?? 0}
           onSelectHospital={handleConfirmHospitalSelection}
         />
       )}

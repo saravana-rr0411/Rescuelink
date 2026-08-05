@@ -12,8 +12,8 @@ export const ReportAccidentScreen: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [incidentType, setIncidentType] = useState(locationState?.category || 'accident');
-  const [address, setAddress] = useState('5th Ave & Pine St, Sector 4 (Detected via GPS)');
-  const [description, setDescription] = useState('Two vehicles collided near traffic signal. One driver requires immediate medical attention.');
+  const [address, setAddress] = useState('Detecting GPS location...');
+  const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM'>('CRITICAL');
   
   // Image Upload States
@@ -25,40 +25,61 @@ export const ReportAccidentScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [latitude, setLatitude] = useState<number | null>(37.7749);
-  const [longitude, setLongitude] = useState<number | null>(-122.4194);
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
 
   // Fetch device GPS location on load if available
   useEffect(() => {
+    fetchDeviceLocation();
+  }, []);
+
+  const fetchDeviceLocation = () => {
+    setErrorMessage('');
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLatitude(pos.coords.latitude);
-          setLongitude(pos.coords.longitude);
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+
+          try {
+            const res = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+              { headers: { 'User-Agent': 'RescueLink/1.0' } }
+            );
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.display_name) {
+                setAddress(data.display_name);
+                return;
+              }
+            }
+          } catch (err) {
+            console.warn('Reverse geocoding error:', err);
+          }
+          setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
         },
         (err) => {
-          console.warn('Geolocation access declined or unavailable, using fallback coordinates:', err.message);
-        }
+          console.warn('Geolocation access declined or unavailable:', err.message);
+          setLatitude(null);
+          setLongitude(null);
+          setAddress('GPS location unavailable');
+          setErrorMessage('GPS permission denied or location unavailable. Please allow browser location access to report an emergency.');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+    } else {
+      setLatitude(null);
+      setLongitude(null);
+      setAddress('GPS not supported');
+      setErrorMessage('Geolocation API is not supported by your browser.');
     }
-  }, []);
+  };
 
   const handleRefetchGPS = () => {
     setAddress('Detecting live GPS location...');
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLatitude(pos.coords.latitude);
-          setLongitude(pos.coords.longitude);
-          setAddress(`GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}) - Sector 4`);
-        },
-        () => {
-          setAddress('5th Ave & Pine St, Sector 4 (GPS Refetched)');
-        }
-      );
-    } else {
-      setAddress('5th Ave & Pine St, Sector 4 (GPS Refetched)');
-    }
+    fetchDeviceLocation();
   };
 
   // Handle Image File Selection
@@ -95,7 +116,12 @@ export const ReportAccidentScreen: React.FC = () => {
     setSuccessMessage('');
 
     // 1. Validation
-    if (!address || address.trim() === '') {
+    if (latitude === null || longitude === null) {
+      setErrorMessage('Location error: Real device GPS coordinates are required to submit an emergency report. Please grant GPS permission and click "Refetch GPS".');
+      return;
+    }
+
+    if (!address || address.trim() === '' || address === 'GPS location unavailable' || address === 'GPS not supported') {
       setErrorMessage('Location address is required.');
       return;
     }
@@ -153,8 +179,8 @@ export const ReportAccidentScreen: React.FC = () => {
         .insert([
           {
             reporter_id: user.id,
-            latitude: latitude || 37.7749,
-            longitude: longitude || -122.4194,
+            latitude: latitude,
+            longitude: longitude,
             address: address.trim(),
             severity: severity,
             description: description.trim(),

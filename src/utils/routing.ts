@@ -85,95 +85,154 @@ export async function fetchOSRMRoute(
 }
 
 /**
- * Returns nearby hospitals relative to accident coordinates
+ * Returns empty array by default. Static/fake hospital generation is strictly disabled.
  */
-export function getNearbyHospitals(latitude: number, longitude: number): Hospital[] {
-  // Offset relative to accident location to create realistic nearby medical centers
-  const list: Hospital[] = [
-    {
-      id: 'hosp-1',
-      name: 'City General Trauma & Emergency Center',
-      address: '120 Healthcare Plaza, Sector 4',
-      phone: '+1 (555) 911-4000',
-      latitude: latitude + 0.0085,
-      longitude: longitude - 0.0062,
-      distanceMeters: Math.round(calculateHaversineDistance(latitude, longitude, latitude + 0.0085, longitude - 0.0062)),
-      emergencyDept: true,
-      bedsAvailable: 14,
-    },
-    {
-      id: 'hosp-2',
-      name: 'St. Jude Memorial Hospital',
-      address: '459 Relief Ave, District 2',
-      phone: '+1 (555) 911-8820',
-      latitude: latitude - 0.0072,
-      longitude: longitude + 0.0094,
-      distanceMeters: Math.round(calculateHaversineDistance(latitude, longitude, latitude - 0.0072, longitude + 0.0094)),
-      emergencyDept: true,
-      bedsAvailable: 6,
-    },
-    {
-      id: 'hosp-3',
-      name: 'Red Cross Urgent Care Clinic',
-      address: '88 Emergency Way, Sector 5',
-      phone: '+1 (555) 911-1200',
-      latitude: latitude + 0.012,
-      longitude: longitude + 0.0041,
-      distanceMeters: Math.round(calculateHaversineDistance(latitude, longitude, latitude + 0.012, longitude + 0.0041)),
-      emergencyDept: true,
-      bedsAvailable: 22,
-    },
-  ];
-
-  return list.sort((a, b) => a.distanceMeters - b.distanceMeters);
+export function getNearbyHospitals(_latitude: number, _longitude: number): Hospital[] {
+  return [];
 }
 
 /**
- * Fetches nearby hospitals using OpenStreetMap Overpass API
- * Sorted by distance ascending with fallback to getNearbyHospitals
+ * Fetches REAL nearby hospitals using OpenStreetMap Overpass API (with Nominatim fallback).
+ * Strictly searches within a 5 km radius around (latitude, longitude).
+ * Never fabricates or returns fake/mock hospital data.
  */
 export async function fetchNearbyHospitalsOverpass(
   latitude: number,
   longitude: number
 ): Promise<Hospital[]> {
+  const results: Hospital[] = [];
+  const seenIds = new Set<string>();
+
+  // 1. Query OpenStreetMap Overpass API for real hospitals within 5 km (5000 m) radius
   try {
-    const query = `[out:json][timeout:4];node["amenity"="hospital"](around:15000,${latitude},${longitude});out 8;`;
+    const query = `[out:json][timeout:6];nwr["amenity"="hospital"](around:5000,${latitude},${longitude});out center 25;`;
     const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-    const res = await fetch(overpassUrl, { signal: AbortSignal.timeout(4000) });
-    
+    const res = await fetch(overpassUrl, {
+      headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
+      signal: AbortSignal.timeout(5000),
+    });
+
     if (res.ok) {
       const data = await res.json();
-      if (data.elements && data.elements.length > 0) {
-        const fetched: Hospital[] = data.elements.map((el: any, i: number) => {
-          const lat = el.lat;
-          const lon = el.lon;
-          const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
-          const name = el.tags?.name || el.tags?.['name:en'] || `Emergency Hospital ${i + 1}`;
-          const street = el.tags?.['addr:street'] || el.tags?.['addr:suburb'] || 'Emergency Medical Sector';
-          const city = el.tags?.['addr:city'] || el.tags?.['addr:town'] || '';
-          const address = city ? `${street}, ${city}` : street;
+      if (data.elements && Array.isArray(data.elements)) {
+        for (const el of data.elements) {
+          const lat = el.lat || el.center?.lat;
+          const lon = el.lon || el.center?.lon;
+          if (!lat || !lon) continue;
 
-          return {
-            id: `overpass-${el.id || i}`,
-            name,
-            address,
-            phone: el.tags?.phone || '+1 (555) 911-4000',
+          const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
+          if (dist > 5000) continue; // Strictly within 5 km
+
+          const name = el.tags?.name || el.tags?.['name:en'] || el.tags?.['official_name'] || el.tags?.['brand'];
+          if (!name || name.trim() === '') continue; // Skip unnamed nodes
+
+          const id = `overpass-${el.type || 'node'}-${el.id}`;
+          if (seenIds.has(id)) continue;
+          seenIds.add(id);
+
+          const street = el.tags?.['addr:street'] || el.tags?.['addr:suburb'] || el.tags?.['addr:district'] || '';
+          const city = el.tags?.['addr:city'] || el.tags?.['addr:town'] || '';
+          const fullAddr = el.tags?.['addr:full'] || (street && city ? `${street}, ${city}` : street || city || `GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`);
+
+          results.push({
+            id,
+            name: name.trim(),
+            address: fullAddr.trim(),
+            phone: el.tags?.phone || el.tags?.['contact:phone'] || '108',
             latitude: lat,
             longitude: lon,
             distanceMeters: dist,
-            emergencyDept: true,
-            bedsAvailable: 8 + (i % 10),
-          };
-        });
-
-        return fetched.sort((a, b) => a.distanceMeters - b.distanceMeters);
+            emergencyDept: el.tags?.['emergency'] !== 'no',
+            bedsAvailable: 0,
+          });
+        }
       }
     }
   } catch (err) {
-    console.warn('[RescueLink Overpass API] Query timed out or failed, using local hospital fallback:', err);
+    console.warn('[RescueLink Overpass API] Query timed out or failed:', err);
   }
 
-  return getNearbyHospitals(latitude, longitude);
+  // 2. Secondary Real Map Source: Nominatim Search API if Overpass returned 0 real hospitals
+  if (results.length === 0) {
+    try {
+      const viewbox = `${longitude - 0.045},${latitude + 0.045},${longitude + 0.045},${latitude - 0.045}`;
+      const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&lat=${latitude}&lon=${longitude}&bounded=1&viewbox=${viewbox}&limit=15`;
+      const nomRes = await fetch(nomUrl, {
+        headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
+        signal: AbortSignal.timeout(4000),
+      });
+
+      if (nomRes.ok) {
+        const nomData = await nomRes.json();
+        if (Array.isArray(nomData)) {
+          for (const item of nomData) {
+            const lat = parseFloat(item.lat);
+            const lon = parseFloat(item.lon);
+            if (isNaN(lat) || isNaN(lon)) continue;
+
+            const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
+            if (dist > 5000) continue; // Strictly within 5 km
+
+            const nameParts = (item.display_name || '').split(',');
+            const name = nameParts[0]?.trim();
+            if (!name) continue;
+
+            const id = `nominatim-${item.place_id}`;
+            if (seenIds.has(id)) continue;
+            seenIds.add(id);
+
+            const address = nameParts.slice(1, 3).join(',').trim() || `GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+
+            results.push({
+              id,
+              name,
+              address,
+              phone: '108',
+              latitude: lat,
+              longitude: lon,
+              distanceMeters: dist,
+              emergencyDept: true,
+              bedsAvailable: 0,
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[RescueLink Nominatim API] Fallback search error:', err);
+    }
+  }
+
+  // 3. Return ONLY real hospitals sorted by nearest distance. If none exist, returns empty array.
+  return results.sort((a, b) => a.distanceMeters - b.distanceMeters);
+}
+
+/**
+ * Returns numeric hierarchy rank for emergency mission status to enforce strict one-way progression
+ */
+export function getStatusRank(status?: string | null): number {
+  if (!status) return 0;
+  switch (status) {
+    case 'Reported':
+      return 0;
+    case 'Assigned':
+    case 'Volunteer Assigned':
+    case 'En Route':
+    case 'Volunteer En Route':
+      return 1;
+    case 'Arrived at Scene':
+    case 'Volunteer Arrived at Scene':
+      return 2;
+    case 'Transporting to Hospital':
+    case 'Hospital Transfer':
+    case 'To Hospital':
+      return 3;
+    case 'Hospital Reached':
+      return 4;
+    case 'Emergency Resolved':
+      return 5;
+    default:
+      return 0;
+  }
 }
 
 /**

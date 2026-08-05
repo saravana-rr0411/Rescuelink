@@ -27,10 +27,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
 }) => {
   const navigate = useNavigate();
   const [showHospitals, setShowHospitals] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number }>({
-    lat: 12.9716,
-    lng: 77.5946,
-  });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [shareSuccess, setShareSuccess] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -47,13 +44,15 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
           setShowHospitals(true);
         },
         (err) => {
-          console.warn('[Emergency Action Center] Geolocation fallback used:', err);
-          setShowHospitals(true);
+          console.warn('[Emergency Action Center] Geolocation failed:', err.message);
+          setShareSuccess('GPS permission denied. Location access is required to discover nearby hospitals.');
+          setTimeout(() => setShareSuccess(null), 4000);
         },
-        { timeout: 5000 }
+        { enableHighAccuracy: true, timeout: 10000 }
       );
     } else {
-      setShowHospitals(true);
+      setShareSuccess('Geolocation API is not supported by your browser.');
+      setTimeout(() => setShareSuccess(null), 4000);
     }
   };
 
@@ -99,7 +98,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
   return (
     <>
       <div className="fixed inset-0 z-[999] bg-slate-950/75 backdrop-blur-sm flex items-end justify-center p-0 sm:p-4 animate-in fade-in duration-200">
-        <div className="w-full max-w-lg bg-surface border border-outline-variant/60 rounded-t-3xl sm:rounded-3xl shadow-level-3 overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
+        <div className="w-full max-w-md bg-surface border border-outline-variant/60 rounded-t-3xl sm:rounded-3xl shadow-level-3 overflow-hidden flex flex-col max-h-[90vh] animate-in slide-in-from-bottom duration-300">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-surface-container-high flex items-center justify-between bg-gradient-to-r from-red-950/40 via-red-900/20 to-surface">
             <div className="flex items-center gap-3">
@@ -290,7 +289,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
         </div>
       </div>
 
-      {showHospitals && (
+      {showHospitals && userLocation && (
         <HospitalSelectorSheet
           isOpen={showHospitals}
           onClose={() => setShowHospitals(false)}
