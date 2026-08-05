@@ -89,7 +89,7 @@ export async function fetchOSRMRoute(
  */
 export function getNearbyHospitals(latitude: number, longitude: number): Hospital[] {
   // Offset relative to accident location to create realistic nearby medical centers
-  return [
+  const list: Hospital[] = [
     {
       id: 'hosp-1',
       name: 'City General Trauma & Emergency Center',
@@ -124,16 +124,139 @@ export function getNearbyHospitals(latitude: number, longitude: number): Hospita
       bedsAvailable: 22,
     },
   ];
+
+  return list.sort((a, b) => a.distanceMeters - b.distanceMeters);
 }
 
 /**
- * Helper to format duration in minutes/hours
+ * Fetches nearby hospitals using OpenStreetMap Overpass API
+ * Sorted by distance ascending with fallback to getNearbyHospitals
  */
-export function formatETA(seconds: number): string {
-  if (seconds < 60) return '< 1 min';
+export async function fetchNearbyHospitalsOverpass(
+  latitude: number,
+  longitude: number
+): Promise<Hospital[]> {
+  try {
+    const query = `[out:json][timeout:4];node["amenity"="hospital"](around:15000,${latitude},${longitude});out 8;`;
+    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    const res = await fetch(overpassUrl, { signal: AbortSignal.timeout(4000) });
+    
+    if (res.ok) {
+      const data = await res.json();
+      if (data.elements && data.elements.length > 0) {
+        const fetched: Hospital[] = data.elements.map((el: any, i: number) => {
+          const lat = el.lat;
+          const lon = el.lon;
+          const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
+          const name = el.tags?.name || el.tags?.['name:en'] || `Emergency Hospital ${i + 1}`;
+          const street = el.tags?.['addr:street'] || el.tags?.['addr:suburb'] || 'Emergency Medical Sector';
+          const city = el.tags?.['addr:city'] || el.tags?.['addr:town'] || '';
+          const address = city ? `${street}, ${city}` : street;
+
+          return {
+            id: `overpass-${el.id || i}`,
+            name,
+            address,
+            phone: el.tags?.phone || '+1 (555) 911-4000',
+            latitude: lat,
+            longitude: lon,
+            distanceMeters: dist,
+            emergencyDept: true,
+            bedsAvailable: 8 + (i % 10),
+          };
+        });
+
+        return fetched.sort((a, b) => a.distanceMeters - b.distanceMeters);
+      }
+    }
+  } catch (err) {
+    console.warn('[RescueLink Overpass API] Query timed out or failed, using local hospital fallback:', err);
+  }
+
+  return getNearbyHospitals(latitude, longitude);
+}
+
+/**
+ * Helper to format duration in minutes/hours with Arrived state support
+ */
+export function formatETA(seconds: number, distanceMeters?: number): string {
+  if (distanceMeters !== undefined && distanceMeters < 30) {
+    return 'Arrived';
+  }
+  if (seconds <= 0) {
+    return 'Arrived';
+  }
   const mins = Math.round(seconds / 60);
-  if (mins < 60) return `${mins} min${mins > 1 ? 's' : ''}`;
+  if (mins < 1) return '1 min';
+  if (mins < 60) return `${mins} min`;
   const hours = Math.floor(mins / 60);
   const remMins = mins % 60;
   return `${hours} hr ${remMins} min`;
+}
+
+export interface StoredHospital {
+  id?: string;
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone?: string;
+  distanceMeters?: number;
+}
+
+/**
+ * Saves selected hospital separately in localStorage without mutating description
+ */
+export function saveStoredHospital(accidentId: string, hospital: StoredHospital): void {
+  try {
+    localStorage.setItem(`rescuelink_hospital_${accidentId}`, JSON.stringify(hospital));
+    window.dispatchEvent(new CustomEvent('rescuelink_hospital_updated', { detail: { accidentId, hospital } }));
+  } catch (e) {
+    console.warn('[RescueLink Hospital Storage] LocalStorage write error:', e);
+  }
+}
+
+/**
+ * Retrieves stored hospital for an accident ID
+ */
+export function getStoredHospital(accidentId?: string | null): StoredHospital | null {
+  if (!accidentId) return null;
+  try {
+    const raw = localStorage.getItem(`rescuelink_hospital_${accidentId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.name) return parsed;
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return null;
+}
+
+/**
+ * Cleans accident description by stripping any previously injected hospital JSON/strings
+ */
+export function cleanDescriptionText(description?: string | null): string {
+  if (!description) return '';
+  return description
+    .replace(/\[HOSPITAL_DATA:.*?\]/g, '')
+    .replace(/Destination Hospital Selected:.*?(\n|$)/gi, '')
+    .replace(/\[Hospital:.*?\]/g, '')
+    .replace(/\n\s*\n/g, '\n')
+    .trim();
+}
+
+export interface HospitalData {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+}
+
+export function encodeHospitalData(_hospital: HospitalData, baseDescription?: string | null): string {
+  return cleanDescriptionText(baseDescription);
+}
+
+export function parseHospitalData(_description?: string | null): HospitalData | null {
+  return null;
 }

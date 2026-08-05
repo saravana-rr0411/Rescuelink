@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { SOSButton } from '../components/ui/SOSButton';
+import { EmergencyActionCenterSheet } from '../components/common/EmergencyActionCenterSheet';
 import { mockUserProfile } from '../data/mockData';
 import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, ShieldCheck, MapPin, Clock, ChevronRight, Loader2, Radio } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -25,6 +26,7 @@ export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const [accidents, setAccidents] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isActionCenterOpen, setIsActionCenterOpen] = useState(false);
 
   const categories = [
     { id: 'medical', title: 'Medical Alert', icon: Stethoscope, color: 'bg-red-100 text-red-700 border-red-200' },
@@ -201,8 +203,13 @@ export const HomeScreen: React.FC = () => {
         <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/40 shadow-level-1 text-center">
           <h2 className="text-base font-bold text-on-surface mb-1">In an Immediate Emergency?</h2>
           <p className="text-xs text-on-surface-variant mb-2">Tap below for automatic GPS dispatch & audio SOS</p>
-          <SOSButton />
+          <SOSButton onTrigger={() => setIsActionCenterOpen(true)} />
         </div>
+
+        <EmergencyActionCenterSheet
+          isOpen={isActionCenterOpen}
+          onClose={() => setIsActionCenterOpen(false)}
+        />
 
         {/* Quick Emergency Category Dispatch */}
         <div>

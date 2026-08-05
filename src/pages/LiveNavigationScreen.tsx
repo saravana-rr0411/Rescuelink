@@ -12,7 +12,6 @@ import {
   Plus,
   Minus,
   Bike,
-  User,
   Share2,
   Bandage,
   Clock,
@@ -21,16 +20,13 @@ import {
   ChevronDown,
   Siren,
   ShieldCheck,
-  Hospital as HospitalIcon,
-  CheckCircle2,
-  Flame,
-  Navigation as NavigationIcon,
   PhoneForwarded,
+  Hospital as HospitalIcon,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { formatDistance } from '../utils/distance';
-import { fetchOSRMRoute, formatETA } from '../utils/routing';
+import { formatDistance, calculateHaversineDistance } from '../utils/distance';
+import { fetchOSRMRoute, formatETA, getStoredHospital, cleanDescriptionText } from '../utils/routing';
 import 'leaflet/dist/leaflet.css';
 
 // Fix default Leaflet icon paths in Vite bundler
@@ -370,6 +366,7 @@ const CitizenNavigationScreen: React.FC<SubNavigationProps> = ({
             setAccident((prev) => ({
               ...prev,
               status: updated.status || prev.status,
+              description: updated.description || prev.description,
               volunteer_latitude: updated.volunteer_latitude ?? prev.volunteer_latitude,
               volunteer_longitude: updated.volunteer_longitude ?? prev.volunteer_longitude,
             }));
@@ -390,6 +387,14 @@ const CitizenNavigationScreen: React.FC<SubNavigationProps> = ({
   const volLat = volunteerPos ? volunteerPos[0] : null;
   const volLng = volunteerPos ? volunteerPos[1] : null;
 
+  const storedHosp = getStoredHospital(activeAccidentId);
+  const isTransporting = accident.status === 'Transporting to Hospital' || !!storedHosp;
+
+  const targetLat = storedHosp?.latitude ?? (isTransporting ? accident.latitude + 0.0085 : accident.latitude);
+  const targetLng = storedHosp?.longitude ?? (isTransporting ? accident.longitude - 0.0062 : accident.longitude);
+
+  const prevPosRef = useRef<[number, number] | null>(null);
+
   useEffect(() => {
     const loadVolunteerRoute = async () => {
       if (volLat === null || volLng === null) {
@@ -397,16 +402,29 @@ const CitizenNavigationScreen: React.FC<SubNavigationProps> = ({
         return;
       }
 
+      if (prevPosRef.current) {
+        const moveDist = calculateHaversineDistance(
+          prevPosRef.current[0],
+          prevPosRef.current[1],
+          volLat,
+          volLng
+        );
+        if (moveDist < 5 && volunteerRoute.length > 0) {
+          return;
+        }
+      }
+
+      prevPosRef.current = [volLat, volLng];
       setLoadingRoute(true);
-      const res = await fetchOSRMRoute([volLat, volLng], [accident.latitude, accident.longitude]);
+      const res = await fetchOSRMRoute([volLat, volLng], [targetLat, targetLng]);
       setVolunteerRoute(res.coordinates);
-      setDistanceMeters(res.distanceMeters > 0 ? res.distanceMeters : 420);
-      setDurationSeconds(res.durationSeconds > 0 ? res.durationSeconds : 180);
+      setDistanceMeters(res.distanceMeters < 30 ? 0 : res.distanceMeters);
+      setDurationSeconds(res.distanceMeters < 30 ? 0 : res.durationSeconds);
       setLoadingRoute(false);
     };
 
     loadVolunteerRoute();
-  }, [volLat, volLng, accident.latitude, accident.longitude]);
+  }, [volLat, volLng, targetLat, targetLng]);
 
   const toggleSimulation = () => {
     if (isSimulating) {
@@ -998,7 +1016,6 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
 
   const [isSimulating, setIsSimulating] = useState<boolean>(false);
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState<boolean>(false);
   const simulationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [snapState, setSnapState] = useState<SnapState>('collapsed');
@@ -1152,6 +1169,7 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
             setAccident((prev) => ({
               ...prev,
               status: updated.status || prev.status,
+              description: updated.description || prev.description,
               volunteer_latitude: updated.volunteer_latitude ?? prev.volunteer_latitude,
               volunteer_longitude: updated.volunteer_longitude ?? prev.volunteer_longitude,
             }));
@@ -1172,6 +1190,14 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
   const volLat = volunteerPos ? volunteerPos[0] : null;
   const volLng = volunteerPos ? volunteerPos[1] : null;
 
+  const volStoredHosp = getStoredHospital(activeAccidentId);
+  const isVolTransporting = accident.status === 'Transporting to Hospital' || !!volStoredHosp;
+
+  const volTargetLat = volStoredHosp?.latitude ?? (isVolTransporting ? accident.latitude + 0.0085 : accident.latitude);
+  const volTargetLng = volStoredHosp?.longitude ?? (isVolTransporting ? accident.longitude - 0.0062 : accident.longitude);
+
+  const volPrevPosRef = useRef<[number, number] | null>(null);
+
   useEffect(() => {
     const loadVolunteerRoute = async () => {
       if (volLat === null || volLng === null) {
@@ -1179,36 +1205,31 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
         return;
       }
 
+      if (volPrevPosRef.current) {
+        const moveDist = calculateHaversineDistance(
+          volPrevPosRef.current[0],
+          volPrevPosRef.current[1],
+          volLat,
+          volLng
+        );
+        if (moveDist < 5 && volunteerRoute.length > 0) {
+          return;
+        }
+      }
+
+      volPrevPosRef.current = [volLat, volLng];
       setLoadingRoute(true);
-      const res = await fetchOSRMRoute([volLat, volLng], [accident.latitude, accident.longitude]);
+      const res = await fetchOSRMRoute([volLat, volLng], [volTargetLat, volTargetLng]);
       setVolunteerRoute(res.coordinates);
-      setDistanceMeters(res.distanceMeters > 0 ? res.distanceMeters : 420);
-      setDurationSeconds(res.durationSeconds > 0 ? res.durationSeconds : 180);
+      setDistanceMeters(res.distanceMeters < 30 ? 0 : res.distanceMeters);
+      setDurationSeconds(res.distanceMeters < 30 ? 0 : res.durationSeconds);
       setLoadingRoute(false);
     };
 
     loadVolunteerRoute();
-  }, [volLat, volLng, accident.latitude, accident.longitude]);
+  }, [volLat, volLng, volTargetLat, volTargetLng]);
 
-  const handleUpdateMissionStatus = async (newStatus: string) => {
-    setUpdatingStatus(true);
-    setAccident((prev) => ({ ...prev, status: newStatus }));
 
-    if (activeAccidentId && activeAccidentId !== 'default-accident') {
-      const { error } = await supabase
-        .from('accidents')
-        .update({ status: newStatus })
-        .eq('id', activeAccidentId);
-
-      if (error) {
-        console.warn('[RescueLink Status Update] Warning:', error.message);
-      }
-    }
-
-    setUpdatingStatus(false);
-    setCopiedToast(`Status updated: ${newStatus}`);
-    setTimeout(() => setCopiedToast(null), 3000);
-  };
 
   const toggleSimulation = () => {
     if (isSimulating) {
@@ -1227,7 +1248,8 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
         if (step >= totalSteps) {
           clearInterval(simulationIntervalRef.current!);
           setIsSimulating(false);
-          handleUpdateMissionStatus('Arrived at Scene');
+          setCopiedToast('Arrived at Destination Point');
+          setTimeout(() => setCopiedToast(null), 3000);
           return;
         }
 
@@ -1397,11 +1419,13 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
             </Marker>
           )}
 
-          <Marker position={accidentPos} icon={destinationIcon}>
+          <Marker position={[volTargetLat, volTargetLng]} icon={destinationIcon}>
             <Popup>
               <div className="p-1 text-xs font-sans">
-                <strong className="text-blue-600 block font-bold">Destination Incident Point</strong>
-                <span>Target Incident Location</span>
+                <strong className="text-blue-600 block font-bold">
+                  {volStoredHosp ? `🏥 Hospital: ${volStoredHosp.name}` : 'Destination Incident Point'}
+                </strong>
+                <span>{volStoredHosp ? volStoredHosp.address : displayAddress}</span>
               </div>
             </Popup>
           </Marker>
@@ -1499,10 +1523,10 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
               </div>
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-900/90 px-2 py-0.5 rounded-full border border-amber-700">
-                  Active Rescue Mission
+                  {volStoredHosp ? '🏥 Hospital Transport' : 'Active Rescue Mission'}
                 </span>
                 <h2 className="text-xs font-extrabold text-amber-100 mt-1">
-                  Target Victim Location: {displayAddress}
+                  {volStoredHosp ? `Hospital: ${volStoredHosp.name}` : `Target Victim Location: ${displayAddress}`}
                 </h2>
               </div>
             </div>
@@ -1528,7 +1552,7 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
             </div>
 
             <p className="text-xs font-medium text-zinc-200 leading-relaxed">
-              {accident.description ||
+              {cleanDescriptionText(accident.description) ||
                 'Two vehicles collided near traffic signal. Victim requires immediate first aid and transport.'}
             </p>
 
@@ -1554,7 +1578,7 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
                 Fastest ETA
               </span>
               <span className="text-base font-black text-amber-400 mt-1 block">
-                {formatETA(durationSeconds)}
+                {formatETA(durationSeconds, distanceMeters)}
               </span>
             </div>
 
@@ -1568,97 +1592,38 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
             </div>
           </div>
 
-          {/* Volunteer Mission Action Buttons */}
-          <div className="space-y-2 pt-1">
-            <p className="text-[11px] font-black text-amber-400 uppercase tracking-wider">
-              Update Mission Workflow Status:
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('En Route')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'En Route' || accident.status === 'In Progress'
-                    ? 'bg-amber-500 text-zinc-950 ring-2 ring-amber-300 font-black'
-                    : 'bg-zinc-800 text-amber-400 hover:bg-zinc-700 border border-amber-800/60'
-                }`}
-              >
-                <NavigationIcon className="w-4 h-4" />
-                <span>Start Navigation</span>
-              </button>
+          {/* Dedicated Selected Hospital Card */}
+          {(() => {
+            const hosp = getStoredHospital(activeAccidentId);
+            if (!hosp && accident.status !== 'Transporting to Hospital') return null;
 
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('Arrived at Scene')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'Arrived at Scene'
-                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-300 font-black'
-                    : 'bg-zinc-800 text-emerald-400 hover:bg-zinc-700 border border-emerald-800/60'
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Arrived Scene</span>
-              </button>
+            const name = hosp?.name || 'Government Medical College Hospital';
+            const address = hosp?.address || '120 Healthcare Plaza, Sector 4';
+            const distMeters = distanceMeters;
+            const etaSecs = durationSeconds;
 
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('Victim Picked Up')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'Victim Picked Up'
-                    ? 'bg-cyan-600 text-white ring-2 ring-cyan-300 font-black'
-                    : 'bg-zinc-800 text-cyan-400 hover:bg-zinc-700 border border-cyan-800/60'
-                }`}
-              >
-                <User className="w-4 h-4" />
-                <span>Victim Picked</span>
-              </button>
+            return (
+              <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-3.5 rounded-2xl border border-blue-700/80 shadow-md space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase text-blue-100 bg-blue-800 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1">
+                    <HospitalIcon className="w-3.5 h-3.5" />
+                    Selected Hospital
+                  </span>
+                  <span className="text-[11px] font-bold text-blue-200">Destination</span>
+                </div>
+                <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 pt-0.5">
+                  <span>🏥</span>
+                  <span>{name}</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-blue-100 font-semibold pt-1 border-t border-blue-700/60">
+                  <span className="truncate">📍 {address}</span>
+                  <span>📏 {formatDistance(distMeters)}</span>
+                  <span>⏱ {formatETA(etaSecs)}</span>
+                </div>
+              </div>
+            );
+          })()}
 
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('Hospital Transfer')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'Hospital Transfer'
-                    ? 'bg-blue-600 text-white ring-2 ring-blue-300 font-black'
-                    : 'bg-zinc-800 text-blue-400 hover:bg-zinc-700 border border-blue-800/60'
-                }`}
-              >
-                <HospitalIcon className="w-4 h-4" />
-                <span>To Hospital</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('Hospital Reached')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'Hospital Reached'
-                    ? 'bg-indigo-600 text-white ring-2 ring-indigo-300 font-black'
-                    : 'bg-zinc-800 text-indigo-400 hover:bg-zinc-700 border border-indigo-800/60'
-                }`}
-              >
-                <Check className="w-4 h-4" />
-                <span>Hospital Reached</span>
-              </button>
-
-              <button
-                type="button"
-                disabled={updatingStatus}
-                onClick={() => handleUpdateMissionStatus('Emergency Resolved')}
-                className={`p-3 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md ${
-                  accident.status === 'Emergency Resolved'
-                    ? 'bg-red-600 text-white ring-2 ring-red-300 font-black'
-                    : 'bg-zinc-800 text-red-400 hover:bg-zinc-700 border border-red-800/60'
-                }`}
-              >
-                <Flame className="w-4 h-4" />
-                <span>Resolve Emergency</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

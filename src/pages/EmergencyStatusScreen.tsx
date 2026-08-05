@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2 } from 'lucide-react';
+import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
+import { getStoredHospital, cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
 
 interface AccidentRecord {
   id: string;
@@ -145,25 +146,114 @@ export const EmergencyStatusScreen: React.FC = () => {
     });
   };
 
-  const eta = 4;
-
-  const getTimelineSteps = (status: string, createdAt: string) => {
-    const isVolunteerAssigned = ['Volunteer Assigned', 'Ambulance Requested', 'Ambulance Dispatched', 'Hospital Notified', 'Emergency Resolved'].includes(status);
-    const isAmbulanceRequested = ['Ambulance Requested', 'Ambulance Dispatched', 'Hospital Notified', 'Emergency Resolved'].includes(status);
-    const isAmbulanceDispatched = ['Ambulance Dispatched', 'Hospital Notified', 'Emergency Resolved'].includes(status);
-    const isHospitalNotified = ['Hospital Notified', 'Emergency Resolved'].includes(status);
-    const isResolved = status === 'Emergency Resolved';
-
-    return [
-      { title: 'SOS Broadcast Triggered', time: formatReportedTime(createdAt), completed: true },
-      { title: 'Volunteer Responder Assigned', time: isVolunteerAssigned ? 'Assigned' : 'Pending', completed: isVolunteerAssigned },
-      { title: 'Ambulance Unit Requested', time: isAmbulanceRequested ? 'Requested' : 'Pending', completed: isAmbulanceRequested },
-      { title: 'Ambulance En Route', time: isAmbulanceDispatched ? 'Dispatched' : 'Pending', completed: isAmbulanceDispatched },
-      { title: isResolved ? 'Emergency Resolved' : isHospitalNotified ? 'Hospital Emergency Room Notified' : 'Arrived at Emergency Scene', time: isResolved ? 'Completed' : `Est. ${eta} mins`, completed: isResolved || isHospitalNotified },
-    ];
+  const getStatusStageIndex = (status: string): number => {
+    switch (status) {
+      case 'Assigned':
+      case 'Volunteer Assigned':
+        return 0; // Stage 1: Volunteer Assigned
+      case 'En Route':
+      case 'Volunteer En Route':
+        return 1; // Stage 2: Volunteer En Route
+      case 'Arrived at Scene':
+      case 'Volunteer Arrived at Scene':
+        return 2; // Stage 3: Volunteer Arrived at Scene
+      case 'Transporting to Hospital':
+      case 'Hospital Transfer':
+      case 'To Hospital':
+        return 3; // Stage 4: Transporting to Hospital
+      case 'Hospital Reached':
+        return 4; // Stage 5: Hospital Reached
+      case 'Emergency Resolved':
+        return 5; // Stage 6: Emergency Resolved
+      default:
+        return -1; // Pending Volunteer Assignment
+    }
   };
 
-  const timelineSteps = accident ? getTimelineSteps(accident.status, accident.created_at) : [];
+  const getTimelineSteps = (status: string) => {
+    const stages = [
+      'Volunteer Assigned',
+      'Volunteer En Route',
+      'Volunteer Arrived at Scene',
+      'Transporting to Hospital',
+      'Hospital Reached',
+      'Emergency Resolved',
+    ];
+
+    const currentIdx = getStatusStageIndex(status);
+
+    return stages.map((title, idx) => ({
+      title,
+      completed: idx <= currentIdx,
+      isCurrent: idx === currentIdx,
+    }));
+  };
+
+  const timelineSteps = accident ? getTimelineSteps(accident.status) : [];
+
+  // Realtime ETA calculation via OSRM / Haversine
+  const [liveDistanceMeters, setLiveDistanceMeters] = useState<number | null>(null);
+  const [liveDurationSeconds, setLiveDurationSeconds] = useState<number | null>(null);
+  const citizenPrevPosRef = React.useRef<[number, number] | null>(null);
+
+  const storedHosp = getStoredHospital(accident?.id);
+  const isTransporting = accident?.status === 'Transporting to Hospital' || !!storedHosp;
+
+  const targetLat = storedHosp?.latitude ?? (isTransporting ? (accident?.latitude || 0) + 0.0085 : (accident?.latitude || 0));
+  const targetLng = storedHosp?.longitude ?? (isTransporting ? (accident?.longitude || 0) - 0.0062 : (accident?.longitude || 0));
+
+  const volLat = accident?.volunteer_latitude;
+  const volLng = accident?.volunteer_longitude;
+
+  useEffect(() => {
+    if (!accident || volLat === null || volLat === undefined || volLng === null || volLng === undefined) {
+      return;
+    }
+
+    if (citizenPrevPosRef.current) {
+      const moveDist = calculateHaversineDistance(
+        citizenPrevPosRef.current[0],
+        citizenPrevPosRef.current[1],
+        volLat,
+        volLng
+      );
+      if (moveDist < 5 && liveDistanceMeters !== null) {
+        return;
+      }
+    }
+
+    citizenPrevPosRef.current = [volLat, volLng];
+
+    const updateLiveETA = async () => {
+      const res = await fetchOSRMRoute([volLat, volLng], [targetLat, targetLng]);
+      if (res.distanceMeters < 30) {
+        setLiveDistanceMeters(0);
+        setLiveDurationSeconds(0);
+      } else {
+        setLiveDistanceMeters(res.distanceMeters);
+        setLiveDurationSeconds(res.durationSeconds);
+      }
+    };
+
+    updateLiveETA();
+  }, [volLat, volLng, targetLat, targetLng, accident?.id]);
+
+  const getEtaDisplay = (): string => {
+    if (!accident) return 'Pending';
+    if (accident.status === 'Emergency Resolved') return 'Resolved';
+    if (accident.status === 'Hospital Reached') return 'Arrived';
+    if (accident.status === 'Arrived at Scene' && !isTransporting) return 'Arrived';
+
+    if (liveDurationSeconds !== null && liveDistanceMeters !== null) {
+      return formatETA(liveDurationSeconds, liveDistanceMeters);
+    }
+    if (volLat !== null && volLat !== undefined && volLng !== null && volLng !== undefined) {
+      const dist = calculateHaversineDistance(volLat, volLng, targetLat, targetLng);
+      const estSecs = (dist / 1000 / 40) * 3600;
+      return formatETA(estSecs, dist);
+    }
+    return 'Calculating...';
+  };
 
   // Calculate straight-line Haversine distance when both sets of coordinates exist
   const hasAccidentCoords = accident?.latitude !== null && accident?.latitude !== undefined && accident?.longitude !== null && accident?.longitude !== undefined;
@@ -172,17 +262,13 @@ export const EmergencyStatusScreen: React.FC = () => {
   let calculatedDistanceDisplay: string | null = null;
 
   if (hasAccidentCoords && hasVolunteerCoords && accident) {
-    const distMeters = calculateHaversineDistance(
+    const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
       Number(accident.latitude),
       Number(accident.longitude),
       Number(accident.volunteer_latitude),
       Number(accident.volunteer_longitude)
     );
     calculatedDistanceDisplay = formatDistance(distMeters);
-
-    console.log('[RescueLink Haversine Distance] Accident coordinates:', { lat: accident.latitude, lng: accident.longitude });
-    console.log('[RescueLink Haversine Distance] Volunteer coordinates:', { lat: accident.volunteer_latitude, lng: accident.volunteer_longitude });
-    console.log('[RescueLink Haversine Distance] Calculated distance:', calculatedDistanceDisplay, `(${distMeters.toFixed(1)} meters)`);
   }
 
   return (
@@ -238,7 +324,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 <div>
                   <p className="text-xs text-blue-100 font-medium">Estimated Arrival Time</p>
                   <h2 className="text-3xl font-extrabold tracking-tight mt-0.5">
-                    {accident.status === 'Emergency Resolved' ? 'Resolved' : `${eta} Minutes`}
+                    {getEtaDisplay()}
                   </h2>
                 </div>
                 <div className="text-right">
@@ -269,6 +355,54 @@ export const EmergencyStatusScreen: React.FC = () => {
                 }`}></div>
               </div>
             </div>
+
+            {/* Incident Description */}
+            {accident.description && cleanDescriptionText(accident.description) && (
+              <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1">
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">
+                  Accident Incident Details
+                </span>
+                <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
+                  {cleanDescriptionText(accident.description)}
+                </p>
+              </div>
+            )}
+
+            {/* Dedicated Selected Hospital Card */}
+            {(() => {
+              const hosp = getStoredHospital(accident.id);
+              if (!hosp && accident.status !== 'Transporting to Hospital') return null;
+
+              const hospName = hosp?.name || 'Government Medical College Hospital';
+              const hospAddress = hosp?.address || '120 Healthcare Plaza, Sector 4';
+              const distMeters = hosp?.distanceMeters || 2400;
+              const etaSecs = (distMeters / 1000 / 40) * 3600;
+
+              return (
+                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1">
+                      <Hospital className="w-3.5 h-3.5" />
+                      Selected Hospital
+                    </span>
+                    <span className="text-xs text-blue-200 font-bold">Destination</span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-extrabold text-white flex items-center gap-1.5 pt-0.5">
+                      <span>🏥</span>
+                      <span>{hospName}</span>
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-blue-100 font-semibold pt-2 border-t border-blue-800/60">
+                    <span className="truncate">📍 {hospAddress}</span>
+                    <span>📏 {formatDistance(distMeters)}</span>
+                    <span>⏱ {formatETA(etaSecs)}</span>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Interactive Google Map Box with Live Volunteer Tracking Marker */}
             <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/50 p-4 shadow-level-1 space-y-3">
@@ -339,27 +473,81 @@ export const EmergencyStatusScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Progress Timeline */}
-            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
-              <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Dispatch Progress Timeline</h3>
+            {/* Citizen Emergency Progress Timeline */}
+            <div className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-primary" />
+                  <span>Citizen Emergency Progress Timeline</span>
+                </h3>
+                <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+                  Realtime Tracking
+                </span>
+              </div>
 
               <div className="space-y-4 pt-1">
-                {timelineSteps.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-3 relative">
-                    {idx !== timelineSteps.length - 1 && (
-                      <div className={`absolute left-2.5 top-5 bottom-0 w-0.5 ${step.completed ? 'bg-emerald-500' : 'bg-surface-container-high'}`}></div>
-                    )}
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0 z-10 ${
-                      step.completed ? 'bg-emerald-500 text-white' : 'bg-surface-container-high text-on-surface-variant'
-                    }`}>
-                      {step.completed ? '✓' : idx + 1}
+                {timelineSteps.map((step, idx) => {
+                  const isCompleted = step.completed;
+                  const isCurrent = step.isCurrent;
+
+                  return (
+                    <div key={idx} className="flex items-start gap-3.5 relative">
+                      {idx !== timelineSteps.length - 1 && (
+                        <div
+                          className={`absolute left-3 top-6 bottom-0 w-0.5 transition-colors duration-300 ${
+                            isCompleted && !isCurrent ? 'bg-emerald-500' : 'bg-surface-container-high'
+                          }`}
+                        ></div>
+                      )}
+
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 z-10 font-bold transition-all ${
+                          isCurrent
+                            ? 'bg-emerald-600 text-white ring-4 ring-emerald-400/30 shadow-md animate-pulse'
+                            : isCompleted
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-surface-container-high text-on-surface-variant/60'
+                        }`}
+                      >
+                        {isCompleted ? '✓' : idx + 1}
+                      </div>
+
+                      <div className="flex-1 flex justify-between items-center text-xs py-0.5">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`transition-colors ${
+                              isCurrent
+                                ? 'text-emerald-700 font-extrabold text-xs'
+                                : isCompleted
+                                ? 'text-on-surface font-bold'
+                                : 'text-on-surface-variant/60 font-medium'
+                            }`}
+                          >
+                            {step.title}
+                          </span>
+                          {isCurrent && (
+                            <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
+                              Current Stage
+                            </span>
+                          )}
+                        </div>
+
+                        <span
+                          className={`text-[10px] font-semibold ${
+                            isCurrent
+                              ? 'text-emerald-600 font-bold'
+                              : isCompleted
+                              ? 'text-emerald-700'
+                              : 'text-on-surface-variant/50'
+                          }`}
+                        >
+                          {isCurrent ? 'In Progress' : isCompleted ? 'Completed' : 'Pending'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex-1 flex justify-between items-center text-xs">
-                      <span className={`font-semibold ${step.completed ? 'text-on-surface' : 'text-on-surface-variant'}`}>{step.title}</span>
-                      <span className="text-[10px] text-on-surface-variant/70 font-medium">{step.time}</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

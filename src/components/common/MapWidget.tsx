@@ -230,20 +230,11 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
       </div>
 
       {/* Address Bar */}
-      <div className="flex items-center justify-between text-xs bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/40">
-        <div className="flex items-center gap-1.5 text-on-surface font-semibold truncate flex-1 pr-2">
+      <div className="flex items-center text-xs bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/40">
+        <div className="flex items-center gap-1.5 text-on-surface font-semibold truncate flex-1">
           <MapPin className="w-4 h-4 text-primary shrink-0" />
           <span className="truncate">{address}</span>
         </div>
-        {showNavigateBtn && (
-          <button
-            onClick={handleOpenNavigation}
-            className="text-xs font-bold text-secondary flex items-center gap-1 hover:underline shrink-0"
-          >
-            <Navigation className="w-3.5 h-3.5" />
-            <span>Open Maps</span>
-          </button>
-        )}
       </div>
     </div>
   );
