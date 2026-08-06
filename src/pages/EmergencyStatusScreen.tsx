@@ -62,14 +62,17 @@ export const EmergencyStatusScreen: React.FC = () => {
           .select('*')
           .eq('reporter_id', user.id);
 
-        if (locationState?.accidentId) {
+        const searchParams = new URLSearchParams(location.search);
+        const targetAccidentId = locationState?.accidentId || searchParams.get('accidentId');
+
+        if (targetAccidentId) {
           const { data: specificData } = await supabase
             .from('accidents')
             .select('*')
-            .eq('id', locationState.accidentId)
+            .eq('id', targetAccidentId)
             .single();
 
-          if (specificData && isActiveStatus(specificData.status)) {
+          if (specificData) {
             setAccident(specificData);
             setLoading(false);
             return;
