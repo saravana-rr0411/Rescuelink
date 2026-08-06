@@ -65,18 +65,20 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
 
         <button 
           onClick={() => navigate('/profile')}
-          className="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center"
+          className="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center shrink-0"
           aria-label="User Profile"
         >
           {avatarUrl ? (
             <img
               src={avatarUrl}
               alt="User Avatar"
-              className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/30 shadow-xs"
+              loading="lazy"
+              decoding="async"
+              className="w-8 h-8 rounded-full object-cover shrink-0 aspect-square ring-2 ring-primary/30 shadow-xs"
             />
           ) : (
-            <div className="p-1.5 rounded-full bg-surface-container-high border border-outline-variant/60">
-              <User className="w-5 h-5 text-on-surface-variant" />
+            <div className="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant/60 shrink-0 aspect-square flex items-center justify-center">
+              <User className="w-4.5 h-4.5 text-on-surface-variant shrink-0" />
             </div>
           )}
         </button>

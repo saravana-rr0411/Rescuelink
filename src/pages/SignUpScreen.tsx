@@ -111,7 +111,7 @@ export const SignUpScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface px-6 py-6 space-y-6">
+    <div className="flex flex-col min-h-full bg-surface px-6 py-6 space-y-6">
       {/* Top Navigation Back */}
       <div className="flex items-center gap-3">
         <button

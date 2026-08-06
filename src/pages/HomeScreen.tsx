@@ -5,6 +5,7 @@ import { SOSButton } from '../components/ui/SOSButton';
 import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPin, Clock, ChevronRight, Loader2, Radio, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { CardSkeleton } from '../components/common/SkeletonLoader';
 
 interface AccidentRecord {
   id: string;
@@ -194,7 +195,7 @@ export const HomeScreen: React.FC = () => {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar />
 
       <main className="flex-1 px-4 py-4 space-y-6">
@@ -247,9 +248,10 @@ export const HomeScreen: React.FC = () => {
           </div>
 
           {loading ? (
-            <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/50 text-center space-y-2">
-              <Loader2 className="w-6 h-6 text-primary animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-on-surface-variant">Loading live emergency alerts...</p>
+            <div className="space-y-3">
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
             </div>
           ) : accidents.length === 0 ? (
             /* Friendly empty state */
@@ -264,7 +266,7 @@ export const HomeScreen: React.FC = () => {
                 <div
                   key={incident.id}
                   onClick={() => navigate('/status', { state: { accidentId: incident.id, mode: 'citizen' } })}
-                  className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-level-1 hover:shadow-level-2 transition-all cursor-pointer group"
+                  className="bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-level-1 hover:shadow-level-2 transition-all cursor-pointer group animate-card-enter"
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
@@ -275,7 +277,9 @@ export const HomeScreen: React.FC = () => {
                         {incident.address}
                       </h3>
                     </div>
-                    <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase ${
+                    <span
+                      key={incident.status}
+                      className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase animate-badge-pop ${
                       incident.status === 'Reported' || !incident.volunteer_id
                         ? 'bg-amber-100 text-amber-900 border border-amber-300'
                         : 'bg-blue-100 text-blue-900'

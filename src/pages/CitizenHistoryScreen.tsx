@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getStoredHospital } from '../utils/routing';
+import { formatSupabaseError } from '../utils/locationGuard';
+import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import {
   Clock,
   MapPin,
-  Loader2,
   ChevronRight,
   UserCheck,
   Hospital as HospitalIcon,
   CheckCircle2,
-  FileText,
+  History,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 
 interface HistoryAccidentRecord {
@@ -40,68 +43,71 @@ export const CitizenHistoryScreen: React.FC = () => {
 
   const [historyItems, setHistoryItems] = useState<HistoryAccidentRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  useEffect(() => {
-    async function fetchCitizenHistory() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('accidents')
-          .select('*')
-          .eq('reporter_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.warn('[RescueLink Citizen History] Fetch error:', error.message);
-          setHistoryItems([]);
-        } else if (data && data.length > 0) {
-          // Fetch volunteer profile names for items with assigned volunteer_id
-          const volunteerIds = Array.from(
-            new Set(data.map((item) => item.volunteer_id).filter(Boolean))
-          ) as string[];
-
-          let volunteerProfilesMap: Record<string, string> = {};
-
-          if (volunteerIds.length > 0) {
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('auth_user_id, full_name')
-              .in('auth_user_id', volunteerIds);
-
-            if (profiles) {
-              profiles.forEach((p) => {
-                if (p.auth_user_id && p.full_name) {
-                  volunteerProfilesMap[p.auth_user_id] = p.full_name;
-                }
-              });
-            }
-          }
-
-          const enriched = data.map((item) => ({
-            ...item,
-            volunteer_name: item.volunteer_id
-              ? volunteerProfilesMap[item.volunteer_id] || 'Assigned Responder'
-              : undefined,
-          }));
-
-          setHistoryItems(enriched);
-        } else {
-          setHistoryItems([]);
-        }
-      } catch (err) {
-        console.error('[RescueLink Citizen History] Unexpected error:', err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchCitizenHistory = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
     }
 
-    fetchCitizenHistory();
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      const { data, error } = await supabase
+        .from('accidents')
+        .select('*')
+        .eq('reporter_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setErrorMessage(formatSupabaseError(error, 'Failed to load accident history. Please try again.'));
+        setHistoryItems([]);
+      } else if (data && data.length > 0) {
+        // Fetch volunteer profile names for items with assigned volunteer_id
+        const volunteerIds = Array.from(
+          new Set(data.map((item) => item.volunteer_id).filter(Boolean))
+        ) as string[];
+
+        let volunteerProfilesMap: Record<string, string> = {};
+
+        if (volunteerIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('auth_user_id, full_name')
+            .in('auth_user_id', volunteerIds);
+
+          if (profiles) {
+            profiles.forEach((p) => {
+              if (p.auth_user_id && p.full_name) {
+                volunteerProfilesMap[p.auth_user_id] = p.full_name;
+              }
+            });
+          }
+        }
+
+        const enriched = data.map((item) => ({
+          ...item,
+          volunteer_name: item.volunteer_id
+            ? volunteerProfilesMap[item.volunteer_id] || 'Assigned Responder'
+            : undefined,
+        }));
+
+        setHistoryItems(enriched);
+      } else {
+        setHistoryItems([]);
+      }
+    } catch (err) {
+      console.error('[RescueLink Citizen History] Unexpected error:', err);
+      setErrorMessage('Failed to load accident history. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchCitizenHistory();
+  }, [fetchCitizenHistory]);
 
   const formatDate = (isoString: string): string => {
     if (!isoString) return 'N/A';
@@ -134,35 +140,41 @@ export const CitizenHistoryScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
+    <div className="flex flex-col min-h-full bg-surface">
       <Navbar title="Accident History" showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
-        {loading ? (
-          <div className="p-8 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
-            <p className="text-xs font-semibold text-on-surface-variant">
-              Loading incident history...
-            </p>
-          </div>
-        ) : historyItems.length === 0 ? (
-          <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/50 shadow-level-1 text-center space-y-4 my-6">
-            <div className="w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center mx-auto">
-              <FileText className="w-8 h-8 text-outline" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-on-surface">No History Available</h2>
-              <p className="text-xs text-on-surface-variant max-w-xs mx-auto">
-                You haven't reported any emergency incidents yet. Previous reports will appear here.
-              </p>
+        {errorMessage && (
+          <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-xs font-semibold text-rose-900 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{errorMessage}</span>
             </div>
             <button
-              onClick={() => navigate('/report')}
-              className="px-6 py-3 bg-primary text-white font-extrabold text-xs rounded-xl shadow-level-1 hover:bg-primary-hover transition-colors"
+              onClick={fetchCitizenHistory}
+              className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 transition-colors"
             >
-              Report Emergency Now
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry</span>
             </button>
           </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-4">
+            <SpinnerLoader message="Loading incident history..." />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : historyItems.length === 0 ? (
+          <EmptyState
+            icon={History}
+            title="No accident history yet."
+            description="You haven't reported any emergency incidents yet. Previous reports will appear here."
+            actionText="Report Emergency Now"
+            onAction={() => navigate('/report')}
+          />
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
@@ -179,7 +191,7 @@ export const CitizenHistoryScreen: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className="bg-surface-container-lowest p-4.5 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3 transition-all hover:shadow-level-2"
+                  className="bg-surface-container-lowest p-4.5 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3 transition-all hover:shadow-level-2 animate-card-enter"
                 >
                   {/* Top Info Bar */}
                   <div className="flex items-center justify-between">
@@ -187,7 +199,8 @@ export const CitizenHistoryScreen: React.FC = () => {
                       {item.severity} PRIORITY
                     </span>
                     <span
-                      className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                      key={item.status}
+                      className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-badge-pop ${
                         isCompleted
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -243,7 +256,7 @@ export const CitizenHistoryScreen: React.FC = () => {
                   {/* View Details Button */}
                   <button
                     onClick={() => navigate(`/history/${item.id}`)}
-                    className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 active:scale-95"
+                    className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 btn-press"
                   >
                     <span>View Details</span>
                     <ChevronRight className="w-4 h-4" />

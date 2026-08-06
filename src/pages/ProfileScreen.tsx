@@ -256,7 +256,7 @@ export const ProfileScreen: React.FC = () => {
   const displayMedicalConditions = profile?.medical_conditions && profile.medical_conditions.trim() !== '' ? profile.medical_conditions : 'Not Provided';
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar title="Medical Passport & Profile" showBack />
 
       {/* Hidden File Picker Input for Avatar Upload */}
@@ -291,20 +291,20 @@ export const ProfileScreen: React.FC = () => {
             {/* Interactive Clickable Avatar */}
             <div
               onClick={() => avatarInputRef.current?.click()}
-              className="relative w-16 h-16 rounded-full border-2 border-primary/20 shrink-0 cursor-pointer group flex items-center justify-center overflow-hidden bg-primary-fixed text-primary font-extrabold text-xl uppercase shadow-xs hover:border-primary transition-colors"
+              className="relative w-16 h-16 rounded-full border-2 border-primary/20 shrink-0 aspect-square cursor-pointer group flex items-center justify-center overflow-hidden bg-primary-fixed text-primary font-extrabold text-xl uppercase shadow-xs hover:border-primary transition-colors"
               title="Tap to change profile picture"
             >
               {uploadingAvatar ? (
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <Loader2 className="w-6 h-6 animate-spin text-primary shrink-0" />
               ) : profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt={displayName} className="w-full h-full object-cover" />
+                <img src={profile.avatar_url} alt={displayName} loading="lazy" decoding="async" className="w-full h-full object-cover shrink-0 rounded-full aspect-square" />
               ) : (
                 <span>{displayName.slice(0, 2)}</span>
               )}
 
               {/* Camera Icon Overlay */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                <Camera className="w-5 h-5" />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-full">
+                <Camera className="w-5 h-5 shrink-0" />
               </div>
             </div>
 

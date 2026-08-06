@@ -89,7 +89,7 @@ export interface MapWidgetProps {
   mode?: 'citizen' | 'volunteer';
 }
 
-export const MapWidget: React.FC<MapWidgetProps> = ({
+const MapWidgetComponent: React.FC<MapWidgetProps> = ({
   accidentId,
   latitude,
   longitude,
@@ -240,6 +240,8 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
     </div>
   );
 };
+
+export const MapWidget = React.memo(MapWidgetComponent);
 
 // Backwards compatibility re-export
 export const GoogleMapWidget = MapWidget;

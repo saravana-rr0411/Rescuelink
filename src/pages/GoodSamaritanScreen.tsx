@@ -5,7 +5,7 @@ import { Scale, ShieldCheck, FileText, PhoneCall, CheckCircle } from 'lucide-rea
 
 export const GoodSamaritanScreen: React.FC = () => {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar title="Good Samaritan Rights" showBack />
 
       <main className="flex-1 px-4 py-4 space-y-5">

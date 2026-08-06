@@ -6,7 +6,7 @@ import { Search, HeartPulse, Droplet, Flame, Wind, AlertTriangle, BookOpen, Cloc
 export const FirstAidGuideScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [expandedId, setExpandedId] = useState<string>('fa-1');
+  const [expandedId, setExpandedId] = useState<string>('');
 
   const categories = [
     { id: 'all', name: 'All 10 Modules' },
@@ -62,7 +62,7 @@ export const FirstAidGuideScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar title="First Aid Handbook" showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">

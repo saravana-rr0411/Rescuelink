@@ -142,7 +142,7 @@ export const EmergencyActionScreen: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
+    <div className="flex flex-col min-h-full bg-surface">
       {/* Top Header Navbar */}
       <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high px-4 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3">
@@ -193,7 +193,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Call Ambulance (108) */}
               <div
                 onClick={() => handleCall('108')}
-                className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity"
+                className="bg-gradient-to-r from-red-700 to-rose-800 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity btn-press"
               >
                 <div className="flex items-center space-x-3.5">
                   <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -217,7 +217,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Call Police (100) */}
               <div
                 onClick={() => handleCall('100')}
-                className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity"
+                className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity btn-press"
               >
                 <div className="flex items-center space-x-3.5">
                   <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -242,7 +242,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Nearby Hospitals Button */}
               <button
                 onClick={handleOpenHospitals}
-                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group"
+                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group btn-press"
               >
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <HospitalIcon className="w-5 h-5 text-emerald-700" />

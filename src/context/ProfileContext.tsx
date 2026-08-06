@@ -53,6 +53,35 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (data) {
         setProfile(data as UserProfile);
         return data as UserProfile;
+      } else {
+        // First-time login (e.g. Google OAuth): Auto-create user profile in Supabase
+        const defaultProfile: UserProfile = {
+          auth_user_id: user.id,
+          full_name:
+            user.user_metadata?.full_name ||
+            user.user_metadata?.name ||
+            (user.email ? user.email.split('@')[0] : 'RescueLink User'),
+          phone_number: user.user_metadata?.phone_number || '',
+          blood_group: 'O-',
+          emergency_contact_name: '',
+          emergency_contact_phone: '',
+          emergency_contact_relation: '',
+          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        };
+
+        const { data: createdData, error: createError } = await supabase
+          .from('profiles')
+          .upsert(defaultProfile, { onConflict: 'auth_user_id' })
+          .select()
+          .single();
+
+        if (!createError && createdData) {
+          setProfile(createdData as UserProfile);
+          return createdData as UserProfile;
+        } else {
+          setProfile(defaultProfile);
+          return defaultProfile;
+        }
       }
     } catch (err) {
       console.error('[RescueLink ProfileContext] Unexpected error fetching profile:', err);

@@ -4,12 +4,15 @@ import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
 import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
 import { saveStoredHospital, getStoredHospital, cleanDescriptionText, formatETA, getStatusRank } from '../utils/routing';
 import { formatDistance } from '../utils/distance';
+import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
+import { Inbox } from 'lucide-react';
 
 interface AccidentRecord {
   id: string;
@@ -31,6 +34,7 @@ interface AccidentRecord {
 export const VolunteerDashboardScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { profile, avatarUrl } = useProfile();
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Data States
@@ -69,26 +73,40 @@ export const VolunteerDashboardScreen: React.FC = () => {
     });
   };
 
+  const isFinishedStatus = (status?: string | null): boolean => {
+    if (!status) return false;
+    const s = status.trim();
+    return (
+      s === 'Emergency Completed' ||
+      s === 'Emergency Resolved' ||
+      s === 'Completed' ||
+      s === 'Problem Resolved' ||
+      s === 'Resolved'
+    );
+  };
+
   // 1. Fetch both unassigned reported accidents and assigned volunteer missions on open
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
       try {
-        console.log('[RescueLink Volunteer] Fetching accident feeds from Supabase...');
+        console.log('[RescueLink Volunteer] Fetching active accident feeds from Supabase...');
         
-        // Fetch active non-resolved reported accidents
+        // Fetch only active non-completed reported accidents directly from Supabase
         const { data: reportedData, error: reportedError } = await supabase
           .from('accidents')
           .select('*')
-          .neq('status', 'Emergency Resolved')
+          .not('status', 'in', '("Emergency Completed","Emergency Resolved","Completed","Problem Resolved","Resolved")')
           .order('created_at', { ascending: false });
 
         if (reportedError) {
           console.warn('[RescueLink Volunteer] Error fetching reported accidents:', reportedError.message);
         } else if (reportedData) {
-          setIncidents(reportedData.filter((item) => item.volunteer_id !== user?.id));
+          const activeOnly = reportedData.filter((item) => !isFinishedStatus(item.status));
+
+          setIncidents(activeOnly.filter((item) => !item.volunteer_id || item.volunteer_id !== user?.id));
           if (user) {
-            setAssignedMissions(reportedData.filter((item) => item.volunteer_id === user.id));
+            setAssignedMissions(activeOnly.filter((item) => item.volunteer_id === user.id));
           }
         }
       } catch (err) {
@@ -117,26 +135,38 @@ export const VolunteerDashboardScreen: React.FC = () => {
         (payload) => {
           console.log('[RescueLink Realtime] Volunteer dashboard received event:', payload.eventType, payload);
 
+          if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any)?.id;
+            if (deletedId) {
+              setIncidents((prev) => prev.filter((item) => item.id !== deletedId));
+              setAssignedMissions((prev) => prev.filter((m) => m.id !== deletedId));
+            }
+            return;
+          }
+
           const newRecord = payload.new as AccidentRecord;
+          if (!newRecord) return;
 
           if (payload.eventType === 'INSERT') {
-            if (newRecord && (newRecord.status === 'SOS Sent' || newRecord.status === 'Reported' || newRecord.status === 'Pending')) {
-              setIncidents((prev) => {
-                if (prev.some((item) => item.id === newRecord.id)) return prev;
-                return [newRecord, ...prev];
-              });
+            if (!isFinishedStatus(newRecord.status)) {
+              if (!newRecord.volunteer_id || newRecord.volunteer_id !== user?.id) {
+                setIncidents((prev) => {
+                  if (prev.some((item) => item.id === newRecord.id)) return prev;
+                  return [newRecord, ...prev];
+                });
+              }
             }
           } else if (payload.eventType === 'UPDATE') {
-            if (!newRecord) return;
-
-            const isFinished = newRecord.status === 'Emergency Completed' || newRecord.status === 'Emergency Resolved' || newRecord.status === 'Completed';
+            if (isFinishedStatus(newRecord.status)) {
+              // Immediately remove completed/resolved incident across all connected dashboards
+              setIncidents((prev) => prev.filter((item) => item.id !== newRecord.id));
+              setAssignedMissions((prev) => prev.filter((m) => m.id !== newRecord.id));
+              return;
+            }
 
             // Realtime update for nearby alerts feed
             setIncidents((prev) => {
-              if (isFinished) {
-                return prev.filter((item) => item.id !== newRecord.id);
-              }
-              if (user && newRecord.volunteer_id === user.id) {
+              if (newRecord.volunteer_id) {
                 return prev.filter((item) => item.id !== newRecord.id);
               }
               const exists = prev.some((item) => item.id === newRecord.id);
@@ -148,17 +178,13 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
             // Realtime update for current logged-in volunteer's assigned missions
             if (user && newRecord.volunteer_id === user.id) {
-              if (isFinished) {
-                setAssignedMissions((prev) => prev.filter((m) => m.id !== newRecord.id));
-              } else {
-                setAssignedMissions((prev) => {
-                  const exists = prev.some((m) => m.id === newRecord.id);
-                  if (exists) {
-                    return prev.map((m) => (m.id === newRecord.id ? newRecord : m));
-                  }
-                  return [newRecord, ...prev];
-                });
-              }
+              setAssignedMissions((prev) => {
+                const exists = prev.some((m) => m.id === newRecord.id);
+                if (exists) {
+                  return prev.map((m) => (m.id === newRecord.id ? newRecord : m));
+                }
+                return [newRecord, ...prev];
+              });
             } else if (user && newRecord.volunteer_id && newRecord.volunteer_id !== user.id) {
               setAssignedMissions((prev) => prev.filter((m) => m.id !== newRecord.id));
             }
@@ -168,7 +194,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       .subscribe((status, err) => {
         console.log('[RescueLink Realtime] Volunteer dashboard channel subscription status:', status);
         if (err) {
-          console.warn('[RescueLink Realtime] Volunteer dashboard subscription error (falling back to fetch-on-open):', err);
+          console.warn('[RescueLink Realtime] Volunteer dashboard subscription error:', err);
         }
       });
 
@@ -473,7 +499,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-full bg-slate-50">
       <Navbar
         title="Volunteer Responder HQ"
         showBack
@@ -491,28 +517,45 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {/* On Duty Toggle Banner */}
-        <div className={`p-5 rounded-3xl text-white shadow-sm transition-all flex items-center justify-between ${
+        <div className={`p-4 sm:p-5 rounded-3xl text-white shadow-sm transition-all flex items-center justify-between gap-3 ${
           isOnDuty ? 'bg-gradient-to-r from-red-800 to-rose-900' : 'bg-white text-slate-800 border border-slate-200/80'
         }`}>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Radio className={`w-4 h-4 ${isOnDuty ? 'animate-pulse text-rose-200' : 'text-slate-400'}`} />
-              <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
-                {isOnDuty ? 'ON-DUTY BROADCAST ACTIVE' : 'RESPONDER OFF-DUTY'}
-              </span>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/40 shadow-xs flex items-center justify-center bg-rose-700 text-white font-extrabold text-lg aspect-square">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={profile?.full_name || 'Volunteer Avatar'}
+                  className="w-full h-full object-cover shrink-0 rounded-full aspect-square"
+                />
+              ) : (
+                <span>{profile?.full_name?.charAt(0) || 'V'}</span>
+              )}
             </div>
-            <h2 className="text-base font-extrabold">{isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode'}</h2>
-            <p className={`text-xs ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
-              Response Radius: <span className="font-bold">{mockUserProfile.responseRadiusKm} km</span>
-            </p>
+
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <Radio className={`w-3.5 h-3.5 shrink-0 ${isOnDuty ? 'animate-pulse text-rose-200' : 'text-slate-400'}`} />
+                <span className={`text-[10px] font-extrabold uppercase tracking-wider truncate ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
+                  {isOnDuty ? 'ON-DUTY BROADCAST ACTIVE' : 'RESPONDER OFF-DUTY'}
+                </span>
+              </div>
+              <h2 className="text-sm sm:text-base font-extrabold truncate leading-tight">
+                {profile?.full_name || (isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode')}
+              </h2>
+              <p className={`text-[11px] font-medium truncate ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
+                Response Radius: <span className="font-bold">{mockUserProfile.responseRadiusKm} km</span>
+              </p>
+            </div>
           </div>
 
           <button
             onClick={() => setIsOnDuty(!isOnDuty)}
-            className={`px-4 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 ${
+            className={`px-3.5 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 shrink-0 ${
               isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
             }`}
           >
+            {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
           </button>
         </div>
 
@@ -705,7 +748,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   {/* Scene Photo Preview if present */}
                   {mission.photo_url && (
                     <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-32">
-                      <img src={mission.photo_url} alt="Scene Evidence" className="w-full h-28 object-cover" />
+                      <img src={mission.photo_url} alt="Scene Evidence" loading="lazy" decoding="async" className="w-full h-28 object-cover" />
                     </div>
                   )}
 
@@ -845,16 +888,17 @@ export const VolunteerDashboardScreen: React.FC = () => {
               <p className="text-[11px] text-slate-500">Toggle duty switch above to receive emergency alerts.</p>
             </div>
           ) : loading ? (
-            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
-              <Loader2 className="w-6 h-6 text-red-700 animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-slate-500">Loading active emergency alerts...</p>
+            <div className="space-y-4">
+              <SpinnerLoader message="Fetching incidents..." />
+              <CardSkeleton />
+              <CardSkeleton />
             </div>
           ) : incidents.length === 0 ? (
-            <div className="bg-white p-8 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
-              <Radio className="w-8 h-8 text-slate-400 mx-auto" />
-              <p className="text-xs font-bold text-slate-800">No emergency requests available.</p>
-              <p className="text-[11px] text-slate-500">Monitoring live broadcast channel for new reported incidents.</p>
-            </div>
+            <EmptyState
+              icon={Inbox}
+              title="No active incidents."
+              description="There are currently no active emergency alerts in your response area. Stand by for broadcasts."
+            />
           ) : (
             <div className="space-y-4">
               {incidents.map((inc) => {
@@ -909,7 +953,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           Incident Scene Photo
                         </span>
                         <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-40">
-                          <img src={inc.photo_url} alt="Accident Evidence" className="w-full h-36 object-cover" />
+                          <img src={inc.photo_url} alt="Accident Evidence" loading="lazy" decoding="async" className="w-full h-36 object-cover" />
                         </div>
                       </div>
                     )}

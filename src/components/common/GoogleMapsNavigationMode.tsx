@@ -9,6 +9,7 @@ import {
   Ambulance,
   Hospital as HospitalIcon,
   Navigation as NavigationIcon,
+  Loader2,
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { fetchOSRMRoute, formatETA } from '../../utils/routing';
@@ -393,8 +394,16 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   };
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col select-none touch-none bg-slate-100">
+    <div className="relative w-full h-full overflow-hidden flex flex-col select-none touch-none bg-slate-100">
       {/* ========================================================================= */}
+      {/* ROUTE CALCULATION OVERLAY INDICATOR */}
+      {loadingRoute && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[600] bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-slate-700/80 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
+          <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
+          <span>Calculating route...</span>
+        </div>
+      )}
+
       {/* ARRIVAL NOTIFICATION MODAL BANNER */}
       {/* ========================================================================= */}
       {hasArrived && (

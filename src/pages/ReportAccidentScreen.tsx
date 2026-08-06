@@ -4,6 +4,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { Car, Stethoscope, Flame, ShieldAlert, MapPin, Camera, AlertTriangle, Send, Navigation, AlertCircle, CheckCircle, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { isValidGpsCoordinate, formatSupabaseError } from '../utils/locationGuard';
 
 export const ReportAccidentScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +41,15 @@ export const ReportAccidentScreen: React.FC = () => {
         async (pos) => {
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
+
+          if (!isValidGpsCoordinate(lat, lng)) {
+            setLatitude(null);
+            setLongitude(null);
+            setAddress('Unable to determine location');
+            setErrorMessage('Unable to determine your current location. Please enable GPS and try again.');
+            return;
+          }
+
           setLatitude(lat);
           setLongitude(lng);
 
@@ -65,7 +75,7 @@ export const ReportAccidentScreen: React.FC = () => {
           setLatitude(null);
           setLongitude(null);
           setAddress('GPS location unavailable');
-          setErrorMessage('GPS permission denied or location unavailable. Please allow browser location access to report an emergency.');
+          setErrorMessage('Location permission denied. Please enable GPS to continue.');
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
@@ -115,14 +125,19 @@ export const ReportAccidentScreen: React.FC = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    // 1. Validation
-    if (latitude === null || longitude === null) {
-      setErrorMessage('Location error: Real device GPS coordinates are required to submit an emergency report. Please grant GPS permission and click "Refetch GPS".');
+    // 1. Comprehensive Validation
+    if (!isValidGpsCoordinate(latitude, longitude)) {
+      setErrorMessage('Unable to determine your current location. Please enable GPS to continue.');
       return;
     }
 
-    if (!address || address.trim() === '' || address === 'GPS location unavailable' || address === 'GPS not supported') {
-      setErrorMessage('Location address is required.');
+    if (!address || address.trim() === '' || address === 'GPS location unavailable' || address === 'GPS not supported' || address === 'Unable to determine location') {
+      setErrorMessage('Location address is required to submit an emergency report.');
+      return;
+    }
+
+    if (!description || description.trim().length < 3) {
+      setErrorMessage('Please provide a brief description of the incident (at least 3 characters).');
       return;
     }
 
@@ -193,7 +208,7 @@ export const ReportAccidentScreen: React.FC = () => {
 
       if (error) {
         console.error('[RescueLink Database] Supabase accident insert failed. Exact error:', error);
-        setErrorMessage(`Failed to report accident: ${error.message || 'Database error occurred'}`);
+        setErrorMessage(formatSupabaseError(error, 'Failed to save emergency report. Please try again.'));
         setSubmitting(false);
         return;
       }
@@ -222,7 +237,7 @@ export const ReportAccidentScreen: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar title="Report Incident" showBack />
 
       {/* Hidden File Picker Input */}

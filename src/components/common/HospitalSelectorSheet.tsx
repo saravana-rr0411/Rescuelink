@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import type { Hospital } from '../../utils/routing';
 import { fetchNearbyHospitalsOverpass, formatETA } from '../../utils/routing';
 import { formatDistance } from '../../utils/distance';
-import { Hospital as HospitalIcon, MapPin, Clock, Loader2, X, Navigation, Phone, ShieldCheck, Star } from 'lucide-react';
+import { Hospital as HospitalIcon, MapPin, Clock, X, Navigation, Phone, ShieldCheck, Star } from 'lucide-react';
+
+import { SpinnerLoader, EmptyState, HospitalSkeleton } from './SkeletonLoader';
 
 export interface HospitalSelectorSheetProps {
   isOpen: boolean;
@@ -79,17 +81,26 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         {/* Content */}
         <div className="p-4 overflow-y-auto space-y-3 flex-1">
           {loading ? (
-            <div className="py-10 text-center space-y-3">
-              <Loader2 className="w-8 h-8 text-red-800 animate-spin mx-auto" />
-              <p className="text-xs font-bold text-slate-800">Discovering Nearby Emergency Hospitals...</p>
-              <p className="text-[11px] text-slate-500">Searching surrounding medical facilities around incident location.</p>
+            <div className="space-y-3">
+              <SpinnerLoader message="Loading nearby hospitals..." />
+              <HospitalSkeleton />
+              <HospitalSkeleton />
+              <HospitalSkeleton />
             </div>
           ) : hospitals.length === 0 ? (
-            <div className="py-8 text-center space-y-2">
-              <HospitalIcon className="w-8 h-8 text-slate-300 mx-auto" />
-              <p className="text-xs font-bold text-slate-800">No nearby hospitals found.</p>
-              <p className="text-[11px] text-slate-500">No real emergency hospitals discovered within 5 km radius of the accident location.</p>
-            </div>
+            <EmptyState
+              icon={HospitalIcon}
+              title="No nearby hospitals found."
+              description="Could not locate nearby emergency hospitals within 5 km radius of the accident location."
+              actionText="Retry"
+              onAction={() => {
+                setLoading(true);
+                fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude).then((list) => {
+                  setHospitals(list);
+                  setLoading(false);
+                });
+              }}
+            />
           ) : (
             hospitals.map((hosp) => {
               // Speed estimate ~ 40 km/h in city road traffic
@@ -99,7 +110,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               return (
                 <div
                   key={hosp.id}
-                  className={`p-3.5 rounded-2xl border transition-all space-y-3 ${
+                  className={`p-3.5 rounded-2xl border transition-all space-y-3 animate-card-enter ${
                     isSelected
                       ? 'bg-rose-50/50 border-red-700 ring-2 ring-red-700/20 shadow-xs'
                       : 'bg-white border-slate-200/80 hover:border-red-300'

@@ -1,12 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital, Ambulance, Navigation } from 'lucide-react';
+import { MapPin, PhoneCall, AlertCircle, Clock, Loader2, Camera, CheckCircle2, Hospital, Ambulance, Navigation, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 import { getStoredHospital, cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
+import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
+
+const isActiveStatus = (status?: string | null): boolean => {
+  if (!status) return false;
+  const s = status.trim();
+  const inactiveStatuses = [
+    'Emergency Completed',
+    'Emergency Resolved',
+    'Completed',
+    'Problem Resolved',
+    'Resolved',
+  ];
+  return !inactiveStatuses.includes(s);
+};
 
 interface AccidentRecord {
   id: string;
@@ -55,7 +69,7 @@ export const EmergencyStatusScreen: React.FC = () => {
             .eq('id', locationState.accidentId)
             .single();
 
-          if (specificData) {
+          if (specificData && isActiveStatus(specificData.status)) {
             setAccident(specificData);
             setLoading(false);
             return;
@@ -63,14 +77,16 @@ export const EmergencyStatusScreen: React.FC = () => {
         }
 
         const { data, error } = await query
+          .not('status', 'in', '("Emergency Completed","Emergency Resolved","Completed","Problem Resolved","Resolved")')
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (error) {
-          console.warn('[RescueLink Status] Error fetching latest accident report:', error.message);
-        } else if (data) {
-          console.log('[RescueLink Status] Loaded latest accident report from Supabase:', data);
+          console.warn('[RescueLink Status] Error fetching latest active accident report:', error.message);
+          setAccident(null);
+        } else if (data && isActiveStatus(data.status)) {
+          console.log('[RescueLink Status] Loaded active accident report from Supabase:', data);
           setAccident(data);
         } else {
           setAccident(null);
@@ -179,13 +195,37 @@ export const EmergencyStatusScreen: React.FC = () => {
   const getStatusStageIndex = (status: string): number => {
     if (!status) return 0;
     const s = status.trim();
-    if (s === 'Emergency Completed' || s === 'Emergency Resolved' || s === 'Completed') return 6;
+    if (
+      s === 'Emergency Completed' ||
+      s === 'Emergency Resolved' ||
+      s === 'Completed' ||
+      s === 'Problem Resolved' ||
+      s === 'Resolved'
+    )
+      return 6;
     if (s === 'Hospital Reached') return 5;
     if (s === 'Transporting to Hospital' || s === 'Hospital Transfer' || s === 'To Hospital') return 4;
     if (s === 'Volunteer Arrived' || s === 'Arrived at Scene' || s === 'Volunteer Arrived at Scene') return 3;
     if (s === 'Volunteer En Route' || s === 'En Route') return 2;
     if (s === 'Volunteer Assigned' || s === 'Assigned') return 1;
     return 0; // Stage 0: SOS Sent
+  };
+
+  const getProgressPercentage = (status?: string | null): number => {
+    if (!status) return 0;
+    const s = status.trim();
+    if (
+      s === 'Emergency Completed' ||
+      s === 'Emergency Resolved' ||
+      s === 'Completed' ||
+      s === 'Problem Resolved' ||
+      s === 'Resolved'
+    ) {
+      return 100;
+    }
+    const idx = getStatusStageIndex(s);
+    if (idx >= 6) return 100;
+    return Math.min(100, Math.round(((idx + 1) / 7) * 100));
   };
 
   const getTimelineSteps = (status: string) => {
@@ -321,7 +361,7 @@ export const EmergencyStatusScreen: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-full">
       <Navbar
         title="Emergency Live Status"
         showBack
@@ -339,27 +379,17 @@ export const EmergencyStatusScreen: React.FC = () => {
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {loading ? (
-          <div className="p-8 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
-            <p className="text-xs font-semibold text-on-surface-variant">Loading live emergency status...</p>
+          <div className="space-y-4">
+            <SpinnerLoader message="Loading live emergency status..." />
+            <StatusCardSkeleton />
           </div>
-        ) : !accident ? (
-          <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/50 shadow-level-1 text-center space-y-4 my-6">
-            <div className="w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center mx-auto">
-              <ShieldAlert className="w-8 h-8 text-outline" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-on-surface">No active emergency reports.</h2>
-              <p className="text-xs text-on-surface-variant max-w-xs mx-auto">
-                You haven't reported any emergency incidents yet. If an incident occurs, tap below to dispatch emergency units.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/report')}
-              className="px-6 py-3 bg-primary text-white font-extrabold text-xs rounded-xl shadow-level-1 hover:bg-primary-hover transition-colors"
-            >
-              Report Emergency Now
-            </button>
+        ) : !accident || !isActiveStatus(accident.status) ? (
+          <div className="space-y-4 py-4 animate-card-enter">
+            <EmptyState
+              icon={ClipboardCheck}
+              title="No Active Complaints"
+              description="You don't have any active accident reports. You can view your previous reports in History or create a new SOS report if needed."
+            />
           </div>
         ) : (
           <>
@@ -491,9 +521,9 @@ export const EmergencyStatusScreen: React.FC = () => {
               const etaSecs = (distMeters / 1000 / 40) * 3600;
 
               return (
-                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5">
+                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5 animate-card-enter">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1 animate-badge-pop">
                       <Hospital className="w-3.5 h-3.5" />
                       Selected Hospital
                     </span>
@@ -510,7 +540,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                           },
                         })
                       }
-                      className="px-3 py-1 bg-white text-blue-900 font-extrabold text-xs rounded-xl shadow-xs hover:bg-blue-50 transition-colors flex items-center gap-1 active:scale-95"
+                      className="px-3 py-1 bg-white text-blue-900 font-extrabold text-xs rounded-xl shadow-xs hover:bg-blue-50 transition-colors flex items-center gap-1 btn-press"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Navigate</span>
@@ -567,7 +597,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                     Attached Scene Photo
                   </span>
                   <div className="rounded-2xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-48">
-                    <img src={accident.photo_url} alt="Scene Evidence" className="w-full h-44 object-cover" />
+                    <img src={accident.photo_url} alt="Scene Evidence" loading="lazy" decoding="async" className="w-full h-44 object-cover" />
                   </div>
                 </div>
               )}
@@ -579,8 +609,8 @@ export const EmergencyStatusScreen: React.FC = () => {
                 <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Assigned Volunteer Responder</h3>
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base border border-emerald-300">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-11 h-11 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-base border border-emerald-300 shrink-0 aspect-square overflow-hidden">
                       {volunteerProfile?.full_name?.charAt(0) || 'V'}
                     </div>
                     <div>
@@ -628,6 +658,29 @@ export const EmergencyStatusScreen: React.FC = () => {
                   Realtime Tracking
                 </span>
               </div>
+
+              {/* Smooth Animated Progress Bar */}
+              {(() => {
+                const pct = getProgressPercentage(accident.status);
+                return (
+                  <div className="space-y-1.5 bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant/40">
+                    <div className="flex items-center justify-between text-xs font-extrabold text-on-surface">
+                      <span className="flex items-center gap-1.5">
+                        <span>Resolution Progress</span>
+                        <span className="text-outline-variant">•</span>
+                        <span className="text-secondary font-bold">{accident.status}</span>
+                      </span>
+                      <span className="font-black text-emerald-700 text-sm">{pct}%</span>
+                    </div>
+                    <div className="w-full h-3 bg-surface-container-high rounded-full overflow-hidden p-0.5 border border-outline-variant/60">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 rounded-full transition-all duration-500 ease-out shadow-xs"
+                        style={{ width: `${pct}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="space-y-4 pt-1">
                 {timelineSteps.map((step, idx) => {

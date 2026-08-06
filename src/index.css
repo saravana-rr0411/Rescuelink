@@ -4,6 +4,12 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  html, body, #root {
+    height: 100dvh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
   body {
     font-family: 'Inter', sans-serif;
     background-color: #f0edec;
@@ -43,3 +49,103 @@
   background: #906f6c;
   border-radius: 4px;
 }
+
+/* ========================================================================= */
+/* RESCUELINK 60 FPS ACCELERATED UI ANIMATION UTILITIES */
+/* ========================================================================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes badgePop {
+  from {
+    opacity: 0.2;
+    transform: scale(0.93);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+.animate-card-enter {
+  animation: cardEnter 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-badge-pop {
+  animation: badgePop 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes pageFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-page-enter {
+  animation: pageFadeSlide 250ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.btn-press {
+  transition: transform 150ms ease, opacity 150ms ease, background-color 150ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* Material Ripple Effect */
+@keyframes rippleEffect {
+  0% {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-circle {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.45);
+  pointer-events: none;
+  animation: rippleEffect 550ms ease-out forwards;
+}
+

@@ -94,7 +94,7 @@ export const NotificationsScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
+    <div className="flex flex-col min-h-full bg-surface">
       {/* Navbar Header */}
       <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-surface-container-high px-4 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center space-x-3">

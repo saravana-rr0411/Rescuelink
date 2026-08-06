@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import { OfflineBanner } from '../common/OfflineBanner';
 
 interface MobileContainerProps {
   children: React.ReactNode;
@@ -14,13 +15,18 @@ export const MobileContainer: React.FC<MobileContainerProps> = ({ children }) =>
     location.pathname.startsWith('/navigation');
 
   return (
-    <div className="min-h-screen bg-surface-container flex justify-center items-start">
+    <div className="h-[100dvh] w-full bg-surface-container flex justify-center items-center overflow-hidden">
       <div
-        className={`w-full max-w-md min-h-screen bg-surface flex flex-col shadow-2xl relative overflow-x-hidden border-x border-outline-variant/30 ${
-          hideBottomNav ? 'pb-0' : 'pb-20'
-        }`}
+        className="w-full max-w-md h-[100dvh] bg-surface flex flex-col shadow-2xl relative overflow-hidden border-x border-outline-variant/30 animate-page-enter"
       >
-        {children}
+        <OfflineBanner />
+        <div
+          className={`flex-1 overflow-y-auto overflow-x-hidden ${
+            hideBottomNav ? 'pb-0' : 'pb-[calc(5rem+env(safe-area-inset-bottom,0px))]'
+          }`}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

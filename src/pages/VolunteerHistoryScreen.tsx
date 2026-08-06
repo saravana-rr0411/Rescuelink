@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getStoredHospital } from '../utils/routing';
+import { formatSupabaseError } from '../utils/locationGuard';
+import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import {
   Clock,
   MapPin,
-  Loader2,
   ChevronRight,
   User,
   Hospital as HospitalIcon,
   CheckCircle2,
   Award,
+  RefreshCw,
+  AlertCircle,
 } from 'lucide-react';
 
 interface HistoryAccidentRecord {
@@ -40,68 +43,71 @@ export const VolunteerHistoryScreen: React.FC = () => {
 
   const [historyItems, setHistoryItems] = useState<HistoryAccidentRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  useEffect(() => {
-    async function fetchVolunteerHistory() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('accidents')
-          .select('*')
-          .eq('volunteer_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) {
-          console.warn('[RescueLink Volunteer History] Fetch error:', error.message);
-          setHistoryItems([]);
-        } else if (data && data.length > 0) {
-          // Fetch reporter profile names for items with reporter_id
-          const reporterIds = Array.from(
-            new Set(data.map((item) => item.reporter_id).filter(Boolean))
-          ) as string[];
-
-          let reporterProfilesMap: Record<string, string> = {};
-
-          if (reporterIds.length > 0) {
-            const { data: profiles } = await supabase
-              .from('profiles')
-              .select('auth_user_id, full_name')
-              .in('auth_user_id', reporterIds);
-
-            if (profiles) {
-              profiles.forEach((p) => {
-                if (p.auth_user_id && p.full_name) {
-                  reporterProfilesMap[p.auth_user_id] = p.full_name;
-                }
-              });
-            }
-          }
-
-          const enriched = data.map((item) => ({
-            ...item,
-            citizen_name: item.reporter_id
-              ? reporterProfilesMap[item.reporter_id] || 'Anonymous Citizen'
-              : 'Anonymous Citizen',
-          }));
-
-          setHistoryItems(enriched);
-        } else {
-          setHistoryItems([]);
-        }
-      } catch (err) {
-        console.error('[RescueLink Volunteer History] Unexpected error:', err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchVolunteerHistory = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      return;
     }
 
-    fetchVolunteerHistory();
+    setLoading(true);
+    setErrorMessage('');
+    try {
+      const { data, error } = await supabase
+        .from('accidents')
+        .select('*')
+        .eq('volunteer_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        setErrorMessage(formatSupabaseError(error, 'Failed to load mission history. Please try again.'));
+        setHistoryItems([]);
+      } else if (data && data.length > 0) {
+        // Fetch reporter profile names for items with reporter_id
+        const reporterIds = Array.from(
+          new Set(data.map((item) => item.reporter_id).filter(Boolean))
+        ) as string[];
+
+        let reporterProfilesMap: Record<string, string> = {};
+
+        if (reporterIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('auth_user_id, full_name')
+            .in('auth_user_id', reporterIds);
+
+          if (profiles) {
+            profiles.forEach((p) => {
+              if (p.auth_user_id && p.full_name) {
+                reporterProfilesMap[p.auth_user_id] = p.full_name;
+              }
+            });
+          }
+        }
+
+        const enriched = data.map((item) => ({
+          ...item,
+          citizen_name: item.reporter_id
+            ? reporterProfilesMap[item.reporter_id] || 'Anonymous Citizen'
+            : 'Anonymous Citizen',
+        }));
+
+        setHistoryItems(enriched);
+      } else {
+        setHistoryItems([]);
+      }
+    } catch (err) {
+      console.error('[RescueLink Volunteer History] Unexpected error:', err);
+      setErrorMessage('Failed to load mission history. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchVolunteerHistory();
+  }, [fetchVolunteerHistory]);
 
   const formatDate = (isoString: string): string => {
     if (!isoString) return 'N/A';
@@ -137,35 +143,41 @@ export const VolunteerHistoryScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface">
+    <div className="flex flex-col min-h-full bg-surface">
       <Navbar title="Volunteer Mission History" showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
-        {loading ? (
-          <div className="p-8 text-center space-y-3">
-            <Loader2 className="w-8 h-8 text-secondary animate-spin mx-auto" />
-            <p className="text-xs font-semibold text-on-surface-variant">
-              Loading mission history...
-            </p>
-          </div>
-        ) : historyItems.length === 0 ? (
-          <div className="bg-surface-container-lowest p-8 rounded-3xl border border-outline-variant/50 shadow-level-1 text-center space-y-4 my-6">
-            <div className="w-16 h-16 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center mx-auto">
-              <Award className="w-8 h-8 text-outline" />
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-base font-extrabold text-on-surface">No History Available</h2>
-              <p className="text-xs text-on-surface-variant max-w-xs mx-auto">
-                You haven't completed any rescue missions yet. Accepted emergency alerts will appear here.
-              </p>
+        {errorMessage && (
+          <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-xs font-semibold text-rose-900 flex items-center justify-between gap-3 animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <span>{errorMessage}</span>
             </div>
             <button
-              onClick={() => navigate('/volunteer')}
-              className="px-6 py-3 bg-secondary text-white font-extrabold text-xs rounded-xl shadow-level-1 hover:bg-secondary/90 transition-colors"
+              onClick={fetchVolunteerHistory}
+              className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 transition-colors"
             >
-              Go to Volunteer Dashboard
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Retry</span>
             </button>
           </div>
+        )}
+
+        {loading ? (
+          <div className="space-y-4">
+            <SpinnerLoader message="Loading rescue history..." />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : historyItems.length === 0 ? (
+          <EmptyState
+            icon={Award}
+            title="No rescue history yet."
+            description="You haven't completed any rescue missions yet. Accepted emergency alerts will appear here."
+            actionText="Go to Volunteer Dashboard"
+            onAction={() => navigate('/volunteer')}
+          />
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
@@ -182,7 +194,7 @@ export const VolunteerHistoryScreen: React.FC = () => {
               return (
                 <div
                   key={item.id}
-                  className="bg-surface-container-lowest p-4.5 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3 transition-all hover:shadow-level-2"
+                  className="bg-surface-container-lowest p-4.5 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3 transition-all hover:shadow-level-2 animate-card-enter"
                 >
                   {/* Top Info Bar */}
                   <div className="flex items-center justify-between">
@@ -190,7 +202,8 @@ export const VolunteerHistoryScreen: React.FC = () => {
                       {item.severity} SEVERITY
                     </span>
                     <span
-                      className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
+                      key={item.status}
+                      className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-badge-pop ${
                         isCompleted
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           : 'bg-blue-50 text-blue-700 border border-blue-200'
@@ -217,11 +230,11 @@ export const VolunteerHistoryScreen: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs bg-surface-container-low p-3 rounded-2xl border border-outline-variant/40">
                     <div>
                       <span className="text-[10px] font-bold text-on-surface-variant block uppercase tracking-wider">
-                        Citizen Victim
+                        Citizen Reporter
                       </span>
                       <span className="font-extrabold text-on-surface flex items-center gap-1 mt-0.5 truncate">
                         <User className="w-3.5 h-3.5 text-primary shrink-0" />
-                        <span className="truncate">{item.citizen_name || 'Anonymous'}</span>
+                        <span className="truncate">{item.citizen_name || 'Citizen'}</span>
                       </span>
                     </div>
 
@@ -231,13 +244,13 @@ export const VolunteerHistoryScreen: React.FC = () => {
                       </span>
                       <span className="font-extrabold text-on-surface flex items-center gap-1 mt-0.5 truncate">
                         <HospitalIcon className="w-3.5 h-3.5 text-tertiary shrink-0" />
-                        <span className="truncate">{hosp?.name || 'Not Selected'}</span>
+                        <span className="truncate">{hosp?.name || 'Not Assigned'}</span>
                       </span>
                     </div>
 
                     <div className="col-span-2 pt-1 border-t border-outline-variant/40 flex items-center justify-between text-[11px]">
-                      <span className="text-on-surface-variant font-medium">Total Response Time</span>
-                      <span className="font-extrabold text-emerald-700">
+                      <span className="text-on-surface-variant font-medium">Rescue Time</span>
+                      <span className="font-extrabold text-secondary">
                         ⏱ {calculateTotalResponseTime(item)}
                       </span>
                     </div>
@@ -246,9 +259,9 @@ export const VolunteerHistoryScreen: React.FC = () => {
                   {/* View Details Button */}
                   <button
                     onClick={() => navigate(`/volunteer/history/${item.id}`)}
-                    className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 active:scale-95"
+                    className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 btn-press"
                   >
-                    <span>View Details</span>
+                    <span>View Mission Record</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

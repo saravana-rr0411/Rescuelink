@@ -1,15 +1,15 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Activity, PlusCircle, Users, BookOpen, User } from 'lucide-react';
+import { House, Activity, PlusCircle, Ambulance, BookOpen, User } from 'lucide-react';
 
-export const BottomNavigation: React.FC = () => {
+const BottomNavigationComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { path: '/', label: 'Home', icon: Home },
+    { path: '/', label: 'Home', icon: House },
     { path: '/status', label: 'Status', icon: Activity },
-    { path: '/volunteer', label: 'Volunteer', icon: Users },
+    { path: '/volunteer', label: 'Volunteer', icon: Ambulance },
     { path: '/first-aid', label: 'First Aid', icon: BookOpen },
     { path: '/profile', label: 'Profile', icon: User },
   ];
@@ -20,7 +20,10 @@ export const BottomNavigation: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-surface/95 backdrop-blur-lg border-t border-surface-container-high z-50 px-2 py-2 shadow-level-3">
+    <div 
+      className="fixed bottom-0 left-0 right-0 mx-auto w-full max-w-md bg-surface/95 backdrop-blur-lg border-t border-surface-container-high z-50 px-2 py-2 shadow-level-3"
+      style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0.5rem))' }}
+    >
       <div className="flex items-center justify-around">
         {navItems.slice(0, 2).map((item) => {
           const Icon = item.icon;
@@ -74,3 +77,5 @@ export const BottomNavigation: React.FC = () => {
     </div>
   );
 };
+
+export const BottomNavigation = React.memo(BottomNavigationComponent);

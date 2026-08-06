@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
@@ -6,21 +6,24 @@ import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { MobileContainer } from './components/layout/MobileContainer';
 import { BottomNavigation } from './components/layout/BottomNavigation';
-import { HomeScreen } from './pages/HomeScreen';
-import { LoginScreen } from './pages/LoginScreen';
-import { SignUpScreen } from './pages/SignUpScreen';
-import { ReportAccidentScreen } from './pages/ReportAccidentScreen';
-import { EmergencyStatusScreen } from './pages/EmergencyStatusScreen';
-import { FirstAidGuideScreen } from './pages/FirstAidGuideScreen';
-import { GoodSamaritanScreen } from './pages/GoodSamaritanScreen';
-import { VolunteerDashboardScreen } from './pages/VolunteerDashboardScreen';
-import { ProfileScreen } from './pages/ProfileScreen';
-import { LiveNavigationScreen } from './pages/LiveNavigationScreen';
-import { EmergencyActionScreen } from './pages/EmergencyActionScreen';
-import { NotificationsScreen } from './pages/NotificationsScreen';
-import { CitizenHistoryScreen } from './pages/CitizenHistoryScreen';
-import { VolunteerHistoryScreen } from './pages/VolunteerHistoryScreen';
-import { HistoryDetailsScreen } from './pages/HistoryDetailsScreen';
+import { SpinnerLoader } from './components/common/SkeletonLoader';
+
+// Lazy-loaded page components for bundle optimization & instant route transitions
+const HomeScreen = lazy(() => import('./pages/HomeScreen').then((m) => ({ default: m.HomeScreen })));
+const LoginScreen = lazy(() => import('./pages/LoginScreen').then((m) => ({ default: m.LoginScreen })));
+const SignUpScreen = lazy(() => import('./pages/SignUpScreen').then((m) => ({ default: m.SignUpScreen })));
+const ReportAccidentScreen = lazy(() => import('./pages/ReportAccidentScreen').then((m) => ({ default: m.ReportAccidentScreen })));
+const EmergencyStatusScreen = lazy(() => import('./pages/EmergencyStatusScreen').then((m) => ({ default: m.EmergencyStatusScreen })));
+const FirstAidGuideScreen = lazy(() => import('./pages/FirstAidGuideScreen').then((m) => ({ default: m.FirstAidGuideScreen })));
+const GoodSamaritanScreen = lazy(() => import('./pages/GoodSamaritanScreen').then((m) => ({ default: m.GoodSamaritanScreen })));
+const VolunteerDashboardScreen = lazy(() => import('./pages/VolunteerDashboardScreen').then((m) => ({ default: m.VolunteerDashboardScreen })));
+const ProfileScreen = lazy(() => import('./pages/ProfileScreen').then((m) => ({ default: m.ProfileScreen })));
+const LiveNavigationScreen = lazy(() => import('./pages/LiveNavigationScreen').then((m) => ({ default: m.LiveNavigationScreen })));
+const EmergencyActionScreen = lazy(() => import('./pages/EmergencyActionScreen').then((m) => ({ default: m.EmergencyActionScreen })));
+const NotificationsScreen = lazy(() => import('./pages/NotificationsScreen').then((m) => ({ default: m.NotificationsScreen })));
+const CitizenHistoryScreen = lazy(() => import('./pages/CitizenHistoryScreen').then((m) => ({ default: m.CitizenHistoryScreen })));
+const VolunteerHistoryScreen = lazy(() => import('./pages/VolunteerHistoryScreen').then((m) => ({ default: m.VolunteerHistoryScreen })));
+const HistoryDetailsScreen = lazy(() => import('./pages/HistoryDetailsScreen').then((m) => ({ default: m.HistoryDetailsScreen })));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -32,30 +35,32 @@ const AppContent: React.FC = () => {
 
   return (
     <MobileContainer>
-      <Routes>
-        {/* Public Auth Routes */}
-        <Route path="/login" element={<LoginScreen />} />
-        <Route path="/signup" element={<SignUpScreen />} />
+      <Suspense fallback={<SpinnerLoader message="Loading RescueLink..." />}>
+        <Routes>
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<LoginScreen />} />
+          <Route path="/signup" element={<SignUpScreen />} />
 
-        {/* Protected Application Routes */}
-        <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-        <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
-        <Route path="/emergency" element={<ProtectedRoute><EmergencyActionScreen /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
-        <Route path="/report" element={<ProtectedRoute><ReportAccidentScreen /></ProtectedRoute>} />
-        <Route path="/status" element={<ProtectedRoute><EmergencyStatusScreen /></ProtectedRoute>} />
-        <Route path="/history" element={<ProtectedRoute><CitizenHistoryScreen /></ProtectedRoute>} />
-        <Route path="/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
-        <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
-        <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
-        <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
-        <Route path="/volunteer/history" element={<ProtectedRoute><VolunteerHistoryScreen /></ProtectedRoute>} />
-        <Route path="/volunteer/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
-        <Route path="/navigation" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
-        <Route path="/navigation/:accidentId" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
-        <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
-      </Routes>
+          {/* Protected Application Routes */}
+          <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
+          <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
+          <Route path="/emergency" element={<ProtectedRoute><EmergencyActionScreen /></ProtectedRoute>} />
+          <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
+          <Route path="/report" element={<ProtectedRoute><ReportAccidentScreen /></ProtectedRoute>} />
+          <Route path="/status" element={<ProtectedRoute><EmergencyStatusScreen /></ProtectedRoute>} />
+          <Route path="/history" element={<ProtectedRoute><CitizenHistoryScreen /></ProtectedRoute>} />
+          <Route path="/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
+          <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
+          <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
+          <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
+          <Route path="/volunteer/history" element={<ProtectedRoute><VolunteerHistoryScreen /></ProtectedRoute>} />
+          <Route path="/volunteer/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
+          <Route path="/navigation" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
+          <Route path="/navigation/:accidentId" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
+          <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
+        </Routes>
+      </Suspense>
       {!hideBottomNav && <BottomNavigation />}
     </MobileContainer>
   );

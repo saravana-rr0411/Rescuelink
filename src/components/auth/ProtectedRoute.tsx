@@ -13,7 +13,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 space-y-4 text-center">
+      <div className="min-h-full bg-surface flex flex-col items-center justify-center p-6 space-y-4 text-center">
         <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center animate-spin">
           <ShieldAlert className="w-6 h-6" />
         </div>
