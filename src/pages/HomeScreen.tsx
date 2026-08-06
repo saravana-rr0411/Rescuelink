@@ -103,7 +103,7 @@ export const HomeScreen: React.FC = () => {
     });
   };
 
-  // 1. Fetch initial active accidents where status != 'Emergency Resolved'
+  // 1. Fetch initial active accidents where status is not completed
   useEffect(() => {
     async function fetchActiveAccidents() {
       setLoading(true);
@@ -113,6 +113,7 @@ export const HomeScreen: React.FC = () => {
           .from('accidents')
           .select('*')
           .neq('status', 'Emergency Resolved')
+          .neq('status', 'Emergency Completed')
           .order('created_at', { ascending: false });
 
         if (error) {
@@ -147,9 +148,10 @@ export const HomeScreen: React.FC = () => {
         (payload) => {
           console.log('[RescueLink Home Realtime] Event payload received:', payload.eventType, payload);
           const newRecord = payload.new as AccidentRecord;
+          const isFinished = newRecord?.status === 'Emergency Completed' || newRecord?.status === 'Emergency Resolved' || newRecord?.status === 'Completed';
 
           if (payload.eventType === 'INSERT') {
-            if (newRecord && newRecord.status !== 'Emergency Resolved') {
+            if (newRecord && !isFinished) {
               setAccidents((prev) => {
                 if (prev.some((a) => a.id === newRecord.id)) return prev;
                 return [newRecord, ...prev];
@@ -157,7 +159,7 @@ export const HomeScreen: React.FC = () => {
             }
           } else if (payload.eventType === 'UPDATE') {
             if (!newRecord) return;
-            if (newRecord.status === 'Emergency Resolved') {
+            if (isFinished) {
               // Resolved accidents disappear automatically
               setAccidents((prev) => prev.filter((a) => a.id !== newRecord.id));
             } else {

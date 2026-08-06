@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
 import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall } from 'lucide-react';
@@ -28,6 +29,7 @@ interface AccidentRecord {
 }
 
 export const VolunteerDashboardScreen: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [isOnDuty, setIsOnDuty] = useState(true);
 
@@ -118,7 +120,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
           const newRecord = payload.new as AccidentRecord;
 
           if (payload.eventType === 'INSERT') {
-            if (newRecord && newRecord.status === 'Reported') {
+            if (newRecord && (newRecord.status === 'SOS Sent' || newRecord.status === 'Reported' || newRecord.status === 'Pending')) {
               setIncidents((prev) => {
                 if (prev.some((item) => item.id === newRecord.id)) return prev;
                 return [newRecord, ...prev];
@@ -127,9 +129,11 @@ export const VolunteerDashboardScreen: React.FC = () => {
           } else if (payload.eventType === 'UPDATE') {
             if (!newRecord) return;
 
+            const isFinished = newRecord.status === 'Emergency Completed' || newRecord.status === 'Emergency Resolved' || newRecord.status === 'Completed';
+
             // Realtime update for nearby alerts feed
             setIncidents((prev) => {
-              if (newRecord.status === 'Emergency Resolved') {
+              if (isFinished) {
                 return prev.filter((item) => item.id !== newRecord.id);
               }
               if (user && newRecord.volunteer_id === user.id) {
@@ -144,7 +148,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
             // Realtime update for current logged-in volunteer's assigned missions
             if (user && newRecord.volunteer_id === user.id) {
-              if (newRecord.status === 'Emergency Resolved') {
+              if (isFinished) {
                 setAssignedMissions((prev) => prev.filter((m) => m.id !== newRecord.id));
               } else {
                 setAssignedMissions((prev) => {
@@ -285,10 +289,11 @@ export const VolunteerDashboardScreen: React.FC = () => {
       }
 
       const updatePayload: any = {
-        status: 'Assigned',
+        status: 'Volunteer Assigned',
         volunteer_id: user.id,
         volunteer_latitude: pos.lat,
         volunteer_longitude: pos.lng,
+        accepted_at: new Date().toISOString(),
       };
 
       // Atomic Update: Only update if volunteer_id IS NULL
@@ -354,9 +359,20 @@ export const VolunteerDashboardScreen: React.FC = () => {
     try {
       console.log(`[RescueLink Volunteer] Updating accident ${accidentId} status to: ${newStatus}`);
 
+      const nowIso = new Date().toISOString();
+      const statusPayload: any = { status: newStatus };
+
+      if (newStatus === 'Volunteer Arrived' || newStatus === 'Arrived at Scene') {
+        statusPayload.arrived_at = nowIso;
+      } else if (newStatus === 'Hospital Reached') {
+        statusPayload.hospital_reached_at = nowIso;
+      } else if (newStatus === 'Emergency Completed' || newStatus === 'Emergency Resolved') {
+        statusPayload.completed_at = nowIso;
+      }
+
       const { data, error } = await supabase
         .from('accidents')
-        .update({ status: newStatus })
+        .update(statusPayload)
         .eq('id', accidentId)
         .select()
         .single();
@@ -377,7 +393,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       setAssignedMissions((prev) =>
         prev
           .map((m) => (m.id === accidentId ? { ...m, status: newStatus } : m))
-          .filter((m) => newStatus !== 'Emergency Resolved' || m.id !== accidentId)
+          .filter((m) => newStatus !== 'Emergency Resolved' && newStatus !== 'Emergency Completed' || m.id !== accidentId)
       );
 
       // Automatically trigger Hospital Selector when Arrived at Scene
@@ -420,6 +436,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
         .update({
           status: 'Transporting to Hospital',
           description: cleanDesc,
+          transported_at: new Date().toISOString(),
         })
         .eq('id', missionId)
         .select()
@@ -457,7 +474,20 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
-      <Navbar title="Volunteer Responder HQ" showBack />
+      <Navbar
+        title="Volunteer Responder HQ"
+        showBack
+        rightAction={
+          <button
+            onClick={() => navigate('/volunteer/history')}
+            className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-full border border-outline-variant/60 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+            aria-label="View Volunteer History"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>History</span>
+          </button>
+        }
+      />
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {/* On Duty Toggle Banner */}
@@ -679,69 +709,114 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Status Action Buttons (Strictly One-Way Progression) */}
+                  {/* Status Action Buttons (Strictly One-Way 7-Stage Progression) */}
                   <div className="pt-3 border-t border-slate-100 space-y-2.5">
                     <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                      {mission.status === 'Emergency Resolved' ? 'Mission Status:' : 'Next Mission Action:'}
+                      {getStatusRank(mission.status) >= 7 ? 'Mission Status:' : 'Next Mission Action:'}
                     </p>
 
-                    {/* Stage 1: En Route -> Next is Arrived at Scene */}
-                    {getStatusRank(mission.status) <= 1 && (
+                    {/* Stage 2: Volunteer Assigned -> Next is Start Navigation (Volunteer En Route) */}
+                    {getStatusRank(mission.status) <= 2 && (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
-                        onClick={() => handleUpdateStatus(mission.id, 'Arrived at Scene')}
-                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        onClick={() => {
+                          handleUpdateStatus(mission.id, 'Volunteer En Route');
+                          navigate(`/navigation/${mission.id}`, {
+                            state: {
+                              accidentId: mission.id,
+                              latitude: mission.latitude,
+                              longitude: mission.longitude,
+                              address: mission.address,
+                              severity: mission.severity,
+                              mode: 'volunteer',
+                            },
+                          });
+                        }}
+                        className="w-full p-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
-                        <CheckSquare className="w-4 h-4" />
-                        <span>Arrived at Scene</span>
+                        {updatingStatusId === mission.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Navigation className="w-4 h-4" />
+                        )}
+                        <span>Start Navigation (Volunteer En Route)</span>
                       </button>
                     )}
 
-                    {/* Stage 2: Arrived at Scene -> Next is Select Destination Hospital */}
-                    {getStatusRank(mission.status) === 2 && (
+                    {/* Stage 3: Volunteer En Route -> Next is Mark Arrived */}
+                    {getStatusRank(mission.status) === 3 && (
+                      <button
+                        type="button"
+                        disabled={updatingStatusId === mission.id}
+                        onClick={() => handleUpdateStatus(mission.id, 'Volunteer Arrived')}
+                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                      >
+                        {updatingStatusId === mission.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckSquare className="w-4 h-4" />
+                        )}
+                        <span>Mark Volunteer Arrived at Scene</span>
+                      </button>
+                    )}
+
+                    {/* Stage 4: Volunteer Arrived -> Next is Select Hospital & Start Transport */}
+                    {getStatusRank(mission.status) === 4 && (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
                         onClick={() => setHospitalSheetMission(mission)}
-                        className="w-full p-3 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        className="w-full p-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
-                        <HospitalIcon className="w-4 h-4" />
-                        <span>Select Destination Hospital</span>
+                        {updatingStatusId === mission.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <HospitalIcon className="w-4 h-4" />
+                        )}
+                        <span>Select Hospital & Start Transport</span>
                       </button>
                     )}
 
-                    {/* Stage 3: Transporting to Hospital -> Next is Hospital Reached */}
-                    {getStatusRank(mission.status) === 3 && (
+                    {/* Stage 5: Transporting to Hospital -> Next is Hospital Reached */}
+                    {getStatusRank(mission.status) === 5 && (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
                         onClick={() => handleUpdateStatus(mission.id, 'Hospital Reached')}
                         className="w-full p-3 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
-                        <CheckSquare className="w-4 h-4" />
-                        <span>Hospital Reached</span>
+                        {updatingStatusId === mission.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckSquare className="w-4 h-4" />
+                        )}
+                        <span>Mark Hospital Reached</span>
                       </button>
                     )}
 
-                    {/* Stage 4: Hospital Reached -> Next is Emergency Resolved */}
-                    {getStatusRank(mission.status) === 4 && (
+                    {/* Stage 6: Hospital Reached -> Next is Complete Emergency */}
+                    {getStatusRank(mission.status) === 6 && (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
-                        onClick={() => handleUpdateStatus(mission.id, 'Emergency Resolved')}
-                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        onClick={() => handleUpdateStatus(mission.id, 'Emergency Completed')}
+                        className="w-full p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
-                        <CheckSquare className="w-4 h-4" />
-                        <span>Complete Mission (Emergency Resolved)</span>
+                        {updatingStatusId === mission.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckSquare className="w-4 h-4" />
+                        )}
+                        <span>Complete Emergency</span>
                       </button>
                     )}
 
-                    {/* Stage 5: Emergency Resolved -> No action buttons remain */}
-                    {getStatusRank(mission.status) === 5 && (
+                    {/* Stage 7: Emergency Completed */}
+                    {getStatusRank(mission.status) >= 7 && (
                       <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2">
                         <CheckSquare className="w-4 h-4 text-emerald-600" />
-                        <span>Emergency Resolved</span>
+                        <span>Emergency Completed</span>
                       </div>
                     )}
                   </div>

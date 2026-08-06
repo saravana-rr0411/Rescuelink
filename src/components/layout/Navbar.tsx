@@ -7,9 +7,10 @@ import { useProfile } from '../../context/ProfileContext';
 interface NavbarProps {
   title?: string;
   showBack?: boolean;
+  rightAction?: React.ReactNode;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false }) => {
+export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAction }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount } = useNotifications();
@@ -48,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false }) => {
       </div>
 
       <div className="flex items-center space-x-2">
+        {rightAction}
         <button 
           onClick={() => navigate('/notifications')}
           className="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"

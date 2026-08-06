@@ -18,6 +18,9 @@ import { ProfileScreen } from './pages/ProfileScreen';
 import { LiveNavigationScreen } from './pages/LiveNavigationScreen';
 import { EmergencyActionScreen } from './pages/EmergencyActionScreen';
 import { NotificationsScreen } from './pages/NotificationsScreen';
+import { CitizenHistoryScreen } from './pages/CitizenHistoryScreen';
+import { VolunteerHistoryScreen } from './pages/VolunteerHistoryScreen';
+import { HistoryDetailsScreen } from './pages/HistoryDetailsScreen';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -41,9 +44,13 @@ const AppContent: React.FC = () => {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
         <Route path="/report" element={<ProtectedRoute><ReportAccidentScreen /></ProtectedRoute>} />
         <Route path="/status" element={<ProtectedRoute><EmergencyStatusScreen /></ProtectedRoute>} />
+        <Route path="/history" element={<ProtectedRoute><CitizenHistoryScreen /></ProtectedRoute>} />
+        <Route path="/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
         <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
         <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
         <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
+        <Route path="/volunteer/history" element={<ProtectedRoute><VolunteerHistoryScreen /></ProtectedRoute>} />
+        <Route path="/volunteer/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
         <Route path="/navigation" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
         <Route path="/navigation/:accidentId" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
         <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />

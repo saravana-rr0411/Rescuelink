@@ -177,43 +177,33 @@ export const EmergencyStatusScreen: React.FC = () => {
   };
 
   const getStatusStageIndex = (status: string): number => {
-    switch (status) {
-      case 'Assigned':
-      case 'Volunteer Assigned':
-        return 1;
-      case 'En Route':
-      case 'Volunteer En Route':
-        return 2;
-      case 'Arrived at Scene':
-      case 'Volunteer Arrived at Scene':
-        return 3;
-      case 'Transporting to Hospital':
-      case 'Hospital Transfer':
-      case 'To Hospital':
-        return 4;
-      case 'Hospital Reached':
-        return 5;
-      case 'Emergency Resolved':
-        return 6;
-      default:
-        return 0; // Stage 0: Searching for Volunteer
-    }
+    if (!status) return 0;
+    const s = status.trim();
+    if (s === 'Emergency Completed' || s === 'Emergency Resolved' || s === 'Completed') return 6;
+    if (s === 'Hospital Reached') return 5;
+    if (s === 'Transporting to Hospital' || s === 'Hospital Transfer' || s === 'To Hospital') return 4;
+    if (s === 'Volunteer Arrived' || s === 'Arrived at Scene' || s === 'Volunteer Arrived at Scene') return 3;
+    if (s === 'Volunteer En Route' || s === 'En Route') return 2;
+    if (s === 'Volunteer Assigned' || s === 'Assigned') return 1;
+    return 0; // Stage 0: SOS Sent
   };
 
   const getTimelineSteps = (status: string) => {
     const stages = [
-      'Searching for Volunteer',
-      'Volunteer Assigned',
-      'Volunteer En Route',
-      'Volunteer Arrived at Scene',
-      'Transporting to Hospital',
-      'Emergency Resolved',
+      { title: 'SOS Sent', desc: 'Emergency SOS signal broadcasted to rescue network' },
+      { title: 'Volunteer Assigned', desc: 'Emergency responder claimed dispatch' },
+      { title: 'Volunteer En Route', desc: 'Responder is actively navigating to your location' },
+      { title: 'Volunteer Arrived', desc: 'Responder has arrived at the incident scene' },
+      { title: 'Transporting to Hospital', desc: 'Ambulance transport in progress to trauma center' },
+      { title: 'Hospital Reached', desc: 'Safely arrived at destination hospital' },
+      { title: 'Emergency Completed', desc: 'Medical handoff complete and emergency resolved' },
     ];
 
     const currentIdx = getStatusStageIndex(status);
 
-    return stages.map((title, idx) => ({
-      title,
+    return stages.map((step, idx) => ({
+      title: step.title,
+      desc: step.desc,
       completed: idx <= currentIdx,
       isCurrent: idx === currentIdx,
     }));
@@ -230,10 +220,10 @@ export const EmergencyStatusScreen: React.FC = () => {
 
   // Status Category Guards
   const isEnRoute = accident?.status === 'Assigned' || accident?.status === 'Volunteer Assigned' || accident?.status === 'En Route' || accident?.status === 'Volunteer En Route';
-  const isArrivedOnScene = accident?.status === 'Arrived at Scene' || accident?.status === 'Volunteer Arrived at Scene';
+  const isArrivedOnScene = accident?.status === 'Volunteer Arrived' || accident?.status === 'Arrived at Scene' || accident?.status === 'Volunteer Arrived at Scene';
   const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!storedHosp);
   const isHospitalReached = accident?.status === 'Hospital Reached';
-  const isResolved = accident?.status === 'Emergency Resolved';
+  const isResolved = accident?.status === 'Emergency Completed' || accident?.status === 'Emergency Resolved' || accident?.status === 'Completed';
 
   // Determine Target Coordinates for OSRM Route & ETA:
   // If Transporting to Hospital or Hospital Reached -> Destination is the Hospital Coordinates!
@@ -332,7 +322,20 @@ export const EmergencyStatusScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar title="Emergency Live Status" showBack />
+      <Navbar
+        title="Emergency Live Status"
+        showBack
+        rightAction={
+          <button
+            onClick={() => navigate('/history')}
+            className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-full border border-outline-variant/60 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
+            aria-label="View History"
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>History</span>
+          </button>
+        }
+      />
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {loading ? (
@@ -653,33 +656,44 @@ export const EmergencyStatusScreen: React.FC = () => {
                         {isCompleted ? '✓' : idx + 1}
                       </div>
 
-                      <div className="flex-1 flex justify-between items-center text-xs py-0.5">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`transition-colors ${
-                              isCurrent
-                                ? 'text-emerald-700 font-extrabold text-xs'
-                                : isCompleted
-                                ? 'text-on-surface font-bold'
-                                : 'text-on-surface-variant/60 font-medium'
-                            }`}
-                          >
-                            {step.title}
-                          </span>
-                          {isCurrent && (
-                            <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
-                              Current Stage
+                      <div className="flex-1 flex justify-between items-start text-xs py-0.5 min-w-0">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span
+                              className={`transition-colors ${
+                                isCurrent
+                                  ? 'text-emerald-700 font-black text-xs'
+                                  : isCompleted
+                                  ? 'text-on-surface font-extrabold'
+                                  : 'text-on-surface-variant/60 font-medium'
+                              }`}
+                            >
+                              {step.title}
                             </span>
-                          )}
+                            {isCurrent && (
+                              <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                Current Stage
+                              </span>
+                            )}
+                          </div>
+                          <p className={`text-[11px] leading-tight ${
+                            isCurrent
+                              ? 'text-emerald-800 font-medium'
+                              : isCompleted
+                              ? 'text-on-surface-variant font-normal'
+                              : 'text-on-surface-variant/40 font-normal'
+                          }`}>
+                            {step.desc}
+                          </p>
                         </div>
 
                         <span
-                          className={`text-[10px] font-semibold ${
+                          className={`text-[10px] font-extrabold shrink-0 ml-2 ${
                             isCurrent
-                              ? 'text-emerald-600 font-bold'
+                              ? 'text-emerald-700 font-black'
                               : isCompleted
                               ? 'text-emerald-700'
-                              : 'text-on-surface-variant/50'
+                              : 'text-on-surface-variant/40'
                           }`}
                         >
                           {isCurrent ? 'In Progress' : isCompleted ? 'Completed' : 'Pending'}

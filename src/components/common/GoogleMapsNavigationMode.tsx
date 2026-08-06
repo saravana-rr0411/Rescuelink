@@ -224,8 +224,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const [hasArrived, setHasArrived] = useState<boolean>(false);
   const mapInstanceRef = useRef<L.Map | null>(null);
 
-  // Arrival & Center Refs (Ensures center is used ONLY on mount and arrival triggers properly)
-  const initialStartPosRef = useRef<[number, number]>(userPos);
+  // Arrival & Center Refs (Ensures arrival triggers ONLY after real GPS updates & physical movement)
+  const firstGpsPosRef = useRef<[number, number] | null>(null);
   const initialMapCenterRef = useRef<[number, number]>(userPos);
   const hasReceivedGpsUpdateRef = useRef<boolean>(false);
   const hasUserMovedRef = useRef<boolean>(false);
@@ -248,18 +248,21 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         const newLat = pos.coords.latitude;
         const newLng = pos.coords.longitude;
 
-        // Mark that a live GPS update has been received
-        hasReceivedGpsUpdateRef.current = true;
-
-        // Check if user has physically moved > 15m from starting position
-        const distFromStart = calculateHaversineDistance(
-          initialStartPosRef.current[0],
-          initialStartPosRef.current[1],
-          newLat,
-          newLng
-        );
-        if (distFromStart > 15) {
-          hasUserMovedRef.current = true;
+        // 1. Establish baseline starting position on the FIRST real GPS update
+        if (!firstGpsPosRef.current) {
+          firstGpsPosRef.current = [newLat, newLng];
+          hasReceivedGpsUpdateRef.current = true;
+        } else {
+          // 2. On subsequent updates: check if user has physically moved > 30m from baseline
+          const distFromStart = calculateHaversineDistance(
+            firstGpsPosRef.current[0],
+            firstGpsPosRef.current[1],
+            newLat,
+            newLng
+          );
+          if (distFromStart > 30) {
+            hasUserMovedRef.current = true;
+          }
         }
 
         prevPosRef.current = [newLat, newLng];
@@ -318,7 +321,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       setDurationSeconds(route.durationSeconds);
       setLoadingRoute(false);
 
-      // Arrival detection check: ONLY trigger AFTER navigation active, GPS updates received, user has travelled, and distance <= 30m
+      // Arrival detection check: ONLY trigger AFTER navigation active, real GPS received, user has physically travelled (>30m), and remaining distance <= 30m
       const directDist = calculateHaversineDistance(
         userPos[0],
         userPos[1],
@@ -402,7 +405,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             </div>
             <div>
               <h3 className="text-sm font-black text-white">
-                ✅ You have arrived at the hospital.
+                {destinationType === 'hospital'
+                  ? '✅ You have arrived at the hospital.'
+                  : destinationType === 'accident'
+                  ? '✅ You have arrived at the accident location.'
+                  : '✅ You have arrived at your destination.'}
               </h3>
               <p className="text-xs text-emerald-200 font-medium">{destinationName}</p>
             </div>

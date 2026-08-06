@@ -184,7 +184,7 @@ export const ReportAccidentScreen: React.FC = () => {
             address: address.trim(),
             severity: severity,
             description: description.trim(),
-            status: 'Reported',
+            status: 'SOS Sent',
             photo_url: uploadedPhotoUrl,
           }
         ])

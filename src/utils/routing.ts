@@ -210,28 +210,35 @@ export async function fetchNearbyHospitalsOverpass(
  * Returns numeric hierarchy rank for emergency mission status to enforce strict one-way progression
  */
 export function getStatusRank(status?: string | null): number {
-  if (!status) return 0;
-  switch (status) {
+  if (!status) return 1;
+  const s = status.trim();
+  switch (s) {
+    case 'SOS Sent':
     case 'Reported':
-      return 0;
-    case 'Assigned':
-    case 'Volunteer Assigned':
-    case 'En Route':
-    case 'Volunteer En Route':
+    case 'Pending':
       return 1;
+    case 'Volunteer Assigned':
+    case 'Assigned':
+      return 2;
+    case 'Volunteer En Route':
+    case 'En Route':
+      return 3;
+    case 'Volunteer Arrived':
     case 'Arrived at Scene':
     case 'Volunteer Arrived at Scene':
-      return 2;
+      return 4;
     case 'Transporting to Hospital':
     case 'Hospital Transfer':
     case 'To Hospital':
-      return 3;
-    case 'Hospital Reached':
-      return 4;
-    case 'Emergency Resolved':
       return 5;
+    case 'Hospital Reached':
+      return 6;
+    case 'Emergency Completed':
+    case 'Emergency Resolved':
+    case 'Completed':
+      return 7;
     default:
-      return 0;
+      return 1;
   }
 }
 
