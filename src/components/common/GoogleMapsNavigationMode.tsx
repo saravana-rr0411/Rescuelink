@@ -26,7 +26,10 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom Google Maps-style Navigation Beacon Pin (North-Up)
+// Fixed Navigation Zoom Level (Fixed at 16, zero automatic zoom changes)
+const DEFAULT_FIXED_ZOOM = 16;
+
+// Custom Navigation Beacon Pin (Fixed North-Up)
 const createNavigationUserIcon = () => {
   return L.divIcon({
     className: 'custom-nav-user-pin',
@@ -120,7 +123,6 @@ function getLowerCenterMapTarget(
 interface NavigationMapControllerProps {
   userCoords: [number, number];
   isFollowing: boolean;
-  isMoving: boolean;
   onManualDrag: () => void;
   recenterTrigger: number;
 }
@@ -128,7 +130,6 @@ interface NavigationMapControllerProps {
 const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   userCoords,
   isFollowing,
-  isMoving,
   onManualDrag,
   recenterTrigger,
 }) => {
@@ -143,39 +144,38 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     return () => clearTimeout(timer);
   }, [map]);
 
-  // Attach drag and zoom event listeners to pause follow mode on manual interaction
+  // Attach drag event listener to pause follow mode on manual map interaction
   useEffect(() => {
     const handleUserInteraction = () => {
       onManualDrag();
     };
 
     map.on('dragstart', handleUserInteraction);
-    map.on('zoomstart', handleUserInteraction);
 
     return () => {
       map.off('dragstart', handleUserInteraction);
-      map.off('zoomstart', handleUserInteraction);
     };
   }, [map, onManualDrag]);
 
-  // Dynamic Camera Follow & Lower-Center Panning Engine
+  // Static Camera Follow Engine (No automatic zoom or rotation changes)
   const updateCameraView = useCallback(
     (forceRecenter = false) => {
       if (!isFollowing && !forceRecenter) return;
 
       map.invalidateSize({ pan: false });
-      const targetZoom = isMoving ? 18 : 16;
-      const currentZoom = map.getZoom();
+      const currentZoom = map.getZoom() || DEFAULT_FIXED_ZOOM;
+      const targetCenter = getLowerCenterMapTarget(userCoords, currentZoom);
 
-      const targetCenter = getLowerCenterMapTarget(userCoords, targetZoom);
-
-      if (forceRecenter || Math.abs(currentZoom - targetZoom) >= 1) {
-        map.flyTo(targetCenter, targetZoom, { duration: 0.8, easeLinearity: 0.25 });
+      if (forceRecenter) {
+        map.flyTo(getLowerCenterMapTarget(userCoords, DEFAULT_FIXED_ZOOM), DEFAULT_FIXED_ZOOM, {
+          duration: 0.8,
+          easeLinearity: 0.25,
+        });
       } else {
         map.panTo(targetCenter, { animate: true, duration: 0.35, easeLinearity: 0.25 });
       }
     },
-    [map, userCoords, isFollowing, isMoving]
+    [map, userCoords, isFollowing]
   );
 
   // Trigger continuous camera update whenever user position changes
@@ -228,7 +228,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   // 2. Camera Controls
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
-  const [isMoving, setIsMoving] = useState<boolean>(false);
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
   const [hasArrived, setHasArrived] = useState<boolean>(false);
 
@@ -254,7 +253,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       (pos) => {
         const newLat = pos.coords.latitude;
         const newLng = pos.coords.longitude;
-        const speed = pos.coords.speed || 0; // m/s
 
         // Mark that a live GPS update has been received
         hasReceivedGpsUpdateRef.current = true;
@@ -269,19 +267,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         if (distFromStart > 15) {
           hasUserMovedRef.current = true;
         }
-
-        // Measure distance moved from previous position
-        let moveDist = 0;
-        if (prevPosRef.current) {
-          moveDist = calculateHaversineDistance(
-            prevPosRef.current[0],
-            prevPosRef.current[1],
-            newLat,
-            newLng
-          );
-        }
-
-        setIsMoving(speed > 0.3 || moveDist > 0.8);
 
         prevPosRef.current = [newLat, newLng];
         setUserPos([newLat, newLng]);
@@ -467,12 +452,12 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN MAP CANVAS (100% STATIC NORTH-UP MAP VIEW) */}
+      {/* 2. FULL-SCREEN MAP CANVAS (STATIC FIXED-ZOOM NORTH-UP MAP VIEW) */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
         <MapContainer
           center={renderedPos}
-          zoom={16}
+          zoom={DEFAULT_FIXED_ZOOM}
           zoomControl={false}
           scrollWheelZoom={true}
           className="w-full h-full"
@@ -489,7 +474,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           <NavigationMapController
             userCoords={renderedPos}
             isFollowing={isFollowing}
-            isMoving={isMoving}
             onManualDrag={() => {
               setIsFollowing(false);
             }}
@@ -517,7 +501,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 <strong className="text-blue-600 block font-bold uppercase">
                   Your Live Location
                 </strong>
-                <span>Speed: {isMoving ? 'Moving' : 'Stationary'}</span>
               </div>
             </Popup>
           </Marker>
