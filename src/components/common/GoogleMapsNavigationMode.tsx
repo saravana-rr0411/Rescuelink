@@ -28,8 +28,6 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom Google Maps-style Navigation Arrow Pin (Pulsing navigation beacon)
-// When isHeadingUp is true, container is rotated by -heading. Inside container, rotating chevron by +heading
-// keeps the arrow pointing 100% straight UP to the TOP of the screen always!
 const createNavigationUserIcon = (heading: number, isHeadingUp: boolean) => {
   const displayHeading = isHeadingUp ? heading : heading;
   return L.divIcon({
@@ -121,8 +119,6 @@ function getLowerCenterMapTarget(
   const [lat, lng] = userCoords;
   const rad = Math.PI / 180;
 
-  // Offset distance in meters ahead of user along heading vector.
-  // When isHeadingUp is false (North-Up), offset is straight North.
   const activeHeading = isHeadingUp ? heading : 0;
   const offsetMeters = 160 * Math.pow(2, 16 - zoom);
 
@@ -156,21 +152,25 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
 }) => {
   const map = useMap();
 
-  // Attach manual drag listener to detect user touch/drag
+  // Attach drag and zoom event listeners to pause follow mode on manual interaction
   useEffect(() => {
-    const handleDragStart = () => {
+    const handleUserInteraction = () => {
       onManualDrag();
     };
 
-    map.on('dragstart', handleDragStart);
+    map.on('dragstart', handleUserInteraction);
+    map.on('zoomstart', handleUserInteraction);
+
     return () => {
-      map.off('dragstart', handleDragStart);
+      map.off('dragstart', handleUserInteraction);
+      map.off('zoomstart', handleUserInteraction);
     };
   }, [map, onManualDrag]);
 
   // Dynamic Camera Follow & Lower-Center Panning Engine
   const updateCameraView = useCallback(
     (forceRecenter = false) => {
+      // If user is manually exploring or Navigation Mode is OFF, DO NOT touch or override zoom/view!
       if (!isFollowing && !forceRecenter) return;
 
       map.invalidateSize();
@@ -188,7 +188,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     [map, userCoords, heading, isFollowing, isHeadingUp, isMoving]
   );
 
-  // Trigger continuous camera update whenever user position, heading, or motion changes
+  // Trigger continuous camera update whenever user position, heading, or motion changes (only if follow mode is active)
   useEffect(() => {
     updateCameraView();
   }, [updateCameraView, userCoords, heading, isHeadingUp]);
@@ -255,9 +255,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     return ((diff + 540) % 360) - 180;
   };
 
-  // Real GPS Geolocation Watcher (High-frequency update GPS Navigation)
+  // Real GPS Geolocation Watcher with Heading Deadband & Speed Filter
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
+
+    const HEADING_DEADBAND_DEGREES = 8; // Ignore noise fluctuations < 8 degrees
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
@@ -265,29 +267,44 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         const newLng = pos.coords.longitude;
         const speed = pos.coords.speed || 0; // m/s
 
-        setIsMoving(speed > 0.5);
+        const userIsMoving = speed > 0.8; // > 0.8 m/s (~3 km/h)
+        setIsMoving(userIsMoving);
 
-        // Update heading if provided by device GPS
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
-          setHeading((prev) => prev + getShortestAngleDelta(prev, pos.coords.heading!));
-        } else if (prevPosRef.current) {
-          const moveDist = calculateHaversineDistance(
-            prevPosRef.current[0],
-            prevPosRef.current[1],
-            newLat,
-            newLng
-          );
-          if (moveDist > 1.2) {
-            // Immediate bearing update on >= 1.2m movement
-            const rad = Math.PI / 180;
-            const dLng = (newLng - prevPosRef.current[1]) * rad;
-            const y = Math.sin(dLng) * Math.cos(newLat * rad);
-            const x =
-              Math.cos(prevPosRef.current[0] * rad) * Math.sin(newLat * rad) -
-              Math.sin(prevPosRef.current[0] * rad) * Math.cos(newLat * rad) * Math.cos(dLng);
-            const calcBearing = (Math.atan2(y, x) * 180) / Math.PI;
-            const normalized = (calcBearing + 360) % 360;
-            setHeading((prev) => prev + getShortestAngleDelta(prev, normalized));
+        // Only rotate map when user is actively moving to prevent spinning when stationary
+        if (userIsMoving) {
+          let rawHeading = pos.coords.heading;
+
+          if (rawHeading === null || isNaN(rawHeading)) {
+            if (prevPosRef.current) {
+              const moveDist = calculateHaversineDistance(
+                prevPosRef.current[0],
+                prevPosRef.current[1],
+                newLat,
+                newLng
+              );
+              if (moveDist >= 2.5) {
+                const rad = Math.PI / 180;
+                const dLng = (newLng - prevPosRef.current[1]) * rad;
+                const y = Math.sin(dLng) * Math.cos(newLat * rad);
+                const x =
+                  Math.cos(prevPosRef.current[0] * rad) * Math.sin(newLat * rad) -
+                  Math.sin(prevPosRef.current[0] * rad) * Math.cos(newLat * rad) * Math.cos(dLng);
+                rawHeading = (Math.atan2(y, x) * 180) / Math.PI;
+              }
+            }
+          }
+
+          if (rawHeading !== null && !isNaN(rawHeading)) {
+            const normalized = (rawHeading + 360) % 360;
+            setHeading((prev) => {
+              const delta = getShortestAngleDelta(prev, normalized);
+              // Filter out micro fluctuations under 8 degrees
+              if (Math.abs(delta) < HEADING_DEADBAND_DEGREES) {
+                return prev;
+              }
+              // Smooth exponential interpolation for larger turns
+              return (prev + delta * 0.35 + 360) % 360;
+            });
           }
         }
 
@@ -392,7 +409,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     setRecenterTrigger((prev) => prev + 1);
   };
 
-  // Toggle Navigation Mode (ON: Camera Follow + Auto Rotate, OFF: Static North-Up Manual Map)
+  // Toggle Navigation Mode (ON: Follow + Auto Rotate, OFF: Static North-Up Manual Map)
   const handleToggleNavMode = () => {
     if (isNavModeActive) {
       setIsNavModeActive(false);
@@ -483,13 +500,15 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN HEADING-UP MAP CANVAS (OVERSIZED TO PREVENT BLACK CORNERS) */}
+      {/* 2. FULL-SCREEN HEADING-UP MAP CANVAS (CENTERED OVERSIZED TO PREVENT CROP & BLACK CORNERS) */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
         <div
-          className="w-[160%] h-[160%] -top-[30%] -left-[30%] absolute transition-transform duration-500 ease-out origin-center"
+          className="w-[150%] h-[150%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 absolute transition-transform duration-500 ease-out origin-center"
           style={{
-            transform: isHeadingUp ? `rotate(-${Math.round(heading)}deg)` : 'none',
+            transform: isHeadingUp
+              ? `translate(-50%, -50%) rotate(-${Math.round(heading)}deg)`
+              : 'translate(-50%, -50%)',
           }}
         >
           <MapContainer
@@ -559,7 +578,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         {/* 3. FLOATING MAP OVERLAY CONTROLS (NAVIGATION MODE TOGGLE) */}
         {/* ========================================================================= */}
         <div className="absolute right-4 top-28 z-[500] flex flex-col gap-3">
-          {/* Navigation Mode Toggle Button (ON: Follow + Auto-Rotate, OFF: Static North-Up) */}
+          {/* Navigation Mode Toggle Button (ON: Follow + Auto Rotate, OFF: Static North-Up) */}
           <button
             onClick={handleToggleNavMode}
             className={`p-3.5 rounded-2xl shadow-2xl border transition-all active:scale-95 flex items-center justify-center ${
