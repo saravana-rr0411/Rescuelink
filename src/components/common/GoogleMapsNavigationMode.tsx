@@ -144,22 +144,28 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     return () => clearTimeout(timer);
   }, [map]);
 
-  // Attach drag event listener to pause follow mode on manual map interaction
+  // Attach drag, pinch, zoom, and touch event listeners to pause Camera Follow on ANY manual map interaction
   useEffect(() => {
-    const handleUserInteraction = () => {
-      onManualDrag();
+    const handleUserInteraction = (e: any) => {
+      // Disable Camera Follow if interaction was user-initiated (drag, pinch zoom, manual pan)
+      if (e?.originalEvent || e?.type === 'dragstart' || e?.type === 'zoomstart') {
+        onManualDrag();
+      }
     };
 
     map.on('dragstart', handleUserInteraction);
+    map.on('zoomstart', handleUserInteraction);
 
     return () => {
       map.off('dragstart', handleUserInteraction);
+      map.off('zoomstart', handleUserInteraction);
     };
   }, [map, onManualDrag]);
 
-  // Static Camera Follow Engine (No automatic zoom or rotation changes)
+  // Static Camera Follow Engine (Pan to user position only when isFollowing is true)
   const updateCameraView = useCallback(
     (forceRecenter = false) => {
+      // NEVER automatically pull back to user while Camera Follow is OFF
       if (!isFollowing && !forceRecenter) return;
 
       map.invalidateSize({ pan: false });
@@ -183,7 +189,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     updateCameraView();
   }, [updateCameraView, userCoords]);
 
-  // Recenter signal trigger
+  // Recenter signal trigger when user presses Recenter button
   useEffect(() => {
     if (recenterTrigger > 0) {
       updateCameraView(true);
@@ -226,7 +232,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const [renderedPos, setRenderedPos] = useState<[number, number]>(userPos);
 
-  // 2. Camera Controls
+  // 2. Camera Follow & Auto Center State (Default ON when navigation starts)
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
   const [hasArrived, setHasArrived] = useState<boolean>(false);
@@ -369,7 +375,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     loadRoute();
   }, [userPos, destinationCoords, routePolyline.length, currentRoad, onArrival]);
 
-  // Recenter button restores camera follow
+  // Recenter button restores Camera Follow & Auto Center
   const handleRecenter = () => {
     setIsFollowing(true);
     setRecenterTrigger((prev) => prev + 1);
@@ -516,7 +522,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           </Marker>
         </MapContainer>
 
-        {/* Floating 📍 Recenter Button (Appears when user manually drags map) */}
+        {/* Floating 📍 Recenter Button (Appears when user performs ANY manual map interaction) */}
         {!isFollowing && (
           <button
             onClick={handleRecenter}
