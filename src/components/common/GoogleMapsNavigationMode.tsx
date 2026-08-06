@@ -3,13 +3,13 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import L from 'leaflet';
 import {
   MapPin,
-  Compass,
   Square,
   Clock,
   CheckCircle2,
   Ambulance,
   Hospital as HospitalIcon,
   Navigation as NavigationIcon,
+  Target,
 } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import { fetchOSRMRoute, formatETA } from '../../utils/routing';
@@ -27,9 +27,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Custom Google Maps-style Navigation Arrow Pin (Pulsing navigation beacon)
-const createNavigationUserIcon = (heading: number, isHeadingUp: boolean) => {
-  const displayHeading = isHeadingUp ? heading : heading;
+// Custom Google Maps-style Navigation Beacon Pin (North-Up)
+const createNavigationUserIcon = () => {
   return L.divIcon({
     className: 'custom-nav-user-pin',
     html: `
@@ -38,11 +37,8 @@ const createNavigationUserIcon = (heading: number, isHeadingUp: boolean) => {
         <span class="absolute w-14 h-14 rounded-full bg-blue-500/35 animate-ping"></span>
         <!-- Inner aura ring -->
         <span class="absolute w-10 h-10 rounded-full bg-blue-600/40 border-2 border-white/60"></span>
-        <!-- Directional vehicle navigation chevron -->
-        <div 
-          class="relative w-9 h-9 rounded-full bg-blue-600 border-2 border-white shadow-2xl flex items-center justify-center text-white transition-transform duration-300 ease-out"
-          style="transform: rotate(${Math.round(displayHeading)}deg);"
-        >
+        <!-- Vehicle navigation chevron -->
+        <div class="relative w-9 h-9 rounded-full bg-blue-600 border-2 border-white shadow-2xl flex items-center justify-center text-white">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <polygon points="12 2 19 21 12 17 5 21 12 2"/>
           </svg>
@@ -107,35 +103,24 @@ const createDestinationIcon = (type: 'accident' | 'hospital' | 'location') => {
 };
 
 /**
- * Calculates the exact map target center required to position `userCoords`
- * near the LOWER CENTER of the screen (~72% down from top) along the user's heading vector.
+ * Calculates map target center required to position `userCoords`
+ * near the LOWER CENTER of the screen on North-Up map view.
  */
 function getLowerCenterMapTarget(
   userCoords: [number, number],
-  heading: number,
-  zoom: number,
-  isHeadingUp: boolean
+  zoom: number
 ): [number, number] {
   const [lat, lng] = userCoords;
-  const rad = Math.PI / 180;
-
-  const activeHeading = isHeadingUp ? heading : 0;
   const offsetMeters = 140 * Math.pow(2, 16 - zoom);
-
   const metersPerDegreeLat = 111320;
-  const metersPerDegreeLng = 111320 * Math.cos(lat * rad);
+  const deltaLat = offsetMeters / metersPerDegreeLat;
 
-  const deltaLat = (offsetMeters * Math.cos(activeHeading * rad)) / metersPerDegreeLat;
-  const deltaLng = (offsetMeters * Math.sin(activeHeading * rad)) / metersPerDegreeLng;
-
-  return [lat + deltaLat, lng + deltaLng];
+  return [lat + deltaLat, lng];
 }
 
 interface NavigationMapControllerProps {
   userCoords: [number, number];
-  heading: number;
   isFollowing: boolean;
-  isHeadingUp: boolean;
   isMoving: boolean;
   onManualDrag: () => void;
   recenterTrigger: number;
@@ -143,16 +128,14 @@ interface NavigationMapControllerProps {
 
 const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   userCoords,
-  heading,
   isFollowing,
-  isHeadingUp,
   isMoving,
   onManualDrag,
   recenterTrigger,
 }) => {
   const map = useMap();
 
-  // Force Leaflet to recalculate exact container bounds & invalidate tile buffer on mount & resize
+  // Force Leaflet to recalculate container bounds on mount
   useEffect(() => {
     map.invalidateSize({ pan: false });
     const timer = setTimeout(() => {
@@ -160,14 +143,6 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     }, 100);
     return () => clearTimeout(timer);
   }, [map]);
-
-  // Invalidate tile buffer when rotation changes so Leaflet loads surrounding buffer tiles immediately
-  useEffect(() => {
-    if (isHeadingUp) {
-      map.invalidateSize({ pan: false });
-      map.fire('move');
-    }
-  }, [map, heading, isHeadingUp]);
 
   // Attach drag and zoom event listeners to pause follow mode on manual interaction
   useEffect(() => {
@@ -194,7 +169,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
       const targetZoom = isMoving ? 18 : 16;
       const currentZoom = map.getZoom();
 
-      const targetCenter = getLowerCenterMapTarget(userCoords, heading, targetZoom, isHeadingUp);
+      const targetCenter = getLowerCenterMapTarget(userCoords, targetZoom);
 
       if (forceRecenter || Math.abs(currentZoom - targetZoom) >= 1) {
         map.flyTo(targetCenter, targetZoom, { duration: 0.8, easeLinearity: 0.25 });
@@ -202,13 +177,13 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
         map.panTo(targetCenter, { animate: true, duration: 0.35, easeLinearity: 0.25 });
       }
     },
-    [map, userCoords, heading, isFollowing, isHeadingUp, isMoving]
+    [map, userCoords, isFollowing, isMoving]
   );
 
-  // Trigger continuous camera update whenever user position, heading, or motion changes
+  // Trigger continuous camera update whenever user position changes
   useEffect(() => {
     updateCameraView();
-  }, [updateCameraView, userCoords, heading, isHeadingUp]);
+  }, [updateCameraView, userCoords]);
 
   // Recenter signal trigger when Navigation Assist is turned ON again
   useEffect(() => {
@@ -257,13 +232,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const [isNavModeActive, setIsNavModeActive] = useState<boolean>(true);
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
   const [isMoving, setIsMoving] = useState<boolean>(false);
-  const [heading, setHeading] = useState<number>(0);
-  const [isHeadingUp, setIsHeadingUp] = useState<boolean>(true);
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
   const [hasArrived, setHasArrived] = useState<boolean>(false);
-
-  // Hardware Compass Reference
-  const compassHeadingRef = useRef<number | null>(null);
 
   // Arrival Detection Refs (Ensures arrival ONLY triggers after GPS updates & physical movement)
   const initialStartPosRef = useRef<[number, number]>(userPos);
@@ -279,40 +249,9 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const prevPosRef = useRef<[number, number] | null>(null);
 
-  // Utility: Shortest angular difference lerp for smooth 360 map rotation
-  const getShortestAngleDelta = (from: number, to: number) => {
-    const diff = (to - from) % 360;
-    return ((diff + 540) % 360) - 180;
-  };
-
-  // Hardware Device Compass Listener (Layer 1)
-  useEffect(() => {
-    const handleOrientation = (e: any) => {
-      let comp: number | null = null;
-      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
-        comp = e.webkitCompassHeading;
-      } else if (e.alpha !== null && e.alpha !== undefined) {
-        comp = (360 - e.alpha) % 360;
-      }
-      if (comp !== null && !isNaN(comp)) {
-        compassHeadingRef.current = comp;
-      }
-    };
-
-    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-    window.addEventListener('deviceorientation', handleOrientation, true);
-
-    return () => {
-      window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
-      window.removeEventListener('deviceorientation', handleOrientation, true);
-    };
-  }, []);
-
-  // Multi-Layer Resilient GPS & Travel Bearing Heading Watcher (Layer 2 & 3)
+  // Real GPS Geolocation Watcher
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
-
-    const MIN_TURNING_DEADBAND_DEGREES = 5; // Minimum degrees turn to trigger rotation
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
@@ -345,41 +284,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           );
         }
 
-        const userIsMoving = speed > 0.3 || moveDist > 0.8;
-        setIsMoving(userIsMoving);
-
-        // Determine candidate heading using priority chain:
-        // 1. pos.coords.heading (Hardware GPS bearing)
-        // 2. compassHeadingRef (Hardware Magnetometer/Compass)
-        // 3. Spherical travel bearing from consecutive GPS coordinates (lat1, lon1) -> (lat2, lon2)
-        let candidateHeading: number | null = null;
-
-        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
-          candidateHeading = pos.coords.heading;
-        } else if (compassHeadingRef.current !== null && !isNaN(compassHeadingRef.current)) {
-          candidateHeading = compassHeadingRef.current;
-        } else if (prevPosRef.current && moveDist >= 1.0) {
-          // Spherical trigonometry bearing calculation from consecutive GPS coordinates
-          const rad = Math.PI / 180;
-          const dLng = (newLng - prevPosRef.current[1]) * rad;
-          const y = Math.sin(dLng) * Math.cos(newLat * rad);
-          const x =
-            Math.cos(prevPosRef.current[0] * rad) * Math.sin(newLat * rad) -
-            Math.sin(prevPosRef.current[0] * rad) * Math.cos(newLat * rad) * Math.cos(dLng);
-          candidateHeading = (Math.atan2(y, x) * 180) / Math.PI;
-        }
-
-        // Apply heading update if user has moved at least 1.0 meter (prevents spinning when stationary)
-        if (candidateHeading !== null && !isNaN(candidateHeading) && (moveDist >= 1.0 || userIsMoving)) {
-          const normalized = (candidateHeading + 360) % 360;
-          setHeading((prev) => {
-            const delta = getShortestAngleDelta(prev, normalized);
-            if (Math.abs(delta) < MIN_TURNING_DEADBAND_DEGREES) {
-              return prev;
-            }
-            return (prev + delta * 0.35 + 360) % 360;
-          });
-        }
+        setIsMoving(speed > 0.3 || moveDist > 0.8);
 
         prevPosRef.current = [newLat, newLng];
         setUserPos([newLat, newLng]);
@@ -485,21 +390,18 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   // Recenter button restores full Navigation Assist ON state
   const handleRecenter = () => {
     setIsFollowing(true);
-    setIsHeadingUp(true);
     setIsNavModeActive(true);
     setRecenterTrigger((prev) => prev + 1);
   };
 
-  // Toggle Navigation Assist (ON: Follow + Auto Rotate + Auto Center + Smart Zoom, OFF: Static North-Up Map)
+  // Toggle Navigation Assist (ON: Camera Follow + Auto Center + Smart Zoom, OFF: Static Map View)
   const handleToggleNavMode = () => {
     if (isNavModeActive) {
       setIsNavModeActive(false);
       setIsFollowing(false);
-      setIsHeadingUp(false);
     } else {
       setIsNavModeActive(true);
       setIsFollowing(true);
-      setIsHeadingUp(true);
       setRecenterTrigger((prev) => prev + 1);
     }
   };
@@ -581,88 +483,77 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN MAP CANVAS WITH REALTIME TILE BUFFERING */}
+      {/* 2. FULL-SCREEN MAP CANVAS (100% NORTH-UP MAP VIEW) */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
-        <div
-          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-out origin-center"
-          style={{
-            transform: isHeadingUp ? `rotate(-${Math.round(heading)}deg)` : 'none',
-          }}
+        <MapContainer
+          center={renderedPos}
+          zoom={16}
+          zoomControl={false}
+          scrollWheelZoom={true}
+          className="w-full h-full"
+          style={{ height: '100%', width: '100%' }}
         >
-          <MapContainer
-            center={renderedPos}
-            zoom={16}
-            zoomControl={false}
-            scrollWheelZoom={true}
-            className="w-full h-full"
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              keepBuffer={12}
-              updateWhenIdle={false}
-              updateWhenZooming={false}
-              maxNativeZoom={19}
-              maxZoom={19}
-            />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            keepBuffer={4}
+            maxNativeZoom={19}
+            maxZoom={19}
+          />
 
-            <NavigationMapController
-              userCoords={renderedPos}
-              heading={heading}
-              isFollowing={isFollowing}
-              isHeadingUp={isHeadingUp}
-              isMoving={isMoving}
-              onManualDrag={() => {
-                setIsFollowing(false);
-              }}
-              recenterTrigger={recenterTrigger}
-            />
+          <NavigationMapController
+            userCoords={renderedPos}
+            isFollowing={isFollowing}
+            isMoving={isMoving}
+            onManualDrag={() => {
+              setIsFollowing(false);
+            }}
+            recenterTrigger={recenterTrigger}
+          />
 
-            {/* OSRM Navigation Route Line */}
-            {routePolyline.length > 0 && (
-              <>
-                <Polyline
-                  positions={routePolyline}
-                  pathOptions={{ color: '#2563eb', weight: 10, opacity: 0.4, lineCap: 'round' }}
-                />
-                <Polyline
-                  positions={routePolyline}
-                  pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.95, lineCap: 'round' }}
-                />
-              </>
-            )}
+          {/* OSRM Navigation Route Line */}
+          {routePolyline.length > 0 && (
+            <>
+              <Polyline
+                positions={routePolyline}
+                pathOptions={{ color: '#2563eb', weight: 10, opacity: 0.4, lineCap: 'round' }}
+              />
+              <Polyline
+                positions={routePolyline}
+                pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.95, lineCap: 'round' }}
+              />
+            </>
+          )}
 
-            {/* User Navigation Chevron Marker */}
-            <Marker position={renderedPos} icon={createNavigationUserIcon(heading, isHeadingUp)}>
-              <Popup>
-                <div className="p-1 text-xs font-sans">
-                  <strong className="text-blue-600 block font-bold uppercase">
-                    Your Live Location
-                  </strong>
-                  <span>Speed: {isMoving ? 'Moving' : 'Stationary'}</span>
-                </div>
-              </Popup>
-            </Marker>
+          {/* User Navigation Chevron Marker */}
+          <Marker position={renderedPos} icon={createNavigationUserIcon()}>
+            <Popup>
+              <div className="p-1 text-xs font-sans">
+                <strong className="text-blue-600 block font-bold uppercase">
+                  Your Live Location
+                </strong>
+                <span>Speed: {isMoving ? 'Moving' : 'Stationary'}</span>
+              </div>
+            </Popup>
+          </Marker>
 
-            {/* Destination Target Marker */}
-            <Marker position={destinationCoords} icon={createDestinationIcon(destinationType)}>
-              <Popup>
-                <div className="p-1 text-xs font-sans">
-                  <strong className="text-red-600 block font-bold uppercase">{destinationName}</strong>
-                  <span>{destinationAddress}</span>
-                </div>
-              </Popup>
-            </Marker>
-          </MapContainer>
-        </div>
+          {/* Destination Target Marker */}
+          <Marker position={destinationCoords} icon={createDestinationIcon(destinationType)}>
+            <Popup>
+              <div className="p-1 text-xs font-sans">
+                <strong className="text-red-600 block font-bold uppercase">{destinationName}</strong>
+                <span>{destinationAddress}</span>
+              </div>
+            </Popup>
+          </Marker>
+        </MapContainer>
 
         {/* ========================================================================= */}
         {/* 3. FLOATING MAP OVERLAY CONTROLS (NAVIGATION ASSIST TOGGLE) */}
         {/* ========================================================================= */}
         <div className="absolute right-4 top-28 z-[500] flex flex-col gap-3">
-          {/* Navigation Assist Toggle Button (ON: Follow + Auto Rotate + Auto Center + Smart Zoom, OFF: Static North-Up) */}
+          {/* Navigation Assist Toggle Button (ON: Follow + Auto Center + Smart Zoom, OFF: Static Map View) */}
           <button
             onClick={handleToggleNavMode}
             className={`p-3.5 rounded-2xl shadow-2xl border transition-all active:scale-95 flex items-center justify-center ${
@@ -673,10 +564,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             title={isNavModeActive ? 'Navigation Assist ON' : 'Navigation Assist OFF'}
             aria-label={isNavModeActive ? 'Navigation Assist ON' : 'Navigation Assist OFF'}
           >
-            <Compass
-              className="w-6 h-6 transition-transform duration-500"
-              style={{ transform: isHeadingUp ? `rotate(${Math.round(heading)}deg)` : 'none' }}
-            />
+            <Target className={`w-6 h-6 ${isNavModeActive ? 'animate-spin-slow' : ''}`} />
           </button>
         </div>
 
