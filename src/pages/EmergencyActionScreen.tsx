@@ -6,7 +6,6 @@ import {
   Hospital as HospitalIcon,
   Bandage,
   Share2,
-  Camera,
   ShieldAlert,
   Flame,
   PhoneCall,
@@ -19,6 +18,7 @@ import {
 } from 'lucide-react';
 import type { Hospital } from '../utils/routing';
 import { fetchNearbyHospitalsOverpass } from '../utils/routing';
+import { formatDistance } from '../utils/distance';
 import { GoogleMapsNavigationMode } from '../components/common/GoogleMapsNavigationMode';
 
 export const EmergencyActionScreen: React.FC = () => {
@@ -124,6 +124,23 @@ export const EmergencyActionScreen: React.FC = () => {
     ? [userLocation.lat, userLocation.lng]
     : null;
 
+  // Render SOS Navigation mode inside the mobile app container (Identical layout to LiveNavigationScreen)
+  if (viewMode === 'navigation' && selectedHospital) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden flex flex-col select-none touch-none bg-slate-950">
+        <GoogleMapsNavigationMode
+          destinationName={selectedHospital.name}
+          destinationAddress={selectedHospital.address}
+          destinationCoords={[selectedHospital.latitude, selectedHospital.longitude]}
+          destinationType="hospital"
+          initialUserCoords={userCoords}
+          navigationStatus="Navigating to Hospital"
+          onStopNavigation={handleStopNavigation}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen bg-surface">
       {/* Top Header Navbar */}
@@ -131,9 +148,7 @@ export const EmergencyActionScreen: React.FC = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => {
-              if (viewMode === 'navigation') {
-                setViewMode('hospitals');
-              } else if (viewMode === 'hospitals') {
+              if (viewMode === 'hospitals') {
                 setViewMode('actions');
               } else {
                 navigate(-1);
@@ -148,16 +163,12 @@ export const EmergencyActionScreen: React.FC = () => {
             <h1 className="text-base font-bold text-on-surface leading-tight">
               {viewMode === 'actions'
                 ? 'SOS Emergency Services'
-                : viewMode === 'hospitals'
-                ? 'Nearby Hospitals & Trauma Centers'
-                : 'Hospital Navigation'}
+                : 'Nearby Hospitals & Trauma Centers'}
             </h1>
             <p className="text-xs text-on-surface-variant">
               {viewMode === 'actions'
                 ? 'Direct 24/7 Dispatch Hotline'
-                : viewMode === 'hospitals'
-                ? 'Realtime OpenStreetMap Emergency Directory'
-                : 'Google Maps Live GPS Navigation'}
+                : 'Realtime OpenStreetMap Emergency Directory'}
             </p>
           </div>
         </div>
@@ -299,83 +310,88 @@ export const EmergencyActionScreen: React.FC = () => {
                     <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Vehicle fire & crash extraction
+                    Fire & rescue emergency hotline
                   </p>
                 </div>
-              </button>
-            </div>
-
-            {/* RescueLink Emergency Hotline Banner */}
-            <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 space-y-3">
-              <div className="flex items-center space-x-2 text-xs font-bold text-on-surface">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>RescueLink Verified Dispatch System</span>
-              </div>
-              <p className="text-xs text-on-surface-variant leading-relaxed">
-                Need to report a road accident? Our automated volunteer network dispatches nearby
-                good samaritan responders within seconds.
-              </p>
-              <button
-                onClick={() => navigate('/report')}
-                className="w-full py-3 bg-primary text-white font-extrabold text-xs rounded-xl shadow-level-1 hover:bg-primary-hover transition-colors flex items-center justify-center space-x-2"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Report Accident Incident Now</span>
               </button>
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* VIEW 2: NEARBY HOSPITALS LIST */}
+        {/* VIEW 2: REALTIME OPENSTREETMAP NEARBY HOSPITALS LIST */}
         {/* ========================================================================= */}
         {viewMode === 'hospitals' && (
           <div className="space-y-3">
+            <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-700" />
+                <span className="text-xs font-bold text-emerald-900">
+                  Live Overpass OpenStreetMap Emergency Query
+                </span>
+              </div>
+              <span className="text-[10px] font-extrabold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
+                {hospitals.length} Found
+              </span>
+            </div>
+
             {loadingHospitals ? (
-              <div className="py-12 text-center space-y-3">
+              <div className="py-16 text-center space-y-3">
                 <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-                <p className="text-xs font-bold text-on-surface">
-                  Fetching nearby emergency hospitals via OpenStreetMap...
+                <p className="text-xs font-bold text-on-surface-variant">
+                  Querying nearest hospitals & emergency trauma centers...
                 </p>
+              </div>
+            ) : hospitals.length === 0 ? (
+              <div className="py-12 text-center text-on-surface-variant space-y-2 bg-surface-container-lowest rounded-2xl border border-outline-variant/60">
+                <HospitalIcon className="w-10 h-10 mx-auto text-on-surface-variant/40" />
+                <p className="text-xs font-bold">No hospitals found within search radius.</p>
+                <p className="text-[11px]">Please call 108 emergency hotline immediately.</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {hospitals.map((hosp) => {
-                  const distFormatted = (hosp.distanceMeters / 1000).toFixed(1) + ' km';
+                  const distFormatted =
+                    hosp.distanceMeters !== undefined
+                      ? formatDistance(hosp.distanceMeters)
+                      : 'Nearby';
+
                   return (
                     <div
                       key={hosp.id}
-                      className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/60 transition-all space-y-3"
+                      className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all space-y-3"
                     >
                       <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-extrabold text-on-surface flex items-center gap-1.5">
-                            <span>🏥</span>
-                            <span>{hosp.name}</span>
+                        <div className="space-y-1 pr-2">
+                          <h3 className="text-sm font-extrabold text-on-surface leading-snug">
+                            {hosp.name}
                           </h3>
-                          <p className="text-xs text-on-surface-variant flex items-center gap-1 font-medium">
+                          <p className="text-xs text-on-surface-variant flex items-center gap-1">
                             <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                            <span>{hosp.address}</span>
+                            <span className="truncate">{hosp.address}</span>
                           </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="text-xs font-black text-primary bg-primary/10 px-2.5 py-1 rounded-full block">
+                          <span className="text-xs font-extrabold text-primary bg-primary-fixed px-2.5 py-1 rounded-full border border-primary/20 block">
                             {distFormatted}
                           </span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs pt-1 border-t border-outline-variant/40">
-                        <span className="text-emerald-700 font-bold flex items-center gap-1">
-                          <Star className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
-                          <span>4.8 (Emergency Ready)</span>
-                        </span>
+                      <div className="flex items-center justify-between pt-2 border-t border-outline-variant/40">
+                        <div className="flex items-center space-x-1 text-amber-600">
+                          <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                          <span className="text-xs font-extrabold">4.8</span>
+                          <span className="text-[11px] text-on-surface-variant font-medium">
+                            (Emergency Ready)
+                          </span>
+                        </div>
 
                         <div className="flex items-center space-x-2">
                           {hosp.phone ? (
                             <a
                               href={`tel:${hosp.phone}`}
-                              className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-on-surface font-bold text-xs rounded-xl flex items-center gap-1 transition-colors"
+                              className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
                             >
                               <PhoneCall className="w-3.5 h-3.5" />
                               <span>Call</span>
@@ -405,21 +421,6 @@ export const EmergencyActionScreen: React.FC = () => {
               </div>
             )}
           </div>
-        )}
-
-        {/* ========================================================================= */}
-        {/* VIEW 3: REUSED LIVE GPS NAVIGATION ENGINE (GOOGLE MAPS STYLE EXPERIENCE) */}
-        {/* ========================================================================= */}
-        {viewMode === 'navigation' && selectedHospital && (
-          <GoogleMapsNavigationMode
-            destinationName={selectedHospital.name}
-            destinationAddress={selectedHospital.address}
-            destinationCoords={[selectedHospital.latitude, selectedHospital.longitude]}
-            destinationType="hospital"
-            initialUserCoords={userCoords}
-            navigationStatus="Navigating to Hospital"
-            onStopNavigation={handleStopNavigation}
-          />
         )}
       </main>
     </div>

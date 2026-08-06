@@ -120,7 +120,7 @@ function getLowerCenterMapTarget(
   const rad = Math.PI / 180;
 
   const activeHeading = isHeadingUp ? heading : 0;
-  const offsetMeters = 160 * Math.pow(2, 16 - zoom);
+  const offsetMeters = 140 * Math.pow(2, 16 - zoom);
 
   const metersPerDegreeLat = 111320;
   const metersPerDegreeLng = 111320 * Math.cos(lat * rad);
@@ -151,6 +151,15 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   recenterTrigger,
 }) => {
   const map = useMap();
+
+  // Force Leaflet to recalculate exact container bounds on mount and resize
+  useEffect(() => {
+    map.invalidateSize();
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [map]);
 
   // Attach drag and zoom event listeners to pause follow mode on manual interaction
   useEffect(() => {
@@ -188,7 +197,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     [map, userCoords, heading, isFollowing, isHeadingUp, isMoving]
   );
 
-  // Trigger continuous camera update whenever user position, heading, or motion changes (only if follow mode is active)
+  // Trigger continuous camera update whenever user position, heading, or motion changes
   useEffect(() => {
     updateCameraView();
   }, [updateCameraView, userCoords, heading, isHeadingUp]);
@@ -226,9 +235,14 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   onArrival,
 }) => {
   // 1. User Position State (smoothly lerped)
-  const [userPos, setUserPos] = useState<[number, number]>(
-    initialUserCoords || [destinationCoords[0] - 0.006, destinationCoords[1] - 0.005]
-  );
+  const [userPos, setUserPos] = useState<[number, number]>(() => {
+    if (initialUserCoords && (initialUserCoords[0] !== 0 || initialUserCoords[1] !== 0)) {
+      return initialUserCoords;
+    }
+    // Fallback starting position offset ~700 meters from destination
+    return [destinationCoords[0] - 0.006, destinationCoords[1] - 0.005];
+  });
+
   const [renderedPos, setRenderedPos] = useState<[number, number]>(userPos);
 
   // 2. Navigation Camera & Motion Controls
@@ -239,6 +253,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const [isHeadingUp, setIsHeadingUp] = useState<boolean>(true);
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
   const [hasArrived, setHasArrived] = useState<boolean>(false);
+
+  // Arrival Detection Refs (Ensures arrival ONLY triggers after GPS updates & physical movement)
+  const initialStartPosRef = useRef<[number, number]>(userPos);
+  const hasReceivedGpsUpdateRef = useRef<boolean>(false);
+  const hasUserMovedRef = useRef<boolean>(false);
 
   // 3. Route & Navigation Metrics
   const [routePolyline, setRoutePolyline] = useState<[number, number][]>([]);
@@ -266,6 +285,20 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         const newLat = pos.coords.latitude;
         const newLng = pos.coords.longitude;
         const speed = pos.coords.speed || 0; // m/s
+
+        // Mark that a live GPS update has been received
+        hasReceivedGpsUpdateRef.current = true;
+
+        // Check if user has physically moved > 15m from starting position
+        const distFromStart = calculateHaversineDistance(
+          initialStartPosRef.current[0],
+          initialStartPosRef.current[1],
+          newLat,
+          newLng
+        );
+        if (distFromStart > 15) {
+          hasUserMovedRef.current = true;
+        }
 
         const userIsMoving = speed > 0.8; // > 0.8 m/s (~3 km/h)
         setIsMoving(userIsMoving);
@@ -364,7 +397,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       setDurationSeconds(route.durationSeconds);
       setLoadingRoute(false);
 
-      // Check arrival (within ~30 meters of destination)
+      // Arrival detection check: ONLY trigger AFTER navigation active, GPS updates received, user has travelled, and distance <= 30m
       const directDist = calculateHaversineDistance(
         userPos[0],
         userPos[1],
@@ -372,7 +405,14 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         destinationCoords[1]
       );
 
-      if ((route.distanceMeters > 0 && route.distanceMeters <= 30) || directDist <= 30) {
+      const isWithinArrivalThreshold =
+        (route.distanceMeters > 0 && route.distanceMeters <= 30) || directDist <= 30;
+
+      if (
+        hasReceivedGpsUpdateRef.current &&
+        hasUserMovedRef.current &&
+        isWithinArrivalThreshold
+      ) {
         setHasArrived(true);
         if (onArrival) onArrival();
       }
@@ -430,7 +470,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   };
 
   return (
-    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col select-none font-sans bg-slate-100">
+    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col select-none touch-none bg-slate-100">
       {/* ========================================================================= */}
       {/* ARRIVAL NOTIFICATION MODAL BANNER */}
       {/* ========================================================================= */}
@@ -500,15 +540,13 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN HEADING-UP MAP CANVAS (CENTERED OVERSIZED TO PREVENT CROP & BLACK CORNERS) */}
+      {/* 2. FULL-SCREEN MAP CANVAS (NORMAL 100% EDGE-TO-EDGE SIZE) */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
         <div
-          className="w-[150%] h-[150%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 absolute transition-transform duration-500 ease-out origin-center"
+          className="w-full h-full absolute inset-0 transition-transform duration-500 ease-out origin-center"
           style={{
-            transform: isHeadingUp
-              ? `translate(-50%, -50%) rotate(-${Math.round(heading)}deg)`
-              : 'translate(-50%, -50%)',
+            transform: isHeadingUp ? `rotate(-${Math.round(heading)}deg)` : 'none',
           }}
         >
           <MapContainer
