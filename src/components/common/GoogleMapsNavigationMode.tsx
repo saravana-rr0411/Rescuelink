@@ -134,6 +134,12 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   recenterTrigger,
 }) => {
   const map = useMap();
+  const isFollowingRef = useRef<boolean>(isFollowing);
+
+  // Sync ref synchronously with prop changes
+  useEffect(() => {
+    isFollowingRef.current = isFollowing;
+  }, [isFollowing]);
 
   // Force Leaflet to recalculate container bounds on mount
   useEffect(() => {
@@ -144,35 +150,55 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     return () => clearTimeout(timer);
   }, [map]);
 
-  // Attach drag, pinch, zoom, and touch event listeners to pause Camera Follow on ANY manual map interaction
+  // Attach comprehensive event listeners for ALL manual map interactions (drag, pan, pinch, zoom, touch, wheel)
   useEffect(() => {
-    const handleUserInteraction = (e: any) => {
-      // Disable Camera Follow if interaction was user-initiated (drag, pinch zoom, manual pan)
-      if (e?.originalEvent || e?.type === 'dragstart' || e?.type === 'zoomstart') {
+    const stopFollowing = () => {
+      // Disable Camera Follow instantly if user initiates any interaction
+      if (isFollowingRef.current) {
+        isFollowingRef.current = false;
         onManualDrag();
       }
     };
 
-    map.on('dragstart', handleUserInteraction);
-    map.on('zoomstart', handleUserInteraction);
+    const handleMoveStart = (e: any) => {
+      // Disable Camera Follow if movestart was triggered by user input (originalEvent exists)
+      if (e?.originalEvent && isFollowingRef.current) {
+        isFollowingRef.current = false;
+        onManualDrag();
+      }
+    };
+
+    map.on('dragstart', stopFollowing);
+    map.on('zoomstart', stopFollowing);
+    map.on('movestart', handleMoveStart);
+
+    const container = map.getContainer();
+    container.addEventListener('touchstart', stopFollowing, { passive: true });
+    container.addEventListener('mousedown', stopFollowing, { passive: true });
+    container.addEventListener('wheel', stopFollowing, { passive: true });
 
     return () => {
-      map.off('dragstart', handleUserInteraction);
-      map.off('zoomstart', handleUserInteraction);
+      map.off('dragstart', stopFollowing);
+      map.off('zoomstart', stopFollowing);
+      map.off('movestart', handleMoveStart);
+      container.removeEventListener('touchstart', stopFollowing);
+      container.removeEventListener('mousedown', stopFollowing);
+      container.removeEventListener('wheel', stopFollowing);
     };
   }, [map, onManualDrag]);
 
-  // Static Camera Follow Engine (Pan to user position only when isFollowing is true)
+  // Static Camera Follow Engine (Strictly halts panTo/flyTo calls when isFollowingRef.current is false)
   const updateCameraView = useCallback(
     (forceRecenter = false) => {
-      // NEVER automatically pull back to user while Camera Follow is OFF
-      if (!isFollowing && !forceRecenter) return;
+      // NEVER automatically pull back or adjust camera while Camera Follow is OFF
+      if (!isFollowingRef.current && !forceRecenter) return;
 
       map.invalidateSize({ pan: false });
       const currentZoom = map.getZoom() || DEFAULT_FIXED_ZOOM;
       const targetCenter = getLowerCenterMapTarget(userCoords, currentZoom);
 
       if (forceRecenter) {
+        isFollowingRef.current = true;
         map.flyTo(getLowerCenterMapTarget(userCoords, DEFAULT_FIXED_ZOOM), DEFAULT_FIXED_ZOOM, {
           duration: 0.8,
           easeLinearity: 0.25,
@@ -181,7 +207,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
         map.panTo(targetCenter, { animate: true, duration: 0.35, easeLinearity: 0.25 });
       }
     },
-    [map, userCoords, isFollowing]
+    [map, userCoords]
   );
 
   // Trigger continuous camera update whenever user position changes
