@@ -1,32 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navbar } from '../components/layout/Navbar';
-import { mockUserProfile } from '../data/mockData';
 import { HeartPulse, PhoneCall, Settings, LogOut, Mail, Loader2, Edit2, Save, X, CheckCircle, AlertCircle, Camera } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useProfile } from '../context/ProfileContext';
+import type { UserProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
-
-interface ProfileRecord {
-  id?: string;
-  auth_user_id?: string;
-  full_name: string;
-  phone_number: string;
-  blood_group: string;
-  emergency_contact_name: string;
-  emergency_contact_phone: string;
-  emergency_contact_relation: string;
-  allergies?: string;
-  medical_conditions?: string;
-  avatar_url?: string | null;
-}
 
 export const ProfileScreen: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
+  const { profile: globalProfile, refreshProfile } = useProfile();
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  const [profile, setProfile] = useState<ProfileRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<UserProfile | null>(globalProfile);
+  const [loading, setLoading] = useState(!globalProfile);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -41,6 +30,13 @@ export const ProfileScreen: React.FC = () => {
   const [contactRelation, setContactRelation] = useState('');
   const [allergies, setAllergies] = useState('');
   const [medicalConditions, setMedicalConditions] = useState('');
+
+  // Auto-open edit mode if navigated with state.edit === true
+  useEffect(() => {
+    if (location.state && (location.state as any).edit) {
+      setIsEditing(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -66,14 +62,14 @@ export const ProfileScreen: React.FC = () => {
           populateForm(data);
         } else {
           console.log('[RescueLink Profile] No existing profile row found for user. Auto-creating profile row in public.profiles...');
-          const fallback: ProfileRecord = {
+          const fallback: UserProfile = {
             auth_user_id: user.id,
-            full_name: user.email ? user.email.split('@')[0] : mockUserProfile.name,
-            phone_number: mockUserProfile.phone,
+            full_name: user.email ? user.email.split('@')[0] : '',
+            phone_number: '',
             blood_group: 'O-',
-            emergency_contact_name: mockUserProfile.emergencyContacts[0].name,
-            emergency_contact_phone: mockUserProfile.emergencyContacts[0].phone,
-            emergency_contact_relation: mockUserProfile.emergencyContacts[0].relation,
+            emergency_contact_name: '',
+            emergency_contact_phone: '',
+            emergency_contact_relation: '',
             allergies: '',
             medical_conditions: '',
             avatar_url: null,
@@ -105,7 +101,7 @@ export const ProfileScreen: React.FC = () => {
     fetchProfile();
   }, [user]);
 
-  const populateForm = (data: ProfileRecord) => {
+  const populateForm = (data: UserProfile) => {
     setFullName(data.full_name || '');
     setPhoneNumber(data.phone_number || '');
     setBloodGroup(data.blood_group || 'O-');
@@ -167,8 +163,8 @@ export const ProfileScreen: React.FC = () => {
         .upsert(
           {
             auth_user_id: user.id,
-            full_name: fullName || profile?.full_name || mockUserProfile.name,
-            phone_number: phoneNumber || profile?.phone_number || mockUserProfile.phone,
+            full_name: fullName || profile?.full_name || (user?.email ? user.email.split('@')[0] : 'User'),
+            phone_number: phoneNumber || profile?.phone_number || '',
             blood_group: bloodGroup || profile?.blood_group || 'O-',
             emergency_contact_name: contactName || profile?.emergency_contact_name || '',
             emergency_contact_phone: contactPhone || profile?.emergency_contact_phone || '',
@@ -187,6 +183,7 @@ export const ProfileScreen: React.FC = () => {
         setMessage({ type: 'error', text: `Failed to save avatar URL: ${profileUpdateError.message}` });
       } else {
         setProfile((prev) => (prev ? { ...prev, avatar_url: avatarPublicUrl } : null));
+        await refreshProfile();
         setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
         setTimeout(() => setMessage(null), 3000);
       }
@@ -204,7 +201,7 @@ export const ProfileScreen: React.FC = () => {
     setSaving(true);
     setMessage(null);
 
-    const updatedData: ProfileRecord = {
+    const updatedData: UserProfile = {
       auth_user_id: user.id,
       full_name: fullName,
       phone_number: phoneNumber,
@@ -233,6 +230,7 @@ export const ProfileScreen: React.FC = () => {
     } else {
       console.log('[RescueLink Profile] Upsert succeeded in public.profiles:', savedData);
       setProfile(savedData || updatedData);
+      await refreshProfile();
       setIsEditing(false);
       setMessage({ type: 'success', text: 'Profile updated in Supabase successfully!' });
       setTimeout(() => setMessage(null), 3000);
@@ -244,12 +242,15 @@ export const ProfileScreen: React.FC = () => {
     navigate('/login');
   };
 
-  const displayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : mockUserProfile.name);
-  const displayPhone = profile?.phone_number || mockUserProfile.phone;
+  const displayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'User');
+  const displayPhone = profile?.phone_number || 'Not Provided';
   const displayBlood = profile?.blood_group || 'O-';
-  const emergencyContactName = profile?.emergency_contact_name || mockUserProfile.emergencyContacts[0].name;
-  const emergencyContactPhone = profile?.emergency_contact_phone || mockUserProfile.emergencyContacts[0].phone;
-  const emergencyContactRelation = profile?.emergency_contact_relation || mockUserProfile.emergencyContacts[0].relation;
+  const hasEmergencyContact = Boolean(
+    profile?.emergency_contact_name?.trim() && profile?.emergency_contact_phone?.trim()
+  );
+  const emergencyContactName = profile?.emergency_contact_name?.trim() || '';
+  const emergencyContactPhone = profile?.emergency_contact_phone?.trim() || '';
+  const emergencyContactRelation = profile?.emergency_contact_relation?.trim() || '';
 
   const displayAllergies = profile?.allergies && profile.allergies.trim() !== '' ? profile.allergies : 'Not Provided';
   const displayMedicalConditions = profile?.medical_conditions && profile.medical_conditions.trim() !== '' ? profile.medical_conditions : 'Not Provided';
@@ -493,25 +494,39 @@ export const ProfileScreen: React.FC = () => {
                   onClick={() => setIsEditing(true)}
                   className="text-xs font-bold text-secondary hover:underline"
                 >
-                  + Edit
+                  {hasEmergencyContact ? '+ Edit' : '+ Add'}
                 </button>
               </div>
 
-              <div className="space-y-2">
-                <div className="bg-surface-container-low p-3 rounded-2xl flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-on-surface">{emergencyContactName}</h4>
-                    <p className="text-[11px] text-on-surface-variant">{emergencyContactRelation} • {emergencyContactPhone}</p>
+              {hasEmergencyContact ? (
+                <div className="space-y-2">
+                  <div className="bg-surface-container-low p-3 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-on-surface">{emergencyContactName}</h4>
+                      <p className="text-[11px] text-on-surface-variant">
+                        {emergencyContactRelation ? `${emergencyContactRelation} • ` : ''}{emergencyContactPhone}
+                      </p>
+                    </div>
+                    <a
+                      href={`tel:${emergencyContactPhone}`}
+                      className="p-2 bg-secondary text-white rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                      aria-label={`Call ${emergencyContactName}`}
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </a>
                   </div>
-                  <a
-                    href={`tel:${emergencyContactPhone}`}
-                    className="p-2 bg-secondary text-white rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
-                    aria-label={`Call ${emergencyContactName}`}
-                  >
-                    <PhoneCall className="w-4 h-4" />
-                  </a>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-surface-container-low p-4 rounded-2xl text-center space-y-2">
+                  <p className="text-xs text-on-surface-variant font-medium">No emergency contacts added.</p>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-3 py-1.5 bg-secondary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                  >
+                    Add Emergency Contact
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -551,3 +566,4 @@ export const ProfileScreen: React.FC = () => {
     </div>
   );
 };
+

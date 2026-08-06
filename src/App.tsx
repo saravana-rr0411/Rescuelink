@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ProfileProvider } from './context/ProfileContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { MobileContainer } from './components/layout/MobileContainer';
 import { BottomNavigation } from './components/layout/BottomNavigation';
@@ -14,12 +16,15 @@ import { GoodSamaritanScreen } from './pages/GoodSamaritanScreen';
 import { VolunteerDashboardScreen } from './pages/VolunteerDashboardScreen';
 import { ProfileScreen } from './pages/ProfileScreen';
 import { LiveNavigationScreen } from './pages/LiveNavigationScreen';
+import { EmergencyActionScreen } from './pages/EmergencyActionScreen';
+import { NotificationsScreen } from './pages/NotificationsScreen';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
   const hideBottomNav =
     location.pathname === '/login' ||
     location.pathname === '/signup' ||
+    location.pathname === '/emergency' ||
     location.pathname.startsWith('/navigation');
 
   return (
@@ -32,6 +37,8 @@ const AppContent: React.FC = () => {
         {/* Protected Application Routes */}
         <Route path="/" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
         <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
+        <Route path="/emergency" element={<ProtectedRoute><EmergencyActionScreen /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsScreen /></ProtectedRoute>} />
         <Route path="/report" element={<ProtectedRoute><ReportAccidentScreen /></ProtectedRoute>} />
         <Route path="/status" element={<ProtectedRoute><EmergencyStatusScreen /></ProtectedRoute>} />
         <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
@@ -50,9 +57,13 @@ const AppContent: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <ProfileProvider>
+        <NotificationProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </NotificationProvider>
+      </ProfileProvider>
     </AuthProvider>
   );
 };

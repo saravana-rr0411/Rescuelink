@@ -16,11 +16,13 @@ import {
   ChevronDown,
   Siren,
   Hospital as HospitalIcon,
+  Compass,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { formatDistance, calculateHaversineDistance } from '../utils/distance';
 import { fetchOSRMRoute, formatETA, getStoredHospital, cleanDescriptionText } from '../utils/routing';
+import { useHeadingRotation } from '../hooks/useHeadingRotation';
 import 'leaflet/dist/leaflet.css';
 
 // Fix default Leaflet icon paths in Vite bundler
@@ -192,6 +194,15 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
       ? [accident.volunteer_latitude, accident.volunteer_longitude]
       : null
   );
+
+  const [isHeadingUpMode, setIsHeadingUpMode] = useState(true);
+
+  const volCoords = volunteerPos
+    ? { lat: volunteerPos[0], lng: volunteerPos[1] }
+    : { lat: accident.latitude, lng: accident.longitude };
+
+  // Heading-Up Auto Rotation Engine
+  const { heading } = useHeadingRotation(isHeadingUpMode && accident.status !== 'Emergency Resolved', volCoords);
 
   // Request real device location for volunteer if not available
   useEffect(() => {
@@ -566,76 +577,83 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
       )}
 
       {/* Volunteer Map */}
-      <div className="absolute inset-0 w-full h-full z-0">
-        <MapContainer
-          center={accidentPos}
-          zoom={15}
-          zoomControl={false}
-          scrollWheelZoom={true}
-          className="w-full h-full z-0"
-          style={{ height: '100%', width: '100%' }}
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+        <div
+          className="w-full h-full transition-transform duration-500 ease-out origin-center"
+          style={{
+            transform: isHeadingUpMode && heading ? `rotate(-${Math.round(heading)}deg) scale(1.15)` : 'none',
+          }}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+          <MapContainer
+            center={accidentPos}
+            zoom={15}
+            zoomControl={false}
+            scrollWheelZoom={true}
+            className="w-full h-full z-0"
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
 
-          <NavigationMapController
-            accidentCoords={accidentPos}
-            volunteerCoords={volunteerPos}
-            recenterSignal={recenterSignal}
-            zoomInSignal={zoomInSignal}
-            zoomOutSignal={zoomOutSignal}
-          />
+            <NavigationMapController
+              accidentCoords={accidentPos}
+              volunteerCoords={volunteerPos}
+              recenterSignal={recenterSignal}
+              zoomInSignal={zoomInSignal}
+              zoomOutSignal={zoomOutSignal}
+            />
 
-          {volunteerRoute.length > 0 && (
-            <>
-              <Polyline
-                positions={volunteerRoute}
-                pathOptions={{ color: '#f59e0b', weight: 9, opacity: 0.35, lineCap: 'round' }}
-              />
-              <Polyline
-                positions={volunteerRoute}
-                pathOptions={{ color: '#d97706', weight: 5, opacity: 0.95, lineCap: 'round' }}
-              />
-            </>
-          )}
+            {volunteerRoute.length > 0 && (
+              <>
+                <Polyline
+                  positions={volunteerRoute}
+                  pathOptions={{ color: '#f59e0b', weight: 9, opacity: 0.35, lineCap: 'round' }}
+                />
+                <Polyline
+                  positions={volunteerRoute}
+                  pathOptions={{ color: '#d97706', weight: 5, opacity: 0.95, lineCap: 'round' }}
+                />
+              </>
+            )}
 
-          <Marker position={accidentPos} icon={accidentIcon}>
-            <Popup>
-              <div className="p-1 text-xs font-sans">
-                <strong className="text-red-600 block font-bold uppercase">
-                  {accident.severity} ACCIDENT LOCATION
-                </strong>
-                <span>{displayAddress}</span>
-              </div>
-            </Popup>
-          </Marker>
-
-          {volunteerPos && (
-            <Marker position={volunteerPos} icon={volunteerIcon}>
+            <Marker position={accidentPos} icon={accidentIcon}>
               <Popup>
                 <div className="p-1 text-xs font-sans">
-                  <strong className="text-emerald-600 block font-bold">
-                    Responder: {accident.volunteer_name}
+                  <strong className="text-red-600 block font-bold uppercase">
+                    {accident.severity} ACCIDENT LOCATION
                   </strong>
-                  <span>Vehicle: {accident.vehicle_type}</span>
+                  <span>{displayAddress}</span>
                 </div>
               </Popup>
             </Marker>
-          )}
 
-          <Marker position={[volTargetLat, volTargetLng]} icon={destinationIcon}>
-            <Popup>
-              <div className="p-1 text-xs font-sans">
-                <strong className="text-blue-600 block font-bold">
-                  {volStoredHosp ? `🏥 Hospital: ${volStoredHosp.name}` : 'Destination Incident Point'}
-                </strong>
-                <span>{volStoredHosp ? volStoredHosp.address : displayAddress}</span>
-              </div>
-            </Popup>
-          </Marker>
-        </MapContainer>
+            {volunteerPos && (
+              <Marker position={volunteerPos} icon={volunteerIcon}>
+                <Popup>
+                  <div className="p-1 text-xs font-sans">
+                    <strong className="text-emerald-600 block font-bold">
+                      Responder: {accident.volunteer_name}
+                    </strong>
+                    <span>Vehicle: {accident.vehicle_type}</span>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+
+            <Marker position={[volTargetLat, volTargetLng]} icon={destinationIcon}>
+              <Popup>
+                <div className="p-1 text-xs font-sans">
+                  <strong className="text-blue-600 block font-bold">
+                    {volStoredHosp ? `🏥 Hospital: ${volStoredHosp.name}` : 'Destination Incident Point'}
+                  </strong>
+                  <span>{volStoredHosp ? volStoredHosp.address : displayAddress}</span>
+                </div>
+              </Popup>
+            </Marker>
+          </MapContainer>
+        </div>
 
         <div
           style={{
@@ -644,6 +662,22 @@ const VolunteerNavigationScreen: React.FC<SubNavigationProps> = ({
           }}
           className="absolute right-3 z-[450] flex flex-col gap-2"
         >
+          {/* Compass Orientation Button */}
+          <button
+            onClick={() => setIsHeadingUpMode(!isHeadingUpMode)}
+            className={`p-3 rounded-2xl border shadow-md transition-all active:scale-90 flex items-center justify-center ${
+              isHeadingUpMode
+                ? 'bg-emerald-600 text-white border-emerald-500 ring-2 ring-emerald-400/30'
+                : 'bg-white/95 text-slate-700 border-slate-200/80 hover:bg-white'
+            }`}
+            title={isHeadingUpMode ? 'Heading-Up Navigation (Auto Rotate Active)' : 'North-Up Map View'}
+          >
+            <Compass
+              className="w-5 h-5 transition-transform duration-500"
+              style={{ transform: `rotate(${Math.round(heading)}deg)` }}
+            />
+          </button>
+
           <button
             onClick={() => setRecenterSignal((prev) => prev + 1)}
             className="p-3 bg-white/95 hover:bg-white text-slate-700 rounded-2xl border border-slate-200/80 shadow-md transition-all active:scale-90 flex items-center justify-center group"

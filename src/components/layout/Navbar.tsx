@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ShieldAlert, ArrowLeft, Bell, User } from 'lucide-react';
+import { useNotifications } from '../../context/NotificationContext';
+import { useProfile } from '../../context/ProfileContext';
 
 interface NavbarProps {
   title?: string;
@@ -10,6 +12,8 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { unreadCount } = useNotifications();
+  const { avatarUrl } = useProfile();
 
   const isHome = location.pathname === '/' || location.pathname === '/home';
 
@@ -45,20 +49,34 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false }) => {
 
       <div className="flex items-center space-x-2">
         <button 
-          onClick={() => navigate('/status')}
+          onClick={() => navigate('/notifications')}
           className="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"
-          aria-label="Notifications"
+          aria-label="Notification Center"
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-primary rounded-full ring-2 ring-surface"></span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-black min-w-5 h-5 px-1 rounded-full flex items-center justify-center border-2 border-surface shadow-xs">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
         </button>
 
         <button 
           onClick={() => navigate('/profile')}
-          className="p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"
+          className="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center"
           aria-label="User Profile"
         >
-          <User className="w-5 h-5" />
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="User Avatar"
+              className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/30 shadow-xs"
+            />
+          ) : (
+            <div className="p-1.5 rounded-full bg-surface-container-high border border-outline-variant/60">
+              <User className="w-5 h-5 text-on-surface-variant" />
+            </div>
+          )}
         </button>
       </div>
     </header>

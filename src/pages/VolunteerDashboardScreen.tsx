@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
-import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare } from 'lucide-react';
+import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
@@ -483,8 +483,28 @@ export const VolunteerDashboardScreen: React.FC = () => {
               isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
             }`}
           >
-            {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
           </button>
+        </div>
+
+        {/* Quick Emergency Communications Card */}
+        <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 text-red-700 flex items-center justify-center shrink-0">
+              <Ambulance className="w-5 h-5 text-red-700" />
+            </div>
+            <div>
+              <h3 className="text-xs font-extrabold text-slate-900">Call Ambulance (108)</h3>
+              <p className="text-[11px] text-slate-500 font-medium">Open 108 emergency phone dialer</p>
+            </div>
+          </div>
+
+          <a
+            href="tel:108"
+            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 shrink-0"
+          >
+            <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
+            <span>Call 108</span>
+          </a>
         </div>
 
         {/* Impact Stats Grid */}
@@ -606,6 +626,51 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       </div>
                     );
                   })()}
+
+                  {/* Mission Communication Actions Panel */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
+                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                      Mission Actions
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {/* 1. Call Ambulance (108) */}
+                      <a
+                        href="tel:108"
+                        className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition-colors active:scale-95"
+                      >
+                        <Ambulance className="w-4 h-4 text-red-600 shrink-0" />
+                        <span>🚑 Call Ambulance (108)</span>
+                      </a>
+
+                      {/* 2. Call Selected Hospital (Displayed ONLY after hospital is selected) */}
+                      {(() => {
+                        const hosp = getStoredHospital(mission.id);
+                        const isHospitalSelected = !!hosp || mission.status === 'Transporting to Hospital';
+                        if (!isHospitalSelected) return null;
+
+                        const phoneNum = hosp?.phone;
+
+                        return phoneNum ? (
+                          <a
+                            href={`tel:${phoneNum}`}
+                            className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition-colors active:scale-95"
+                          >
+                            <PhoneCall className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span>📞 Call Hospital ({phoneNum})</span>
+                          </a>
+                        ) : (
+                          <button
+                            disabled
+                            className="py-2.5 px-3 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed"
+                          >
+                            <PhoneCall className="w-4 h-4 text-slate-400 shrink-0" />
+                            <span>Hospital phone number unavailable</span>
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  </div>
 
                   {/* Scene Photo Preview if present */}
                   {mission.photo_url && (

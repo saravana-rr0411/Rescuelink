@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital } from 'lucide-react';
+import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital, Ambulance } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
@@ -360,6 +360,27 @@ export const EmergencyStatusScreen: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* Quick Emergency Communications Card */}
+            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/60 shadow-level-1 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-700 flex items-center justify-center shrink-0">
+                  <Ambulance className="w-5 h-5 text-red-700" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-on-surface">Call Ambulance (108)</h3>
+                  <p className="text-[11px] text-on-surface-variant font-medium">Open 108 emergency phone dialer</p>
+                </div>
+              </div>
+
+              <a
+                href="tel:108"
+                className="px-4 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface border border-outline-variant/60 font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 shrink-0"
+              >
+                <PhoneCall className="w-4 h-4 text-blue-600" />
+                <span>Call 108</span>
+              </a>
+            </div>
+
             {/* Active Status Hero Banner */}
             <div className={`p-5 rounded-3xl shadow-level-2 space-y-3 relative overflow-hidden text-white transition-all ${
               accident.status === 'Emergency Resolved'

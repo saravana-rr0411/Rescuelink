@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { SOSButton } from '../components/ui/SOSButton';
-import { EmergencyActionCenterSheet } from '../components/common/EmergencyActionCenterSheet';
-import { mockUserProfile } from '../data/mockData';
-import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, ShieldCheck, MapPin, Clock, ChevronRight, Loader2, Radio } from 'lucide-react';
+import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPin, Clock, ChevronRight, Loader2, Radio, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAuth } from '../context/AuthContext';
 
 interface AccidentRecord {
   id: string;
@@ -24,9 +23,15 @@ interface AccidentRecord {
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [accidents, setAccidents] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isActionCenterOpen, setIsActionCenterOpen] = useState(false);
+  const [emergencyContact, setEmergencyContact] = useState<{
+    name: string;
+    phone: string;
+    relation: string;
+  } | null>(null);
+  const [loadingContact, setLoadingContact] = useState(true);
 
   const categories = [
     { id: 'medical', title: 'Medical Alert', icon: Stethoscope, color: 'bg-red-100 text-red-700 border-red-200' },
@@ -34,6 +39,47 @@ export const HomeScreen: React.FC = () => {
     { id: 'fire', title: 'Fire Alert', icon: Flame, color: 'bg-amber-100 text-amber-700 border-amber-200' },
     { id: 'crime', title: 'Safety Hazard', icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 border-purple-200' },
   ];
+
+  // Fetch logged-in user's emergency contact from Supabase
+  useEffect(() => {
+    async function fetchUserEmergencyContact() {
+      if (!user) {
+        setEmergencyContact(null);
+        setLoadingContact(false);
+        return;
+      }
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('emergency_contact_name, emergency_contact_phone, emergency_contact_relation')
+          .eq('auth_user_id', user.id)
+          .maybeSingle();
+
+        if (
+          data &&
+          data.emergency_contact_name &&
+          data.emergency_contact_phone &&
+          data.emergency_contact_name.trim() !== '' &&
+          data.emergency_contact_phone.trim() !== ''
+        ) {
+          setEmergencyContact({
+            name: data.emergency_contact_name.trim(),
+            phone: data.emergency_contact_phone.trim(),
+            relation: data.emergency_contact_relation ? data.emergency_contact_relation.trim() : '',
+          });
+        } else {
+          setEmergencyContact(null);
+        }
+      } catch (err) {
+        console.error('[RescueLink Home] Error fetching emergency contact:', err);
+        setEmergencyContact(null);
+      } finally {
+        setLoadingContact(false);
+      }
+    }
+
+    fetchUserEmergencyContact();
+  }, [user]);
 
   // Helper to format ISO timestamp into relative time ("2 mins ago")
   const formatReportedTime = (isoString: string): string => {
@@ -150,66 +196,12 @@ export const HomeScreen: React.FC = () => {
       <Navbar />
 
       <main className="flex-1 px-4 py-4 space-y-6">
-        {/* Dual Primary Entry Points: Citizen Emergency & Volunteer HQ */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Entry Point 1: 🚨 Report Accident (Citizen Flow) */}
-          <button
-            onClick={() => navigate('/report')}
-            className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 rounded-3xl shadow-level-2 hover:shadow-level-3 transition-all text-left flex flex-col justify-between h-36 group"
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-white">
-                <ShieldAlert className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-extrabold bg-white/20 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Citizen
-              </span>
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold leading-tight group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                🚨 Report Accident
-              </h3>
-              <p className="text-[11px] text-red-100 mt-1 font-medium leading-tight">
-                Instant GPS SOS & Emergency Dispatch
-              </p>
-            </div>
-          </button>
-
-          {/* Entry Point 2: 🛡 Volunteer Dashboard (Volunteer Flow) */}
-          <button
-            onClick={() => navigate('/volunteer')}
-            className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-3xl shadow-level-2 hover:shadow-level-3 transition-all text-left flex flex-col justify-between h-36 group border border-slate-700"
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 backdrop-blur-xs flex items-center justify-center text-emerald-400">
-                <ShieldCheck className="w-6 h-6" />
-              </div>
-              <span className="text-[10px] font-extrabold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Responder
-              </span>
-            </div>
-            <div>
-              <h3 className="text-sm font-extrabold leading-tight group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                🛡 Volunteer Dashboard
-              </h3>
-              <p className="text-[11px] text-slate-300 mt-1 font-medium leading-tight">
-                Respond to active local incidents
-              </p>
-            </div>
-          </button>
-        </div>
-
         {/* SOS Central Trigger */}
         <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/40 shadow-level-1 text-center">
           <h2 className="text-base font-bold text-on-surface mb-1">In an Immediate Emergency?</h2>
           <p className="text-xs text-on-surface-variant mb-2">Tap below for automatic GPS dispatch & audio SOS</p>
-          <SOSButton onTrigger={() => setIsActionCenterOpen(true)} />
+          <SOSButton onTrigger={() => navigate('/emergency')} />
         </div>
-
-        <EmergencyActionCenterSheet
-          isOpen={isActionCenterOpen}
-          onClose={() => setIsActionCenterOpen(false)}
-        />
 
         {/* Quick Emergency Category Dispatch */}
         <div>
@@ -258,7 +250,7 @@ export const HomeScreen: React.FC = () => {
               <p className="text-xs font-semibold text-on-surface-variant">Loading live emergency alerts...</p>
             </div>
           ) : accidents.length === 0 ? (
-            /* Requirement 7: Friendly empty state */
+            /* Friendly empty state */
             <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/50 text-center space-y-2">
               <Radio className="w-8 h-8 text-outline mx-auto" />
               <p className="text-xs font-bold text-on-surface">No Active Nearby Alerts</p>
@@ -358,25 +350,58 @@ export const HomeScreen: React.FC = () => {
           </div>
         </div>
 
-        {/* Primary Contact Hotline */}
-        <div className="bg-surface-container-high p-4 rounded-2xl flex items-center justify-between border border-outline-variant/60">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-              <PhoneCall className="w-5 h-5" />
+        {/* Emergency Contacts Section */}
+        <div className="bg-surface-container-high p-4 rounded-2xl border border-outline-variant/60">
+          {loadingContact ? (
+            <div className="flex items-center gap-3 py-1">
+              <Loader2 className="w-5 h-5 animate-spin text-primary shrink-0" />
+              <p className="text-xs text-on-surface-variant font-medium">Loading emergency contact...</p>
             </div>
-            <div>
-              <p className="text-xs font-bold text-on-surface">Emergency Hotline Contact</p>
-              <p className="text-[11px] text-on-surface-variant">{mockUserProfile.emergencyContacts[0].name} ({mockUserProfile.emergencyContacts[0].relation})</p>
+          ) : emergencyContact ? (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-on-surface">Emergency Contact</p>
+                  <p className="text-[11px] font-semibold text-on-surface">
+                    {emergencyContact.name}{' '}
+                    {emergencyContact.relation ? `(${emergencyContact.relation})` : ''}
+                  </p>
+                  <p className="text-[10px] text-on-surface-variant">{emergencyContact.phone}</p>
+                </div>
+              </div>
+              <a
+                href={`tel:${emergencyContact.phone}`}
+                className="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors shrink-0"
+              >
+                Call
+              </a>
             </div>
-          </div>
-          <a
-            href={`tel:${mockUserProfile.emergencyContacts[0].phone}`}
-            className="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors"
-          >
-            Call
-          </a>
+          ) : (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center shrink-0">
+                  <PhoneCall className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-on-surface">Emergency Contact</p>
+                  <p className="text-[11px] text-on-surface-variant">No emergency contacts added.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/profile', { state: { edit: true } })}
+                className="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors flex items-center gap-1 shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Emergency Contact</span>
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
 };
+
