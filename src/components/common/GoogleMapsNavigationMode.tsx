@@ -152,14 +152,22 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
 }) => {
   const map = useMap();
 
-  // Force Leaflet to recalculate exact container bounds on mount and resize
+  // Force Leaflet to recalculate exact container bounds & invalidate tile buffer on mount & resize
   useEffect(() => {
-    map.invalidateSize();
+    map.invalidateSize({ pan: false });
     const timer = setTimeout(() => {
-      map.invalidateSize();
+      map.invalidateSize({ pan: false });
     }, 100);
     return () => clearTimeout(timer);
   }, [map]);
+
+  // Invalidate tile buffer when rotation changes so Leaflet loads surrounding buffer tiles immediately
+  useEffect(() => {
+    if (isHeadingUp) {
+      map.invalidateSize({ pan: false });
+      map.fire('move');
+    }
+  }, [map, heading, isHeadingUp]);
 
   // Attach drag and zoom event listeners to pause follow mode on manual interaction
   useEffect(() => {
@@ -182,7 +190,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
       // If Navigation Assist is OFF or user is manually exploring, DO NOT touch or override zoom/view!
       if (!isFollowing && !forceRecenter) return;
 
-      map.invalidateSize();
+      map.invalidateSize({ pan: false });
       const targetZoom = isMoving ? 18 : 16;
       const currentZoom = map.getZoom();
 
@@ -254,6 +262,9 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
   const [hasArrived, setHasArrived] = useState<boolean>(false);
 
+  // Hardware Compass Reference
+  const compassHeadingRef = useRef<number | null>(null);
+
   // Arrival Detection Refs (Ensures arrival ONLY triggers after GPS updates & physical movement)
   const initialStartPosRef = useRef<[number, number]>(userPos);
   const hasReceivedGpsUpdateRef = useRef<boolean>(false);
@@ -274,11 +285,34 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     return ((diff + 540) % 360) - 180;
   };
 
-  // Real GPS Geolocation Watcher with Heading Deadband & Speed Filter
+  // Hardware Device Compass Listener (Layer 1)
+  useEffect(() => {
+    const handleOrientation = (e: any) => {
+      let comp: number | null = null;
+      if (e.webkitCompassHeading !== undefined && e.webkitCompassHeading !== null) {
+        comp = e.webkitCompassHeading;
+      } else if (e.alpha !== null && e.alpha !== undefined) {
+        comp = (360 - e.alpha) % 360;
+      }
+      if (comp !== null && !isNaN(comp)) {
+        compassHeadingRef.current = comp;
+      }
+    };
+
+    window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.addEventListener('deviceorientation', handleOrientation, true);
+
+    return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+      window.removeEventListener('deviceorientation', handleOrientation, true);
+    };
+  }, []);
+
+  // Multi-Layer Resilient GPS & Travel Bearing Heading Watcher (Layer 2 & 3)
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
 
-    const HEADING_DEADBAND_DEGREES = 8; // Ignore noise fluctuations < 8 degrees
+    const MIN_TURNING_DEADBAND_DEGREES = 5; // Minimum degrees turn to trigger rotation
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
@@ -300,45 +334,51 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           hasUserMovedRef.current = true;
         }
 
-        const userIsMoving = speed > 0.8; // > 0.8 m/s (~3 km/h)
+        // Measure distance moved from previous position
+        let moveDist = 0;
+        if (prevPosRef.current) {
+          moveDist = calculateHaversineDistance(
+            prevPosRef.current[0],
+            prevPosRef.current[1],
+            newLat,
+            newLng
+          );
+        }
+
+        const userIsMoving = speed > 0.3 || moveDist > 0.8;
         setIsMoving(userIsMoving);
 
-        // Only rotate map when user is actively moving to prevent spinning when stationary
-        if (userIsMoving) {
-          let rawHeading = pos.coords.heading;
+        // Determine candidate heading using priority chain:
+        // 1. pos.coords.heading (Hardware GPS bearing)
+        // 2. compassHeadingRef (Hardware Magnetometer/Compass)
+        // 3. Spherical travel bearing from consecutive GPS coordinates (lat1, lon1) -> (lat2, lon2)
+        let candidateHeading: number | null = null;
 
-          if (rawHeading === null || isNaN(rawHeading)) {
-            if (prevPosRef.current) {
-              const moveDist = calculateHaversineDistance(
-                prevPosRef.current[0],
-                prevPosRef.current[1],
-                newLat,
-                newLng
-              );
-              if (moveDist >= 2.5) {
-                const rad = Math.PI / 180;
-                const dLng = (newLng - prevPosRef.current[1]) * rad;
-                const y = Math.sin(dLng) * Math.cos(newLat * rad);
-                const x =
-                  Math.cos(prevPosRef.current[0] * rad) * Math.sin(newLat * rad) -
-                  Math.sin(prevPosRef.current[0] * rad) * Math.cos(newLat * rad) * Math.cos(dLng);
-                rawHeading = (Math.atan2(y, x) * 180) / Math.PI;
-              }
+        if (pos.coords.heading !== null && !isNaN(pos.coords.heading) && pos.coords.heading >= 0) {
+          candidateHeading = pos.coords.heading;
+        } else if (compassHeadingRef.current !== null && !isNaN(compassHeadingRef.current)) {
+          candidateHeading = compassHeadingRef.current;
+        } else if (prevPosRef.current && moveDist >= 1.0) {
+          // Spherical trigonometry bearing calculation from consecutive GPS coordinates
+          const rad = Math.PI / 180;
+          const dLng = (newLng - prevPosRef.current[1]) * rad;
+          const y = Math.sin(dLng) * Math.cos(newLat * rad);
+          const x =
+            Math.cos(prevPosRef.current[0] * rad) * Math.sin(newLat * rad) -
+            Math.sin(prevPosRef.current[0] * rad) * Math.cos(newLat * rad) * Math.cos(dLng);
+          candidateHeading = (Math.atan2(y, x) * 180) / Math.PI;
+        }
+
+        // Apply heading update if user has moved at least 1.0 meter (prevents spinning when stationary)
+        if (candidateHeading !== null && !isNaN(candidateHeading) && (moveDist >= 1.0 || userIsMoving)) {
+          const normalized = (candidateHeading + 360) % 360;
+          setHeading((prev) => {
+            const delta = getShortestAngleDelta(prev, normalized);
+            if (Math.abs(delta) < MIN_TURNING_DEADBAND_DEGREES) {
+              return prev;
             }
-          }
-
-          if (rawHeading !== null && !isNaN(rawHeading)) {
-            const normalized = (rawHeading + 360) % 360;
-            setHeading((prev) => {
-              const delta = getShortestAngleDelta(prev, normalized);
-              // Filter out micro fluctuations under 8 degrees
-              if (Math.abs(delta) < HEADING_DEADBAND_DEGREES) {
-                return prev;
-              }
-              // Smooth exponential interpolation for larger turns
-              return (prev + delta * 0.35 + 360) % 360;
-            });
-          }
+            return (prev + delta * 0.35 + 360) % 360;
+          });
         }
 
         prevPosRef.current = [newLat, newLng];
@@ -541,7 +581,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN MAP CANVAS (NORMAL 100% EDGE-TO-EDGE SIZE) */}
+      {/* 2. FULL-SCREEN MAP CANVAS WITH REALTIME TILE BUFFERING */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
         <div
@@ -561,6 +601,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              keepBuffer={12}
+              updateWhenIdle={false}
+              updateWhenZooming={false}
+              maxNativeZoom={19}
+              maxZoom={19}
             />
 
             <NavigationMapController
