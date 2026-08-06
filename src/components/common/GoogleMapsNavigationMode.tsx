@@ -28,7 +28,10 @@ L.Icon.Default.mergeOptions({
 });
 
 // Custom Google Maps-style Navigation Arrow Pin (Pulsing navigation beacon)
-const createNavigationUserIcon = (heading: number) => {
+// When isHeadingUp is true, container is rotated by -heading. Inside container, rotating chevron by +heading
+// keeps the arrow pointing 100% straight UP to the TOP of the screen always!
+const createNavigationUserIcon = (heading: number, isHeadingUp: boolean) => {
+  const displayHeading = isHeadingUp ? heading : heading;
   return L.divIcon({
     className: 'custom-nav-user-pin',
     html: `
@@ -40,7 +43,7 @@ const createNavigationUserIcon = (heading: number) => {
         <!-- Directional vehicle navigation chevron -->
         <div 
           class="relative w-9 h-9 rounded-full bg-blue-600 border-2 border-white shadow-2xl flex items-center justify-center text-white transition-transform duration-300 ease-out"
-          style="transform: rotate(${Math.round(heading)}deg);"
+          style="transform: rotate(${Math.round(displayHeading)}deg);"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
             <polygon points="12 2 19 21 12 17 5 21 12 2"/>
@@ -112,20 +115,22 @@ const createDestinationIcon = (type: 'accident' | 'hospital' | 'location') => {
 function getLowerCenterMapTarget(
   userCoords: [number, number],
   heading: number,
-  zoom: number
+  zoom: number,
+  isHeadingUp: boolean
 ): [number, number] {
   const [lat, lng] = userCoords;
   const rad = Math.PI / 180;
 
   // Offset distance in meters ahead of user along heading vector.
-  // At zoom 16: ~160m ahead. At zoom 18: ~40m ahead.
+  // When isHeadingUp is false (North-Up), offset is straight North.
+  const activeHeading = isHeadingUp ? heading : 0;
   const offsetMeters = 160 * Math.pow(2, 16 - zoom);
 
   const metersPerDegreeLat = 111320;
   const metersPerDegreeLng = 111320 * Math.cos(lat * rad);
 
-  const deltaLat = (offsetMeters * Math.cos(heading * rad)) / metersPerDegreeLat;
-  const deltaLng = (offsetMeters * Math.sin(heading * rad)) / metersPerDegreeLng;
+  const deltaLat = (offsetMeters * Math.cos(activeHeading * rad)) / metersPerDegreeLat;
+  const deltaLng = (offsetMeters * Math.sin(activeHeading * rad)) / metersPerDegreeLng;
 
   return [lat + deltaLat, lng + deltaLng];
 }
@@ -134,6 +139,7 @@ interface NavigationMapControllerProps {
   userCoords: [number, number];
   heading: number;
   isFollowing: boolean;
+  isHeadingUp: boolean;
   isMoving: boolean;
   onManualDrag: () => void;
   recenterTrigger: number;
@@ -143,6 +149,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   userCoords,
   heading,
   isFollowing,
+  isHeadingUp,
   isMoving,
   onManualDrag,
   recenterTrigger,
@@ -170,7 +177,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
       const targetZoom = isMoving ? 18 : 16;
       const currentZoom = map.getZoom();
 
-      const targetCenter = getLowerCenterMapTarget(userCoords, heading, targetZoom);
+      const targetCenter = getLowerCenterMapTarget(userCoords, heading, targetZoom, isHeadingUp);
 
       if (forceRecenter || Math.abs(currentZoom - targetZoom) >= 1) {
         map.flyTo(targetCenter, targetZoom, { duration: 0.8, easeLinearity: 0.25 });
@@ -178,13 +185,13 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
         map.panTo(targetCenter, { animate: true, duration: 0.35, easeLinearity: 0.25 });
       }
     },
-    [map, userCoords, heading, isFollowing, isMoving]
+    [map, userCoords, heading, isFollowing, isHeadingUp, isMoving]
   );
 
   // Trigger continuous camera update whenever user position, heading, or motion changes
   useEffect(() => {
     updateCameraView();
-  }, [updateCameraView, userCoords, heading]);
+  }, [updateCameraView, userCoords, heading, isHeadingUp]);
 
   // Recenter signal trigger from floating Recenter button
   useEffect(() => {
@@ -225,6 +232,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const [renderedPos, setRenderedPos] = useState<[number, number]>(userPos);
 
   // 2. Navigation Camera & Motion Controls
+  const [isNavModeActive, setIsNavModeActive] = useState<boolean>(true);
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
   const [isMoving, setIsMoving] = useState<boolean>(false);
   const [heading, setHeading] = useState<number>(0);
@@ -247,7 +255,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     return ((diff + 540) % 360) - 180;
   };
 
-  // Real GPS Geolocation Watcher (Production Live GPS Navigation)
+  // Real GPS Geolocation Watcher (High-frequency update GPS Navigation)
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
 
@@ -269,8 +277,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             newLat,
             newLng
           );
-          if (moveDist > 3) {
-            // Calculate bearing from previous position
+          if (moveDist > 1.2) {
+            // Immediate bearing update on >= 1.2m movement
             const rad = Math.PI / 180;
             const dLng = (newLng - prevPosRef.current[1]) * rad;
             const y = Math.sin(dLng) * Math.cos(newLat * rad);
@@ -289,7 +297,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       (err) => {
         console.warn('[GoogleMapsNav] Geolocation watch warning:', err.message);
       },
-      { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
     );
 
     return () => {
@@ -379,7 +387,23 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const handleRecenter = () => {
     setIsFollowing(true);
+    setIsHeadingUp(true);
+    setIsNavModeActive(true);
     setRecenterTrigger((prev) => prev + 1);
+  };
+
+  // Toggle Navigation Mode (ON: Camera Follow + Auto Rotate, OFF: Static North-Up Manual Map)
+  const handleToggleNavMode = () => {
+    if (isNavModeActive) {
+      setIsNavModeActive(false);
+      setIsFollowing(false);
+      setIsHeadingUp(false);
+    } else {
+      setIsNavModeActive(true);
+      setIsFollowing(true);
+      setIsHeadingUp(true);
+      setRecenterTrigger((prev) => prev + 1);
+    }
   };
 
   const getArrivalTimeString = (secs: number) => {
@@ -389,7 +413,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   };
 
   return (
-    <div className="relative w-full h-[calc(100vh-64px)] max-h-screen overflow-hidden flex flex-col select-none font-sans bg-slate-950">
+    <div className="relative w-full h-full min-h-screen overflow-hidden flex flex-col select-none font-sans bg-slate-100">
       {/* ========================================================================= */}
       {/* ARRIVAL NOTIFICATION MODAL BANNER */}
       {/* ========================================================================= */}
@@ -459,13 +483,13 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN HEADING-UP MAP CANVAS WITH LOWER-CENTER PLACEMENT */}
+      {/* 2. FULL-SCREEN HEADING-UP MAP CANVAS (OVERSIZED TO PREVENT BLACK CORNERS) */}
       {/* ========================================================================= */}
-      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
+      <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
         <div
-          className="w-full h-full transition-transform duration-500 ease-out origin-center"
+          className="w-[160%] h-[160%] -top-[30%] -left-[30%] absolute transition-transform duration-500 ease-out origin-center"
           style={{
-            transform: isHeadingUp ? `rotate(-${Math.round(heading)}deg) scale(1.25)` : 'none',
+            transform: isHeadingUp ? `rotate(-${Math.round(heading)}deg)` : 'none',
           }}
         >
           <MapContainer
@@ -485,8 +509,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               userCoords={renderedPos}
               heading={heading}
               isFollowing={isFollowing}
+              isHeadingUp={isHeadingUp}
               isMoving={isMoving}
-              onManualDrag={() => setIsFollowing(false)}
+              onManualDrag={() => {
+                setIsFollowing(false);
+              }}
               recenterTrigger={recenterTrigger}
             />
 
@@ -505,7 +532,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             )}
 
             {/* User Navigation Chevron Marker */}
-            <Marker position={renderedPos} icon={createNavigationUserIcon(heading)}>
+            <Marker position={renderedPos} icon={createNavigationUserIcon(heading, isHeadingUp)}>
               <Popup>
                 <div className="p-1 text-xs font-sans">
                   <strong className="text-blue-600 block font-bold uppercase">
@@ -529,31 +556,31 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         </div>
 
         {/* ========================================================================= */}
-        {/* 3. FLOATING MAP OVERLAY CONTROLS (COMPASS, RECENTER) */}
+        {/* 3. FLOATING MAP OVERLAY CONTROLS (NAVIGATION MODE TOGGLE) */}
         {/* ========================================================================= */}
         <div className="absolute right-4 top-28 z-[500] flex flex-col gap-3">
-          {/* Compass Heading-Up Toggle */}
+          {/* Navigation Mode Toggle Button (ON: Follow + Auto-Rotate, OFF: Static North-Up) */}
           <button
-            onClick={() => setIsHeadingUp(!isHeadingUp)}
+            onClick={handleToggleNavMode}
             className={`p-3.5 rounded-2xl shadow-2xl border transition-all active:scale-95 flex items-center justify-center ${
-              isHeadingUp
+              isNavModeActive
                 ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-900'
             }`}
-            title={isHeadingUp ? 'Heading-Up Mode Active (Auto Rotate)' : 'North-Up Mode'}
+            title={isNavModeActive ? 'Navigation Mode ON (Follow + Auto Rotate Active)' : 'Navigation Mode OFF (Static Map View)'}
           >
             <Compass
               className="w-6 h-6 transition-transform duration-500"
-              style={{ transform: `rotate(${Math.round(heading)}deg)` }}
+              style={{ transform: isHeadingUp ? `rotate(${Math.round(heading)}deg)` : 'none' }}
             />
           </button>
         </div>
 
-        {/* Floating 📍 Recenter Button (Appears when map is manually dragged) */}
+        {/* Floating 📍 Recenter Button (Always visible above bottom card when user manually drags map) */}
         {!isFollowing && (
           <button
             onClick={handleRecenter}
-            className="absolute bottom-28 right-4 z-[500] bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4.5 py-3 rounded-2xl shadow-2xl border border-blue-400 flex items-center gap-2 transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200"
+            className="absolute bottom-36 right-4 z-[500] bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-3 rounded-2xl shadow-2xl border border-blue-400 flex items-center gap-2 transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200"
             aria-label="Recenter navigation camera"
           >
             <span className="text-base">📍</span>
