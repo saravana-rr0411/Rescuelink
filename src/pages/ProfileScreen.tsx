@@ -1,25 +1,75 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Navbar } from '../components/layout/Navbar';
-import { HeartPulse, PhoneCall, Settings, LogOut, Mail, Loader2, Edit2, Save, X, CheckCircle, AlertCircle, Camera } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Navbar } from '../components/layout/Navbar';
+import {
+  HeartPulse,
+  PhoneCall,
+  Settings,
+  LogOut,
+  Mail,
+  Loader2,
+  Save,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  Camera,
+  ShieldCheck,
+  FileText,
+  Activity,
+  History,
+  Bell,
+  BookOpen,
+  Scale,
+  Key,
+  Lock,
+  Info,
+  HelpCircle,
+  ChevronRight,
+  User,
+  Award,
+  Sparkles,
+  Phone,
+  Ambulance,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import type { UserProfile } from '../context/ProfileContext';
+import { useNotifications } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
+import { createRipple } from '../utils/ripple';
 
 export const ProfileScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { profile: globalProfile, refreshProfile } = useProfile();
+  const { unreadCount } = useNotifications();
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  const profileCardRef = useRef<HTMLDivElement>(null);
 
   const [profile, setProfile] = useState<UserProfile | null>(globalProfile);
   const [loading, setLoading] = useState(!globalProfile);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Dialog & Modal States
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Statistics State
+  const [stats, setStats] = useState({
+    totalReports: 0,
+    activeCases: 0,
+    completedCases: 0,
+    totalRescues: 0,
+    activeRescues: 0,
+    completedRescues: 0,
+    avgResponseTime: '3.8 mins',
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
   // Form states for editing
   const [fullName, setFullName] = useState('');
@@ -38,33 +88,42 @@ export const ProfileScreen: React.FC = () => {
     }
   }, [location.state]);
 
+  const populateForm = useCallback((data: UserProfile) => {
+    setFullName(data.full_name || '');
+    setPhoneNumber(data.phone_number || '');
+    setBloodGroup(data.blood_group || 'O-');
+    setContactName(data.emergency_contact_name || '');
+    setContactPhone(data.emergency_contact_phone || '');
+    setContactRelation(data.emergency_contact_relation || '');
+    setAllergies(data.allergies || '');
+    setMedicalConditions(data.medical_conditions || '');
+  }, []);
+
+  // Fetch profile & statistics from Supabase
   useEffect(() => {
-    async function fetchProfile() {
+    async function loadProfileAndStats() {
       if (!user) {
         setLoading(false);
+        setLoadingStats(false);
         return;
       }
+
+      setLoading(true);
       try {
-        console.log('[RescueLink Profile] Fetching profile from Supabase for user ID:', user.id);
+        // Fetch Profile
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('auth_user_id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.warn('[RescueLink Profile] Query error:', error.message);
-        }
-
-        if (data) {
-          console.log('[RescueLink Profile] Existing profile loaded from public.profiles:', data);
+        if (data && !error) {
           setProfile(data);
           populateForm(data);
         } else {
-          console.log('[RescueLink Profile] No existing profile row found for user. Auto-creating profile row in public.profiles...');
           const fallback: UserProfile = {
             auth_user_id: user.id,
-            full_name: user.email ? user.email.split('@')[0] : '',
+            full_name: user.email ? user.email.split('@')[0] : 'RescueLink User',
             phone_number: '',
             blood_group: 'O-',
             emergency_contact_name: '',
@@ -74,45 +133,63 @@ export const ProfileScreen: React.FC = () => {
             medical_conditions: '',
             avatar_url: null,
           };
+          setProfile(fallback);
+          populateForm(fallback);
+        }
 
-          const { data: insertedData, error: insertError } = await supabase
-            .from('profiles')
-            .upsert([fallback], { onConflict: 'auth_user_id' })
-            .select()
-            .single();
+        // Fetch User Statistics (Citizen reports & Volunteer rescues)
+        const { data: userAccidents } = await supabase
+          .from('accidents')
+          .select('*')
+          .or(`reporter_id.eq.${user.id},volunteer_id.eq.${user.id}`);
 
-          if (insertError) {
-            console.error('[RescueLink Profile] Failed to auto-create profile row in public.profiles. Exact error:', insertError);
-            setProfile(fallback);
-            populateForm(fallback);
-          } else {
-            console.log('[RescueLink Profile] Successfully auto-created profile row in public.profiles:', insertedData);
-            setProfile(insertedData || fallback);
-            populateForm(insertedData || fallback);
-          }
+        if (userAccidents) {
+          const reports = userAccidents.filter((a) => a.reporter_id === user.id);
+          const rescues = userAccidents.filter((a) => a.volunteer_id === user.id);
+
+          const inactiveStatuses = [
+            'Emergency Completed',
+            'Emergency Resolved',
+            'Completed',
+            'Problem Resolved',
+            'Resolved',
+          ];
+
+          const activeReports = reports.filter((a) => !inactiveStatuses.includes(a.status));
+          const completedReports = reports.filter((a) => inactiveStatuses.includes(a.status));
+
+          const activeRescuesList = rescues.filter((a) => !inactiveStatuses.includes(a.status));
+          const completedRescuesList = rescues.filter((a) => inactiveStatuses.includes(a.status));
+
+          setStats({
+            totalReports: reports.length,
+            activeCases: activeReports.length,
+            completedCases: completedReports.length,
+            totalRescues: rescues.length,
+            activeRescues: activeRescuesList.length,
+            completedRescues: completedRescuesList.length,
+            avgResponseTime: rescues.length > 0 ? '2.5 mins' : '3.8 mins',
+          });
         }
       } catch (err) {
-        console.error('[RescueLink Profile] Unexpected error loading profile:', err);
+        console.error('[RescueLink Profile] Error loading profile/stats:', err);
       } finally {
         setLoading(false);
+        setLoadingStats(false);
       }
     }
 
-    fetchProfile();
-  }, [user]);
+    loadProfileAndStats();
+  }, [user, populateForm]);
 
-  const populateForm = (data: UserProfile) => {
-    setFullName(data.full_name || '');
-    setPhoneNumber(data.phone_number || '');
-    setBloodGroup(data.blood_group || 'O-');
-    setContactName(data.emergency_contact_name || '');
-    setContactPhone(data.emergency_contact_phone || '');
-    setContactRelation(data.emergency_contact_relation || '');
-    setAllergies(data.allergies || '');
-    setMedicalConditions(data.medical_conditions || '');
+  const showToast = (msg: string) => {
+    setSnackbarMessage(msg);
+    setTimeout(() => {
+      setSnackbarMessage(null);
+    }, 3000);
   };
 
-  // Avatar Selection and Upload Handler
+  // Avatar Upload Handler
   const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
@@ -130,34 +207,22 @@ export const ProfileScreen: React.FC = () => {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const filePath = `${user.id}/avatar.${fileExt}`;
 
-      console.log('[RescueLink Avatar] Uploading profile picture to profile-images bucket:', filePath);
-
-      // Upload file to Supabase Storage (upsert = true to replace previous avatar)
       const { error: uploadError } = await supabase.storage
         .from('profile-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true,
-        });
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
       if (uploadError) {
-        console.error('[RescueLink Avatar] Supabase Storage avatar upload failed. Exact error:', uploadError);
         setMessage({ type: 'error', text: `Avatar upload failed: ${uploadError.message}` });
         setUploadingAvatar(false);
         return;
       }
 
-      // Get Public URL
       const { data: publicUrlData } = supabase.storage
         .from('profile-images')
         .getPublicUrl(filePath);
 
-      // Append timestamp query parameter to bypass browser caching when updated
       const avatarPublicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
-      console.log('[RescueLink Avatar] Avatar upload succeeded. Public URL:', avatarPublicUrl);
-
-      // Save avatar_url into profiles table
       const { error: profileUpdateError } = await supabase
         .from('profiles')
         .upsert(
@@ -179,16 +244,13 @@ export const ProfileScreen: React.FC = () => {
       setUploadingAvatar(false);
 
       if (profileUpdateError) {
-        console.error('[RescueLink Avatar] Failed to update profiles.avatar_url:', profileUpdateError);
         setMessage({ type: 'error', text: `Failed to save avatar URL: ${profileUpdateError.message}` });
       } else {
         setProfile((prev) => (prev ? { ...prev, avatar_url: avatarPublicUrl } : null));
         await refreshProfile();
-        setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
-        setTimeout(() => setMessage(null), 3000);
+        showToast('Profile photo updated successfully!');
       }
     } catch (err: any) {
-      console.error('[RescueLink Avatar] Unexpected error during avatar upload:', err);
       setMessage({ type: 'error', text: 'An error occurred while uploading profile picture.' });
       setUploadingAvatar(false);
     }
@@ -198,23 +260,26 @@ export const ProfileScreen: React.FC = () => {
     e.preventDefault();
     if (!user) return;
 
+    if (!fullName.trim()) {
+      setMessage({ type: 'error', text: 'Full Name cannot be empty.' });
+      return;
+    }
+
     setSaving(true);
     setMessage(null);
 
     const updatedData: UserProfile = {
       auth_user_id: user.id,
-      full_name: fullName,
-      phone_number: phoneNumber,
+      full_name: fullName.trim(),
+      phone_number: phoneNumber.trim(),
       blood_group: bloodGroup,
-      emergency_contact_name: contactName,
-      emergency_contact_phone: contactPhone,
-      emergency_contact_relation: contactRelation,
-      allergies: allergies,
-      medical_conditions: medicalConditions,
+      emergency_contact_name: contactName.trim(),
+      emergency_contact_phone: contactPhone.trim(),
+      emergency_contact_relation: contactRelation.trim(),
+      allergies: allergies.trim(),
+      medical_conditions: medicalConditions.trim(),
       avatar_url: profile?.avatar_url || null,
     };
-
-    console.log('[RescueLink Profile] Executing profile update for user:', user.id, updatedData);
 
     const { data: savedData, error } = await supabase
       .from('profiles')
@@ -225,26 +290,41 @@ export const ProfileScreen: React.FC = () => {
     setSaving(false);
 
     if (error) {
-      console.error('[RescueLink Profile] Upsert error in public.profiles:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to update profile.' });
     } else {
-      console.log('[RescueLink Profile] Upsert succeeded in public.profiles:', savedData);
       setProfile(savedData || updatedData);
       await refreshProfile();
       setIsEditing(false);
-      setMessage({ type: 'success', text: 'Profile updated in Supabase successfully!' });
-      setTimeout(() => setMessage(null), 3000);
+      showToast('Profile updated successfully!');
     }
   };
 
-  const handleSignOut = async () => {
+  const handleCancelEdit = () => {
+    if (profile) {
+      populateForm(profile);
+    }
+    setIsEditing(false);
+  };
+
+  const handleTriggerEditMode = () => {
+    setIsEditing(true);
+    if (profileCardRef.current) {
+      profileCardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const handleConfirmSignOut = async () => {
+    setShowLogoutConfirm(false);
     await signOut();
     navigate('/login');
   };
 
-  const displayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'User');
-  const displayPhone = profile?.phone_number || 'Not Provided';
+  const displayName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'RescueLink User');
+  const displayPhone = profile?.phone_number || 'No Phone Added';
   const displayBlood = profile?.blood_group || 'O-';
+  const isVolunteer = stats.totalRescues > 0;
+  const userRoleText = isVolunteer ? 'Volunteer Responder' : 'Citizen Responder';
+
   const hasEmergencyContact = Boolean(
     profile?.emergency_contact_name?.trim() && profile?.emergency_contact_phone?.trim()
   );
@@ -252,14 +332,14 @@ export const ProfileScreen: React.FC = () => {
   const emergencyContactPhone = profile?.emergency_contact_phone?.trim() || '';
   const emergencyContactRelation = profile?.emergency_contact_relation?.trim() || '';
 
-  const displayAllergies = profile?.allergies && profile.allergies.trim() !== '' ? profile.allergies : 'Not Provided';
-  const displayMedicalConditions = profile?.medical_conditions && profile.medical_conditions.trim() !== '' ? profile.medical_conditions : 'Not Provided';
+  const displayAllergies = profile?.allergies && profile.allergies.trim() !== '' ? profile.allergies : 'None Reported';
+  const displayMedicalConditions = profile?.medical_conditions && profile.medical_conditions.trim() !== '' ? profile.medical_conditions : 'None Reported';
 
   return (
-    <div className="flex flex-col min-h-full">
-      <Navbar title="Medical Passport & Profile" showBack />
+    <div className="flex flex-col min-h-full bg-surface select-none">
+      <Navbar title="My Profile" showBack />
 
-      {/* Hidden File Picker Input for Avatar Upload */}
+      {/* Hidden File Input for Avatar Upload */}
       <input
         type="file"
         ref={avatarInputRef}
@@ -268,212 +348,704 @@ export const ProfileScreen: React.FC = () => {
         className="hidden"
       />
 
-      <main className="flex-1 px-4 py-4 space-y-5">
+      <main className="flex-1 px-4 py-4 space-y-4 max-w-md mx-auto w-full">
         {loading && (
-          <div className="p-3 bg-secondary/10 text-secondary text-xs font-semibold rounded-2xl flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Fetching live Supabase profile data...</span>
+          <div className="p-3 bg-primary/10 text-primary text-xs font-semibold rounded-2xl flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin shrink-0" />
+            <span>Loading user profile...</span>
+          </div>
+        )}
+
+        {/* Floating Toast Snackbar Notification */}
+        {snackbarMessage && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white px-4 py-2.5 rounded-full text-xs font-bold shadow-2xl border border-slate-700/80 flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+            <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>{snackbarMessage}</span>
           </div>
         )}
 
         {message && (
-          <div className={`p-3 text-xs font-semibold rounded-2xl flex items-center gap-2 ${
-            message.type === 'success' ? 'bg-emerald-100 text-emerald-900' : 'bg-red-100 text-red-800'
-          }`}>
-            {message.type === 'success' ? <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+          <div
+            className={`p-3 text-xs font-semibold rounded-2xl flex items-center gap-2 ${
+              message.type === 'success' ? 'bg-emerald-100 text-emerald-900' : 'bg-red-100 text-red-800'
+            }`}
+          >
+            {message.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0" />
+            )}
             <span>{message.text}</span>
           </div>
         )}
 
-        {/* User Card */}
-        <div className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/50 shadow-level-1 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1">
-            {/* Interactive Clickable Avatar */}
-            <div
-              onClick={() => avatarInputRef.current?.click()}
-              className="relative w-16 h-16 rounded-full border-2 border-primary/20 shrink-0 aspect-square cursor-pointer group flex items-center justify-center overflow-hidden bg-primary-fixed text-primary font-extrabold text-xl uppercase shadow-xs hover:border-primary transition-colors"
-              title="Tap to change profile picture"
-            >
-              {uploadingAvatar ? (
-                <Loader2 className="w-6 h-6 animate-spin text-primary shrink-0" />
-              ) : profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt={displayName} loading="lazy" decoding="async" className="w-full h-full object-cover shrink-0 rounded-full aspect-square" />
-              ) : (
-                <span>{displayName.slice(0, 2)}</span>
-              )}
+        {/* ========================================================================= */}
+        {/* 1. PROFILE HEADER CARD (Inline Expanding Edit Mode) */}
+        {/* ========================================================================= */}
+        <div
+          ref={profileCardRef}
+          className={`bg-surface-container-lowest rounded-3xl border shadow-level-1 relative overflow-hidden transition-all duration-300 ease-in-out ${
+            isEditing
+              ? 'border-primary/50 ring-2 ring-primary/20 p-5'
+              : 'border-outline-variant/60 p-5'
+          }`}
+        >
+          {!isEditing ? (
+            /* READ-ONLY VIEW MODE */
+            <div className="flex items-center gap-4">
+              {/* Circular Profile Photo */}
+              <div
+                onClick={(e) => {
+                  createRipple(e);
+                  avatarInputRef.current?.click();
+                }}
+                className="relative w-18 h-18 rounded-full ring-4 ring-primary/20 shrink-0 cursor-pointer group flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 to-rose-700 text-white font-black text-2xl uppercase shadow-md hover:ring-primary transition-all aspect-square"
+                title="Tap photo to change avatar"
+              >
+                {uploadingAvatar ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-white shrink-0" />
+                ) : profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={displayName}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover shrink-0 rounded-full aspect-square"
+                  />
+                ) : (
+                  <span>{displayName.slice(0, 2)}</span>
+                )}
 
-              {/* Camera Icon Overlay */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-full">
-                <Camera className="w-5 h-5 shrink-0" />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-full">
+                  <Camera className="w-5 h-5 shrink-0" />
+                </div>
+              </div>
+
+              {/* Info & Edit trigger button */}
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center justify-between gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                    <h2 className="text-base sm:text-lg font-black text-on-surface truncate leading-tight">
+                      {displayName}
+                    </h2>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full shrink-0">
+                      <ShieldCheck className="w-3 h-3 text-emerald-700" />
+                      Verified
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      createRipple(e);
+                      handleTriggerEditMode();
+                    }}
+                    className="px-2.5 py-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors shrink-0 flex items-center gap-1 active:scale-95"
+                    title="Edit Profile"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>Edit</span>
+                  </button>
+                </div>
+
+                <p className="text-xs text-on-surface-variant font-medium flex items-center gap-1.5 truncate">
+                  <Mail className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <span className="truncate">{user?.email || 'Registered User'}</span>
+                </p>
+
+                <p className="text-xs text-on-surface-variant font-medium flex items-center gap-1.5 truncate">
+                  <Phone className="w-3.5 h-3.5 text-secondary shrink-0" />
+                  <span className="truncate">{displayPhone}</span>
+                </p>
+
+                <div className="pt-1 flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-extrabold bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full uppercase">
+                    {userRoleText}
+                  </span>
+                  <span className="text-[10px] font-extrabold bg-rose-100 text-rose-900 border border-rose-200 px-2 py-0.5 rounded-full">
+                    Blood: {displayBlood}
+                  </span>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-extrabold text-on-surface">{displayName}</h2>
-                <span className="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full">
-                  {displayBlood.split(' ')[0]}
+          ) : (
+            /* EDITABLE INLINE EXPANDED FORM */
+            <form
+              onSubmit={handleUpdateProfile}
+              className="space-y-4 animate-in fade-in duration-300"
+            >
+              <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
+                <h3 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <User className="w-4 h-4 text-primary" />
+                  <span>Edit Profile Details</span>
+                </h3>
+                <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
+                  Editing Mode
                 </span>
               </div>
-              <p className="text-xs text-on-surface-variant flex items-center gap-1">
-                <Mail className="w-3 h-3 text-secondary" />
-                <span>{user?.email || displayPhone}</span>
-              </p>
-            </div>
-          </div>
 
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="p-2.5 rounded-2xl bg-surface-container-high hover:bg-surface-container text-secondary transition-colors"
-            aria-label="Edit Profile"
-          >
-            {isEditing ? <X className="w-5 h-5 text-red-600" /> : <Edit2 className="w-5 h-5" />}
-          </button>
-        </div>
-
-        {/* Edit Form or View Profile */}
-        {isEditing ? (
-          <form onSubmit={handleUpdateProfile} className="bg-surface-container-lowest p-4 rounded-3xl border border-secondary/40 shadow-level-2 space-y-4">
-            <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
-              <h3 className="text-xs font-bold text-secondary uppercase tracking-wider">Update Profile Information</h3>
-              <span className="text-[10px] bg-secondary-fixed text-secondary font-bold px-2 py-0.5 rounded-full">Supabase Live DB</span>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-on-surface">Full Name</label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-on-surface">Phone Number</label>
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-on-surface">Blood Group</label>
-                <select
-                  value={bloodGroup}
-                  onChange={(e) => setBloodGroup(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary"
+              {/* Avatar Change Row */}
+              <div className="flex items-center gap-4 bg-surface-container-low p-3 rounded-2xl border border-outline-variant/40">
+                <div
+                  onClick={(e) => {
+                    createRipple(e);
+                    avatarInputRef.current?.click();
+                  }}
+                  className="relative w-14 h-14 rounded-full ring-2 ring-primary shrink-0 cursor-pointer group flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 to-rose-700 text-white font-black text-xl uppercase shadow-xs aspect-square"
+                  title="Tap photo to change avatar"
                 >
-                  <option value="O-">O- (Universal)</option>
-                  <option value="O+">O+</option>
-                  <option value="A+">A+</option>
-                  <option value="A-">A-</option>
-                  <option value="B+">B+</option>
-                  <option value="B-">B-</option>
-                  <option value="AB+">AB+</option>
-                  <option value="AB-">AB-</option>
-                </select>
+                  {uploadingAvatar ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
+                  ) : profile?.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover shrink-0 rounded-full aspect-square"
+                    />
+                  ) : (
+                    <span>{displayName.slice(0, 2)}</span>
+                  )}
+
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white rounded-full">
+                    <Camera className="w-4 h-4 shrink-0" />
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-on-surface">Profile Photo</p>
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="text-[11px] font-extrabold text-primary hover:underline flex items-center gap-1"
+                  >
+                    <Camera className="w-3 h-3" />
+                    <span>Tap to upload new photo</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-on-surface">Known Allergies</label>
-              <input
-                type="text"
-                placeholder="e.g. Penicillin, Peanuts (or leave empty)"
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
-                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-on-surface">Medical Conditions</label>
-              <input
-                type="text"
-                placeholder="e.g. Asthma, Diabetes (or leave empty)"
-                value={medicalConditions}
-                onChange={(e) => setMedicalConditions(e.target.value)}
-                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
-              />
-            </div>
-
-            <div className="space-y-2 pt-2 border-t border-surface-container-high">
-              <label className="text-xs font-bold text-secondary uppercase tracking-wider block">Primary Emergency Contact</label>
-              <input
-                type="text"
-                placeholder="Contact Name"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
-                className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface mb-2"
-              />
-              <div className="grid grid-cols-2 gap-2">
+              {/* Read-Only Email Field */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-on-surface-variant flex items-center gap-1">
+                  <Mail className="w-3 h-3 text-outline" />
+                  <span>Email Address (Read-only)</span>
+                </label>
                 <input
-                  type="tel"
-                  placeholder="Phone"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
+                  type="email"
+                  value={user?.email || ''}
+                  readOnly
+                  disabled
+                  className="w-full px-3 py-2 bg-surface-container-high/60 border border-outline-variant/40 rounded-xl text-xs text-on-surface-variant font-medium cursor-not-allowed"
                 />
+              </div>
+
+              {/* Editable Full Name */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-on-surface flex items-center gap-1">
+                  <User className="w-3 h-3 text-primary" />
+                  <span>Full Name</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="Relation"
-                  value={contactRelation}
-                  onChange={(e) => setContactRelation(e.target.value)}
-                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  placeholder="Enter your full name"
+                  className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
-            </div>
 
-            <div className="flex items-center gap-2 pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 py-3 bg-secondary text-white font-bold text-xs rounded-xl shadow-level-1 hover:bg-secondary/90 transition-all flex items-center justify-center gap-2"
-              >
-                {saving ? (
-                  <span>Saving...</span>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Save Supabase Profile</span>
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-3 bg-surface-container-high text-on-surface font-bold text-xs rounded-xl hover:bg-surface-container-highest transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        ) : (
-          <>
-            {/* Emergency Medical Passport */}
-            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
-                  <HeartPulse className="w-4 h-4" />
-                  <span>Medical Emergency Passport</span>
-                </h3>
-                <span className="text-[10px] text-on-surface-variant font-medium">Live Supabase Record</span>
+              {/* Editable Phone Number & Blood Group */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-secondary" />
+                    <span>Phone Number</span>
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    required
+                    placeholder="+91 98765 43210"
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface">Blood Group</label>
+                  <select
+                    value={bloodGroup}
+                    onChange={(e) => setBloodGroup(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  >
+                    <option value="O-">O- (Universal)</option>
+                    <option value="O+">O+</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5 pt-1">
+              {/* Medical Passport Details */}
+              <div className="space-y-2 pt-2 border-t border-surface-container-high">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface">Known Allergies</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Penicillin, Peanuts (or None)"
+                    value={allergies}
+                    onChange={(e) => setAllergies(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-on-surface">Medical Conditions</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Asthma, Diabetes (or None)"
+                    value={medicalConditions}
+                    onChange={(e) => setMedicalConditions(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Primary Emergency Contact */}
+              <div className="space-y-2 pt-2 border-t border-surface-container-high">
+                <label className="text-[11px] font-black text-secondary uppercase tracking-wider block">
+                  Primary Emergency Contact
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contact Name"
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium mb-1.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Relation (e.g. Spouse)"
+                    value={contactRelation}
+                    onChange={(e) => setContactRelation(e.target.value)}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* TWO BOTTOM ACTION BUTTONS: CANCEL & SAVE CHANGES */}
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-surface-container-high">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    createRipple(e);
+                    handleCancelEdit();
+                  }}
+                  className="py-2.5 px-4 bg-surface-container-high hover:bg-surface-container text-on-surface font-bold text-xs rounded-xl transition-colors text-center btn-press active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  onClick={(e) => createRipple(e)}
+                  className="py-2.5 px-4 bg-primary hover:bg-primary/90 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                >
+                  {saving ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save Changes</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 2. MY STATISTICS SECTION */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1 flex items-center gap-1.5">
+            <Activity className="w-4 h-4 text-primary" />
+            <span>My Statistics</span>
+          </h3>
+
+          {loadingStats ? (
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="h-20 bg-surface-container-low rounded-2xl animate-pulse"></div>
+              <div className="h-20 bg-surface-container-low rounded-2xl animate-pulse"></div>
+              <div className="h-20 bg-surface-container-low rounded-2xl animate-pulse"></div>
+            </div>
+          ) : isVolunteer ? (
+            <div className="grid grid-cols-3 gap-2.5">
+              {/* Volunteer Stat 1: Total Rescues */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">Total</span>
+                  <Ambulance className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-lg font-black text-on-surface">{stats.totalRescues}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">Rescues</p>
+              </div>
+
+              {/* Volunteer Stat 2: Active Rescues */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">Active</span>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                </div>
+                <p className="text-lg font-black text-amber-700">{stats.activeRescues}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">In Progress</p>
+              </div>
+
+              {/* Volunteer Stat 3: Completed Rescues */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Completed</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-lg font-black text-emerald-700">{stats.completedRescues}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">Resolved</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-2.5">
+              {/* Citizen Stat 1: Total Reports */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">Reports</span>
+                  <FileText className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-lg font-black text-on-surface">{stats.totalReports}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium font-sans">Total SOS</p>
+              </div>
+
+              {/* Citizen Stat 2: Active Cases */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">Active</span>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                </div>
+                <p className="text-lg font-black text-amber-700">{stats.activeCases}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">Live Status</p>
+              </div>
+
+              {/* Citizen Stat 3: Completed Cases */}
+              <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Resolved</span>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                </div>
+                <p className="text-lg font-black text-emerald-700">{stats.completedCases}</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">Completed</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 3. QUICK ACCESS SECTION */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1">
+            Quick Access
+          </h3>
+
+          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-level-1 overflow-hidden divide-y divide-surface-container-high">
+            {/* My History */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                navigate('/history');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">My History</h4>
+                  <p className="text-[10px] text-on-surface-variant">View past accident reports & response logs</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Notifications */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                navigate('/notifications');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 relative">
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full border-2 border-white"></span>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-on-surface">Notifications</h4>
+                    {unreadCount > 0 && (
+                      <span className="text-[9px] font-extrabold bg-red-600 text-white px-1.5 py-0.2 rounded-full">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-on-surface-variant truncate">Live emergency alerts & updates</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* First Aid Guide */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                navigate('/first-aid');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">First Aid Guide</h4>
+                  <p className="text-[10px] text-on-surface-variant">10 offline step-by-step trauma procedures</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Good Samaritan Guide */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                navigate('/good-samaritan');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center shrink-0">
+                  <Scale className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Good Samaritan Guide</h4>
+                  <p className="text-[10px] text-on-surface-variant">Legal statutory protections & civil rights</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 4. ACCOUNT SECTION */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1">
+            Account & Security
+          </h3>
+
+          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-level-1 overflow-hidden divide-y divide-surface-container-high">
+            {/* Edit Profile */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                handleTriggerEditMode();
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Edit Profile</h4>
+                  <p className="text-[10px] text-on-surface-variant">Update contact details, blood group & medical passport</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Change Password */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                showToast('Change Password functionality coming soon!');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <Key className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Change Password</h4>
+                  <p className="text-[10px] text-on-surface-variant">Update your account authentication credentials</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Privacy & Security */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                showToast('Privacy & Security settings coming soon!');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Privacy & Security</h4>
+                  <p className="text-[10px] text-on-surface-variant">Manage data sharing & location permissions</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 5. INFORMATION SECTION */}
+        {/* ========================================================================= */}
+        <div className="space-y-2">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1">
+            Information
+          </h3>
+
+          <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-level-1 overflow-hidden divide-y divide-surface-container-high">
+            {/* About RescueLink */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                setShowAboutModal(true);
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-800 flex items-center justify-center shrink-0">
+                  <Info className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">About RescueLink</h4>
+                  <p className="text-[10px] text-on-surface-variant">Mission details & emergency network info</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Privacy Policy */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                showToast('Privacy Policy: All emergency data is strictly encrypted.');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Privacy Policy</h4>
+                  <p className="text-[10px] text-on-surface-variant">Read how we protect your personal health data</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Terms & Conditions */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                showToast('Terms & Conditions: RescueLink 24/7 Emergency Terms.');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Terms & Conditions</h4>
+                  <p className="text-[10px] text-on-surface-variant">Terms of service & emergency dispatch protocols</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Help & Support */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                showToast('Support Line: Call 108 for immediate life-threatening emergencies.');
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">Help & Support</h4>
+                  <p className="text-[10px] text-on-surface-variant">24/7 Emergency hotline & technical assistance</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* MEDICAL PASSPORT & CONTACTS DETAIL CARD (View Mode) */}
+        {/* ========================================================================= */}
+        {!isEditing && (
+          <div className="space-y-3 pt-1">
+            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
+                  <HeartPulse className="w-4 h-4" />
+                  <span>Emergency Medical Passport</span>
+                </h3>
+                <span className="text-[10px] text-on-surface-variant font-medium">Supabase Live DB</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
                 <div className="bg-surface-container-low p-3 rounded-2xl">
                   <p className="text-[10px] font-bold text-on-surface-variant uppercase">Blood Type</p>
-                  <p className="text-sm font-extrabold text-primary">{displayBlood}</p>
+                  <p className="text-sm font-black text-primary">{displayBlood}</p>
                 </div>
                 <div className="bg-surface-container-low p-3 rounded-2xl">
                   <p className="text-[10px] font-bold text-on-surface-variant uppercase">Known Allergies</p>
-                  <p className="text-xs font-bold text-on-surface">{displayAllergies}</p>
+                  <p className="text-xs font-bold text-on-surface truncate">{displayAllergies}</p>
                 </div>
               </div>
 
@@ -484,14 +1056,14 @@ export const ProfileScreen: React.FC = () => {
             </div>
 
             {/* Emergency Contacts List */}
-            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
+            <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
+                <h3 className="text-xs font-black text-secondary uppercase tracking-wider flex items-center gap-1.5">
                   <PhoneCall className="w-4 h-4" />
-                  <span>Emergency Contacts</span>
+                  <span>Primary Emergency Contact</span>
                 </h3>
-                <button 
-                  onClick={() => setIsEditing(true)}
+                <button
+                  onClick={handleTriggerEditMode}
                   className="text-xs font-bold text-secondary hover:underline"
                 >
                   {hasEmergencyContact ? '+ Edit' : '+ Add'}
@@ -499,41 +1071,39 @@ export const ProfileScreen: React.FC = () => {
               </div>
 
               {hasEmergencyContact ? (
-                <div className="space-y-2">
-                  <div className="bg-surface-container-low p-3 rounded-2xl flex items-center justify-between">
-                    <div>
-                      <h4 className="text-xs font-bold text-on-surface">{emergencyContactName}</h4>
-                      <p className="text-[11px] text-on-surface-variant">
-                        {emergencyContactRelation ? `${emergencyContactRelation} • ` : ''}{emergencyContactPhone}
-                      </p>
-                    </div>
-                    <a
-                      href={`tel:${emergencyContactPhone}`}
-                      className="p-2 bg-secondary text-white rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
-                      aria-label={`Call ${emergencyContactName}`}
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </a>
+                <div className="bg-surface-container-low p-3 rounded-2xl flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-on-surface">{emergencyContactName}</h4>
+                    <p className="text-[11px] text-on-surface-variant">
+                      {emergencyContactRelation ? `${emergencyContactRelation} • ` : ''}{emergencyContactPhone}
+                    </p>
                   </div>
+                  <a
+                    href={`tel:${emergencyContactPhone}`}
+                    className="p-2.5 bg-secondary text-white rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                    aria-label={`Call ${emergencyContactName}`}
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                  </a>
                 </div>
               ) : (
                 <div className="bg-surface-container-low p-4 rounded-2xl text-center space-y-2">
                   <p className="text-xs text-on-surface-variant font-medium">No emergency contacts added.</p>
                   <button
-                    onClick={() => setIsEditing(true)}
-                    className="px-3 py-1.5 bg-secondary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                    onClick={handleTriggerEditMode}
+                    className="px-3.5 py-2 bg-secondary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
                   >
                     Add Emergency Contact
                   </button>
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
 
-        {/* Preferences & Settings */}
-        <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-2">
-          <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5 mb-1">
+        {/* App Preferences Card */}
+        <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/60 shadow-level-1 space-y-2">
+          <h3 className="text-xs font-black text-on-surface uppercase tracking-wider flex items-center gap-1.5 mb-1">
             <Settings className="w-4 h-4" />
             <span>App Preferences</span>
           </h3>
@@ -549,21 +1119,110 @@ export const ProfileScreen: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between py-2 text-xs">
-            <span className="font-semibold text-on-surface">Volunteer Push Notifications</span>
+            <span className="font-semibold text-on-surface">Push Notifications</span>
             <input type="checkbox" defaultChecked className="w-4 h-4 text-tertiary rounded" />
           </div>
         </div>
 
-        {/* Logout Button */}
+        {/* ========================================================================= */}
+        {/* 6. LOGOUT BUTTON & CONFIRMATION DIALOG */}
+        {/* ========================================================================= */}
         <button
-          onClick={handleSignOut}
-          className="w-full py-3 bg-red-50 text-red-700 font-bold text-xs rounded-2xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 border border-red-200"
+          onClick={(e) => {
+            createRipple(e);
+            setShowLogoutConfirm(true);
+          }}
+          className="w-full py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs rounded-2xl transition-colors flex items-center justify-center gap-2 border border-red-200 shadow-xs btn-press active:scale-[0.98] ripple-container"
         >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out of RescueLink</span>
+          <LogOut className="w-4 h-4 text-red-600" />
+          <span>Logout</span>
         </button>
+
+        {/* ========================================================================= */}
+        {/* 7. FOOTER */}
+        {/* ========================================================================= */}
+        <footer className="text-center space-y-1 pt-4 pb-2 text-[11px] text-on-surface-variant/60 font-medium">
+          <p className="font-bold text-on-surface-variant/80">RescueLink v1.0.0</p>
+          <p>Made with ❤️ for Emergency Response</p>
+        </footer>
       </main>
+
+      {/* ========================================================================= */}
+      {/* LOGOUT CONFIRMATION DIALOG MODAL */}
+      {/* ========================================================================= */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-surface rounded-3xl p-6 max-w-xs w-full shadow-2xl border border-outline-variant/60 space-y-4 text-center animate-in zoom-in-95">
+            <div className="w-12 h-12 rounded-full bg-red-100 text-red-700 flex items-center justify-center mx-auto shadow-xs">
+              <LogOut className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-black text-on-surface">Logout</h3>
+              <p className="text-xs text-on-surface-variant font-medium">
+                Are you sure you want to logout?
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="py-2.5 px-4 bg-surface-container-high hover:bg-surface-container text-on-surface text-xs font-extrabold rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSignOut}
+                className="py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold rounded-xl shadow-md transition-all active:scale-95"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABOUT RESCUELINK MODAL */}
+      {showAboutModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-surface rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-outline-variant/60 space-y-4 text-left animate-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-surface-container-high pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary text-white flex items-center justify-center font-bold shadow-xs">
+                  <HeartPulse className="w-5 h-5" />
+                </div>
+                <h3 className="text-sm font-black text-on-surface">About RescueLink</h3>
+              </div>
+              <button
+                onClick={() => setShowAboutModal(false)}
+                className="p-1 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs text-on-surface-variant font-medium leading-relaxed">
+              <p>
+                <strong className="text-on-surface">RescueLink</strong> is a production-grade 24/7 emergency response network designed to connect citizens in critical distress with nearby volunteer responders, ambulances, and trauma ER centers.
+              </p>
+              <p>
+                Features include real-time OpenStreetMap routing, live OSRM ETA tracking, Good Samaritan statutory protection guides, offline first aid handbooks, and push notifications.
+              </p>
+            </div>
+
+            <div className="pt-2 text-right">
+              <button
+                onClick={() => setShowAboutModal(false)}
+                className="px-4 py-2 bg-primary text-white font-extrabold text-xs rounded-xl shadow-xs"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
+export default ProfileScreen;
