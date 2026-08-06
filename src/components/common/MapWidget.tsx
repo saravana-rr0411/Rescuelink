@@ -101,7 +101,7 @@ export const MapWidget: React.FC<MapWidgetProps> = ({
   volunteerLongitude = null,
   mode = 'citizen',
 }) => {
-  const shouldShowNavigateBtn = showNavigateBtn !== undefined ? showNavigateBtn : mode === 'volunteer';
+  const shouldShowNavigateBtn = showNavigateBtn !== undefined ? showNavigateBtn : true;
   const navigate = useNavigate();
 
   const hasCoordinates =

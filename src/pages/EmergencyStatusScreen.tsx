@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital, Ambulance } from 'lucide-react';
+import { MapPin, PhoneCall, AlertCircle, Loader2, Clock, ShieldAlert, Camera, CheckCircle2, Hospital, Ambulance, Navigation } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { MapWidget } from '../components/common/MapWidget';
@@ -494,7 +494,24 @@ export const EmergencyStatusScreen: React.FC = () => {
                       <Hospital className="w-3.5 h-3.5" />
                       Selected Hospital
                     </span>
-                    <span className="text-xs text-blue-200 font-bold">Destination</span>
+                    <button
+                      onClick={() =>
+                        navigate(`/navigation/${accident.id}`, {
+                          state: {
+                            accidentId: accident.id,
+                            latitude: accident.latitude,
+                            longitude: accident.longitude,
+                            address: accident.address,
+                            severity: accident.severity,
+                            mode: 'citizen',
+                          },
+                        })
+                      }
+                      className="px-3 py-1 bg-white text-blue-900 font-extrabold text-xs rounded-xl shadow-xs hover:bg-blue-50 transition-colors flex items-center gap-1 active:scale-95"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>Navigate</span>
+                    </button>
                   </div>
 
                   <div>
@@ -533,7 +550,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 address={accident.address}
                 severity={accident.severity}
                 height="h-56"
-                showNavigateBtn={false}
+                showNavigateBtn={true}
                 volunteerLatitude={hasVolunteer ? accident.volunteer_latitude : null}
                 volunteerLongitude={hasVolunteer ? accident.volunteer_longitude : null}
                 mode="citizen"
