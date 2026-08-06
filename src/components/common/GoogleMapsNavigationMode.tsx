@@ -179,7 +179,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
   // Dynamic Camera Follow & Lower-Center Panning Engine
   const updateCameraView = useCallback(
     (forceRecenter = false) => {
-      // If user is manually exploring or Navigation Mode is OFF, DO NOT touch or override zoom/view!
+      // If Navigation Assist is OFF or user is manually exploring, DO NOT touch or override zoom/view!
       if (!isFollowing && !forceRecenter) return;
 
       map.invalidateSize();
@@ -202,7 +202,7 @@ const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
     updateCameraView();
   }, [updateCameraView, userCoords, heading, isHeadingUp]);
 
-  // Recenter signal trigger from floating Recenter button
+  // Recenter signal trigger when Navigation Assist is turned ON again
   useEffect(() => {
     if (recenterTrigger > 0) {
       updateCameraView(true);
@@ -245,7 +245,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const [renderedPos, setRenderedPos] = useState<[number, number]>(userPos);
 
-  // 2. Navigation Camera & Motion Controls
+  // 2. Navigation Assist Controls (ON by default)
   const [isNavModeActive, setIsNavModeActive] = useState<boolean>(true);
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
   const [isMoving, setIsMoving] = useState<boolean>(false);
@@ -442,6 +442,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     loadRoute();
   }, [userPos, destinationCoords, routePolyline.length, currentRoad, onArrival]);
 
+  // Recenter button restores full Navigation Assist ON state
   const handleRecenter = () => {
     setIsFollowing(true);
     setIsHeadingUp(true);
@@ -449,7 +450,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     setRecenterTrigger((prev) => prev + 1);
   };
 
-  // Toggle Navigation Mode (ON: Follow + Auto Rotate, OFF: Static North-Up Manual Map)
+  // Toggle Navigation Assist (ON: Follow + Auto Rotate + Auto Center + Smart Zoom, OFF: Static North-Up Map)
   const handleToggleNavMode = () => {
     if (isNavModeActive) {
       setIsNavModeActive(false);
@@ -613,10 +614,10 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         </div>
 
         {/* ========================================================================= */}
-        {/* 3. FLOATING MAP OVERLAY CONTROLS (NAVIGATION MODE TOGGLE) */}
+        {/* 3. FLOATING MAP OVERLAY CONTROLS (NAVIGATION ASSIST TOGGLE) */}
         {/* ========================================================================= */}
         <div className="absolute right-4 top-28 z-[500] flex flex-col gap-3">
-          {/* Navigation Mode Toggle Button (ON: Follow + Auto Rotate, OFF: Static North-Up) */}
+          {/* Navigation Assist Toggle Button (ON: Follow + Auto Rotate + Auto Center + Smart Zoom, OFF: Static North-Up) */}
           <button
             onClick={handleToggleNavMode}
             className={`p-3.5 rounded-2xl shadow-2xl border transition-all active:scale-95 flex items-center justify-center ${
@@ -624,7 +625,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30'
                 : 'bg-slate-900/90 text-slate-300 border-slate-700/80 hover:bg-slate-900'
             }`}
-            title={isNavModeActive ? 'Navigation Mode ON (Follow + Auto Rotate Active)' : 'Navigation Mode OFF (Static Map View)'}
+            title={isNavModeActive ? 'Navigation Assist ON' : 'Navigation Assist OFF'}
+            aria-label={isNavModeActive ? 'Navigation Assist ON' : 'Navigation Assist OFF'}
           >
             <Compass
               className="w-6 h-6 transition-transform duration-500"
