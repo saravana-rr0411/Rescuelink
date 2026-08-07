@@ -30,14 +30,30 @@ CREATE TABLE IF NOT EXISTS public.accidents (
 -- 3. Enable Row Level Security (RLS)
 ALTER TABLE public.accidents ENABLE ROW LEVEL SECURITY;
 
--- 4. Policy: Allow users to view their own reports OR volunteers/users to view active 'Reported' accidents
+-- 4. Policy: Allow authenticated users to view:
+--    a) Their own reports (as citizen/reporter)
+--    b) Their assigned missions (as volunteer)
+--    c) ALL active (non-completed) accidents so volunteer dashboards see every new SOS
+-- BUG FIX: Previous policy used status = 'Reported' which blocked 'SOS Sent' and all other
+-- active statuses from appearing on volunteer dashboards. The status column stores 'SOS Sent',
+-- 'Volunteer Assigned', 'Volunteer En Route', etc — not just 'Reported'.
 DROP POLICY IF EXISTS "Users can view own accident reports" ON public.accidents;
 DROP POLICY IF EXISTS "Users and Volunteers can view accident reports" ON public.accidents;
 
 CREATE POLICY "Users and Volunteers can view accident reports"
   ON public.accidents
   FOR SELECT
-  USING (auth.uid() = reporter_id OR status = 'Reported' OR auth.uid() = volunteer_id);
+  USING (
+    auth.uid() = reporter_id
+    OR auth.uid() = volunteer_id
+    OR status NOT IN (
+      'Emergency Completed',
+      'Emergency Resolved',
+      'Completed',
+      'Problem Resolved',
+      'Resolved'
+    )
+  );
 
 -- 5. Policy: Allow users to create their own accident reports
 DROP POLICY IF EXISTS "Users can create own accident reports" ON public.accidents;
@@ -53,7 +69,17 @@ DROP POLICY IF EXISTS "Users and Volunteers can update accident reports" ON publ
 CREATE POLICY "Users and Volunteers can update accident reports"
   ON public.accidents
   FOR UPDATE
-  USING (auth.uid() = reporter_id OR status = 'Reported' OR auth.uid() = volunteer_id);
+  USING (
+    auth.uid() = reporter_id
+    OR auth.uid() = volunteer_id
+    OR status NOT IN (
+      'Emergency Completed',
+      'Emergency Resolved',
+      'Completed',
+      'Problem Resolved',
+      'Resolved'
+    )
+  );
 
 -- 7. Trigger for automatic `updated_at` timestamps
 CREATE OR REPLACE FUNCTION public.update_accidents_updated_at()
@@ -68,3 +94,4 @@ DROP TRIGGER IF EXISTS trigger_accidents_updated_at ON public.accidents;
 CREATE TRIGGER trigger_accidents_updated_at
   BEFORE UPDATE ON public.accidents
   FOR EACH ROW EXECUTE FUNCTION public.update_accidents_updated_at();
+

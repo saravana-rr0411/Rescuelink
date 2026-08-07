@@ -99,13 +99,21 @@ export const VolunteerDashboardScreen: React.FC = () => {
           .order('created_at', { ascending: false });
 
         if (reportedError) {
-          console.warn('[RescueLink Volunteer] Error fetching reported accidents:', reportedError.message);
+          console.error('[RescueLink Volunteer] Error fetching reported accidents:', reportedError.code, reportedError.message, reportedError.details);
+          console.error('[RescueLink Volunteer] ⚠️ If code=42501 (insufficient_privilege) the RLS SELECT policy is blocking volunteers. Run the updated accidents_schema.sql in Supabase SQL Editor.');
         } else if (reportedData) {
+          console.log('[RescueLink Volunteer] Raw records returned from Supabase:', reportedData.length, reportedData.map(r => ({ id: r.id, status: r.status, volunteer_id: r.volunteer_id })));
           const activeOnly = reportedData.filter((item) => !isFinishedStatus(item.status));
+          console.log('[RescueLink Volunteer] Active (non-finished) records after filter:', activeOnly.length);
 
-          setIncidents(activeOnly.filter((item) => !item.volunteer_id || item.volunteer_id !== user?.id));
+          const unassigned = activeOnly.filter((item) => !item.volunteer_id || item.volunteer_id !== user?.id);
+          console.log('[RescueLink Volunteer] Incidents (unassigned feed):', unassigned.length);
+          setIncidents(unassigned);
+
           if (user) {
-            setAssignedMissions(activeOnly.filter((item) => item.volunteer_id === user.id));
+            const myMissions = activeOnly.filter((item) => item.volunteer_id === user.id);
+            console.log('[RescueLink Volunteer] My assigned missions:', myMissions.length);
+            setAssignedMissions(myMissions);
           }
         }
       } catch (err) {
@@ -147,13 +155,21 @@ export const VolunteerDashboardScreen: React.FC = () => {
           if (!newRecord) return;
 
           if (payload.eventType === 'INSERT') {
+            console.log('[RescueLink Realtime] New accident INSERT received:', { id: newRecord.id, status: newRecord.status, volunteer_id: newRecord.volunteer_id, latitude: newRecord.latitude, longitude: newRecord.longitude });
             if (!isFinishedStatus(newRecord.status)) {
+              // Show in feed if unassigned or assigned to someone else (not this volunteer)
               if (!newRecord.volunteer_id || newRecord.volunteer_id !== user?.id) {
                 setIncidents((prev) => {
-                  if (prev.some((item) => item.id === newRecord.id)) return prev;
+                  if (prev.some((item) => item.id === newRecord.id)) {
+                    console.log('[RescueLink Realtime] INSERT ignored – already in incidents list:', newRecord.id);
+                    return prev;
+                  }
+                  console.log('[RescueLink Realtime] ✅ Adding new incident to dashboard feed:', newRecord.id, newRecord.status);
                   return [newRecord, ...prev];
                 });
               }
+            } else {
+              console.warn('[RescueLink Realtime] INSERT ignored – status is finished:', newRecord.status);
             }
           } else if (payload.eventType === 'UPDATE') {
             if (isFinishedStatus(newRecord.status)) {

@@ -592,16 +592,16 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         />
 
         {/* QUICK EMERGENCY CALL ACTION BUTTONS (Above Bottom Action Bar) */}
-        <div className="absolute bottom-[calc(9.2rem+env(safe-area-inset-bottom,0px))] left-4 z-[550] flex items-center gap-2 max-w-[calc(100vw-8rem)] overflow-x-auto no-scrollbar pointer-events-auto">
+        <div className={`absolute bottom-[calc(9.2rem+env(safe-area-inset-bottom,0px))] left-4 z-[550] pointer-events-auto flex flex-col gap-2.5 ${destinationType === 'hospital' ? 'md:flex-row md:items-center' : ''} w-[calc(100vw-8rem)] md:w-auto`}>
           {/* 1. Call Ambulance Button */}
           <button
             type="button"
             onClick={handleCallAmbulance}
-            className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-rose-400 flex items-center gap-2 transition-all active:scale-95 shrink-0"
+            className="w-full md:w-auto px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-rose-400 flex items-center justify-center gap-2 transition-all active:scale-95"
             aria-label="Call Ambulance"
             title="Call Ambulance"
           >
-            <PhoneCall className="w-4 h-4 text-white stroke-[2.5]" />
+            <PhoneCall className="w-4 h-4 text-white stroke-[2.5] shrink-0" />
             <span>Call Ambulance</span>
           </button>
 
@@ -610,11 +610,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             <button
               type="button"
               onClick={handleCallHospital}
-              className="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-blue-400 flex items-center gap-2 transition-all active:scale-95 shrink-0"
+              className="w-full md:w-auto px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-blue-400 flex items-center justify-center gap-2 transition-all active:scale-95"
               aria-label="Call Hospital"
               title="Call Hospital"
             >
-              <Phone className="w-4 h-4 text-white stroke-[2.5]" />
+              <Phone className="w-4 h-4 text-white stroke-[2.5] shrink-0" />
               <span>Call Hospital</span>
             </button>
           )}
