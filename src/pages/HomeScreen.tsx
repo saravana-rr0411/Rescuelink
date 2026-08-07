@@ -6,6 +6,7 @@ import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPi
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { CardSkeleton } from '../components/common/SkeletonLoader';
+import { GoogleMap } from '../components/maps/GoogleMap';
 
 interface AccidentRecord {
   id: string;
@@ -262,6 +263,31 @@ export const HomeScreen: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-3">
+              {/* Live Google Map for Active Alerts */}
+              {accidents.some((a) => a.latitude !== null && a.longitude !== null) && (
+                <div className="w-full h-48 rounded-2xl overflow-hidden border border-outline-variant/50 shadow-xs mb-1">
+                  <GoogleMap
+                    center={
+                      accidents.find((a) => a.latitude !== null && a.longitude !== null)
+                        ? {
+                            lat: accidents.find((a) => a.latitude !== null && a.longitude !== null)!.latitude!,
+                            lng: accidents.find((a) => a.latitude !== null && a.longitude !== null)!.longitude!,
+                          }
+                        : { lat: 12.9716, lng: 77.5946 }
+                    }
+                    zoom={13}
+                    markers={accidents
+                      .filter((a) => a.latitude !== null && a.longitude !== null)
+                      .map((a) => ({
+                        id: a.id,
+                        lat: a.latitude!,
+                        lng: a.longitude!,
+                        title: `${a.severity}: ${a.address}`,
+                      }))}
+                    className="w-full h-full"
+                  />
+                </div>
+              )}
               {accidents.map((incident) => (
                 <div
                   key={incident.id}
