@@ -48,9 +48,9 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center pointer-events-none p-0 sm:pb-2">
-      {/* Bottom Sheet Container (Aligned with max-w-md App Viewport) */}
-      <div className="w-full max-w-md bg-white border-t border-x sm:border border-slate-200/80 rounded-t-3xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[60vh] sm:max-h-[55vh] pointer-events-auto animate-in slide-in-from-bottom duration-300">
+    <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center pointer-events-none p-0">
+      {/* Bottom Sheet Container (Occupies ~75% of screen height, leaving map visible in top ~25%) */}
+      <div className="w-full max-w-md bg-white border-t border-x sm:border border-slate-200/80 rounded-t-3xl sm:rounded-t-3xl shadow-2xl overflow-hidden flex flex-col h-[75vh] max-h-[75vh] pointer-events-auto animate-in slide-in-from-bottom duration-300 pb-[env(safe-area-inset-bottom,0px)]">
         
         {/* Drag Handle */}
         <div className="pt-2.5 pb-1 flex justify-center shrink-0 cursor-grab">
@@ -110,7 +110,11 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               return (
                 <div
                   key={hosp.id}
-                  className={`p-3.5 rounded-2xl border transition-all space-y-3 animate-card-enter ${
+                  onClick={() => {
+                    setSelectedId(hosp.id);
+                    onSelectHospital(hosp);
+                  }}
+                  className={`p-3.5 rounded-2xl border transition-all space-y-3 animate-card-enter cursor-pointer ${
                     isSelected
                       ? 'bg-rose-50/50 border-red-700 ring-2 ring-red-700/20 shadow-xs'
                       : 'bg-white border-slate-200/80 hover:border-red-300'

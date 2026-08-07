@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
-import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall } from 'lucide-react';
+import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall, Maximize2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
-import { MapWidget } from '../components/common/MapWidget';
+import { GoogleMap } from '../components/maps/GoogleMap';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
 import { saveStoredHospital, getStoredHospital, cleanDescriptionText, formatETA, getStatusRank } from '../utils/routing';
@@ -353,6 +353,18 @@ export const VolunteerDashboardScreen: React.FC = () => {
       setTimeout(() => {
         setSuccessMessage(null);
       }, 2500);
+
+      // Automatically launch Live Navigation
+      navigate(`/navigation/${accidentId}`, {
+        state: {
+          accidentId: data.id,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          address: data.address,
+          severity: data.severity,
+          mode: 'volunteer',
+        },
+      });
     } catch (err: any) {
       console.error('[RescueLink Volunteer] Unexpected error during assignment:', err);
       setErrorMessage('An unexpected error occurred while accepting the alert.');
@@ -637,11 +649,12 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
             <div className="space-y-4">
               {assignedMissions.map((mission) => (
-                <div key={mission.id} className="bg-white border-2 border-emerald-500/30 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+                <div key={mission.id} className="bg-white border-2 border-emerald-500/40 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full uppercase tracking-wide">
-                        Status: {mission.status}
+                      <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wide flex items-center gap-1.5 w-fit">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        Mission Accepted
                       </span>
                       <h3 className="font-extrabold text-sm text-slate-900 mt-2">{mission.address}</h3>
                     </div>
@@ -650,17 +663,25 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Interactive OpenStreetMap Leaflet Map with Marker & Navigation */}
-                  <MapWidget
-                    accidentId={mission.id}
-                    latitude={mission.latitude}
-                    longitude={mission.longitude}
-                    address={mission.address}
-                    severity={mission.severity}
-                    height="h-48"
-                    showNavigateBtn={true}
-                    mode="volunteer"
-                  />
+                  {/* Google Map with Marker & Navigation */}
+                  {mission.latitude !== null && mission.longitude !== null && (
+                    <div className="w-full h-48 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs relative">
+                      <GoogleMap
+                        center={{ lat: mission.latitude, lng: mission.longitude }}
+                        zoom={15}
+                        markers={[
+                          {
+                            id: mission.id,
+                            lat: mission.latitude,
+                            lng: mission.longitude,
+                            title: `${mission.severity} ACCIDENT: ${mission.address}`,
+                            type: 'accident' as const,
+                          },
+                        ]}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  )}
 
                   {mission.description && (
                     <p className="text-xs text-slate-600 font-medium leading-relaxed">
@@ -674,28 +695,33 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     if (!hosp && mission.status !== 'Transporting to Hospital') return null;
 
                     const name = hosp?.name || 'Nearest Regional Emergency Center';
-                    const address = hosp?.address || (mission.latitude && mission.longitude ? `GPS (${mission.latitude.toFixed(4)}, ${mission.longitude.toFixed(4)})` : mission.address);
-                    const distMeters = hosp?.distanceMeters || 1800;
-                    const etaSecs = (distMeters / 1000 / 40) * 3600;
+                    const address = hosp?.address || mission.address;
+                    const phoneNum = hosp?.phone || hosp?.internationalPhone;
 
                     return (
                       <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white space-y-2.5 border border-slate-800 shadow-sm">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold uppercase text-blue-200 bg-blue-900/80 px-2.5 py-0.5 rounded-full border border-blue-700 flex items-center gap-1">
-                            <HospitalIcon className="w-3.5 h-3.5 text-blue-300" />
+                          <span className="text-[10px] font-extrabold uppercase text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-700 flex items-center gap-1">
+                            <HospitalIcon className="w-3.5 h-3.5 text-emerald-300" />
                             Selected Hospital
                           </span>
-                          <span className="text-[11px] font-bold text-slate-300">Destination</span>
+                          {hosp?.rating && (
+                            <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30">
+                              ★ {hosp.rating}
+                            </span>
+                          )}
                         </div>
                         <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 pt-0.5">
                           <span>🏥</span>
                           <span>{name}</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-slate-200 font-semibold pt-2 border-t border-slate-800">
-                          <span className="truncate">📍 {address}</span>
-                          <span>📏 {formatDistance(distMeters)}</span>
-                          <span>⏱ {formatETA(etaSecs)}</span>
-                        </div>
+                        <p className="text-xs text-slate-300 font-medium truncate">
+                          📍 {address}
+                        </p>
+                        <p className="text-xs font-bold text-emerald-300 flex items-center gap-1 pt-1 border-t border-slate-800">
+                          <span>☎ Hospital Phone:</span>
+                          <span className="font-extrabold text-white">{phoneNum || 'Unavailable'}</span>
+                        </p>
                       </div>
                     );
                   })()}
@@ -722,15 +748,15 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         const isHospitalSelected = !!hosp || mission.status === 'Transporting to Hospital';
                         if (!isHospitalSelected) return null;
 
-                        const phoneNum = hosp?.phone;
+                        const phoneNum = hosp?.phone || hosp?.internationalPhone;
 
                         return phoneNum ? (
                           <a
                             href={`tel:${phoneNum}`}
-                            className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition-colors active:scale-95"
+                            className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-md transition-colors active:scale-95 border border-blue-500"
                           >
-                            <PhoneCall className="w-4 h-4 text-blue-600 shrink-0" />
-                            <span>📞 Call Hospital ({phoneNum})</span>
+                            <PhoneCall className="w-4 h-4 text-white shrink-0" />
+                            <span>📞 Call Hospital</span>
                           </a>
                         ) : (
                           <button
@@ -752,11 +778,28 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Status Action Buttons (Strictly One-Way 7-Stage Progression) */}
+                  {/* Status Action Buttons & Resume Navigation */}
                   <div className="pt-3 border-t border-slate-100 space-y-2.5">
-                    <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                      {getStatusRank(mission.status) >= 7 ? 'Mission Status:' : 'Next Mission Action:'}
-                    </p>
+                    {/* Primary Resume Navigation Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigate(`/navigation/${mission.id}`, {
+                          state: {
+                            accidentId: mission.id,
+                            latitude: mission.latitude,
+                            longitude: mission.longitude,
+                            address: mission.address,
+                            severity: mission.severity,
+                            mode: 'volunteer',
+                          },
+                        });
+                      }}
+                      className="w-full p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-emerald-500"
+                    >
+                      <Navigation className="w-4 h-4 text-white fill-white" />
+                      <span>▶ Resume Navigation</span>
+                    </button>
 
                     {/* Stage 2: Volunteer Assigned -> Next is Start Navigation (Volunteer En Route) */}
                     {getStatusRank(mission.status) <= 2 && (
@@ -927,17 +970,25 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Interactive OpenStreetMap Leaflet Map Preview (Read-only mode) */}
-                    <MapWidget
-                      accidentId={inc.id}
-                      latitude={inc.latitude}
-                      longitude={inc.longitude}
-                      address={inc.address}
-                      severity={inc.severity}
-                      height="h-44"
-                      showNavigateBtn={false}
-                      mode="volunteer"
-                    />
+                    {/* Interactive Google Map Preview */}
+                    {inc.latitude !== null && inc.longitude !== null && (
+                      <div className="w-full h-44 rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs relative">
+                        <GoogleMap
+                          center={{ lat: inc.latitude, lng: inc.longitude }}
+                          zoom={15}
+                          markers={[
+                            {
+                              id: inc.id,
+                              lat: inc.latitude,
+                              lng: inc.longitude,
+                              title: `${inc.severity} ACCIDENT: ${inc.address}`,
+                              type: 'accident' as const,
+                            },
+                          ]}
+                          className="w-full h-full"
+                        />
+                      </div>
+                    )}
 
                     {inc.description && cleanDescriptionText(inc.description) && (
                       <p className="text-xs text-slate-600 font-medium leading-relaxed">
@@ -958,35 +1009,49 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between text-xs text-slate-600 font-medium pt-2.5 border-t border-slate-100">
-                      <span className="flex items-center gap-1.5 truncate pr-2">
-                        <MapPin className="w-3.5 h-3.5 text-red-700 shrink-0" />
-                        <span className="truncate">{inc.address}</span>
-                      </span>
+                    <div className="space-y-3 pt-2.5 border-t border-slate-100">
+                      {/* Full Accident Address (up to 2 lines, never truncated) */}
+                      <div className="flex items-start gap-1.5 text-xs text-slate-700 font-semibold leading-relaxed">
+                        <MapPin className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
+                        <span className="line-clamp-2">{inc.address}</span>
+                      </div>
 
+                      {/* Action Buttons placed below location */}
                       {isAssignedToOther ? (
-                        <div className="px-3 py-1.5 rounded-xl font-bold text-xs bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1 shrink-0">
-                          <AlertCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <div className="px-3 py-2 rounded-xl font-bold text-xs bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 w-full">
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
                           <span>Already accepted by another volunteer.</span>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => handleAcceptMission(inc.id)}
-                          disabled={isAccepting}
-                          className="px-4 py-2 rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 bg-red-800 text-white hover:bg-red-900 active:scale-95 disabled:opacity-70 shrink-0"
-                        >
-                          {isAccepting ? (
-                            <>
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              <span>Accepting...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Navigation className="w-3.5 h-3.5" />
-                              <span>Accept Mission</span>
-                            </>
-                          )}
-                        </button>
+                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/volunteer/preview/${inc.id}`, { state: { incident: inc } })}
+                            className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
+                            <span>Open Map</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptMission(inc.id)}
+                            disabled={isAccepting}
+                            className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 bg-red-800 text-white hover:bg-red-900 active:scale-95 disabled:opacity-70"
+                          >
+                            {isAccepting ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Accepting...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Navigation className="w-3.5 h-3.5" />
+                                <span>Accept Mission</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

@@ -1,191 +1,27 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
-  Square,
   Clock,
   CheckCircle2,
-  Ambulance,
   Hospital as HospitalIcon,
   Navigation as NavigationIcon,
   Loader2,
+  Ambulance,
+  ArrowLeft,
+  AlertCircle,
+  Compass,
+  LocateFixed,
+  PhoneCall,
+  Phone,
 } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
 import { fetchOSRMRoute, formatETA } from '../../utils/routing';
 import { formatDistance, calculateHaversineDistance } from '../../utils/distance';
+import { GoogleMap } from '../maps/GoogleMap';
+import { fetchGoogleRoute } from '../../services/googleRoutes';
 
-// Leaflet default marker icons fix for bundlers
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-});
-
-// Fixed Navigation Zoom Level (Fixed at 16, zero automatic zoom changes)
-const DEFAULT_FIXED_ZOOM = 16;
-
-// Custom Navigation Beacon Pin (Fixed North-Up)
-const createNavigationUserIcon = () => {
-  return L.divIcon({
-    className: 'custom-nav-user-pin',
-    html: `
-      <div class="relative flex items-center justify-center w-14 h-14">
-        <!-- Outer pulsating radar ring -->
-        <span class="absolute w-14 h-14 rounded-full bg-blue-500/35 animate-ping"></span>
-        <!-- Inner aura ring -->
-        <span class="absolute w-10 h-10 rounded-full bg-blue-600/40 border-2 border-white/60"></span>
-        <!-- Vehicle navigation chevron -->
-        <div class="relative w-9 h-9 rounded-full bg-blue-600 border-2 border-white shadow-2xl flex items-center justify-center text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-            <polygon points="12 2 19 21 12 17 5 21 12 2"/>
-          </svg>
-        </div>
-      </div>
-    `,
-    iconSize: [56, 56],
-    iconAnchor: [28, 28],
-    popupAnchor: [0, -28],
-  });
-};
-
-// Destination Pin (Hospital / Accident / Location)
-const createDestinationIcon = (type: 'accident' | 'hospital' | 'location') => {
-  if (type === 'hospital') {
-    return L.divIcon({
-      className: 'custom-nav-hospital-pin',
-      html: `
-        <div class="relative flex items-center justify-center w-12 h-12">
-          <span class="absolute w-12 h-12 rounded-full bg-blue-500/40 animate-ping"></span>
-          <div class="relative w-11 h-11 rounded-full bg-indigo-700 border-2 border-white shadow-2xl flex items-center justify-center text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v12"/><path d="M6 12h12"/></svg>
-          </div>
-        </div>
-      `,
-      iconSize: [48, 48],
-      iconAnchor: [24, 24],
-      popupAnchor: [0, -24],
-    });
-  }
-
-  if (type === 'accident') {
-    return L.divIcon({
-      className: 'custom-nav-accident-pin',
-      html: `
-        <div class="relative flex items-center justify-center w-12 h-12">
-          <span class="absolute w-12 h-12 rounded-full bg-red-500/50 animate-ping"></span>
-          <div class="relative w-11 h-11 rounded-full bg-red-600 border-2 border-white shadow-2xl flex items-center justify-center text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-        </div>
-      `,
-      iconSize: [48, 48],
-      iconAnchor: [24, 24],
-      popupAnchor: [0, -24],
-    });
-  }
-
-  return L.divIcon({
-    className: 'custom-nav-target-pin',
-    html: `
-      <div class="relative flex items-center justify-center w-10 h-10">
-        <div class="relative w-10 h-10 rounded-full bg-emerald-600 border-2 border-white shadow-xl flex items-center justify-center text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
-        </div>
-      </div>
-    `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
-    popupAnchor: [0, -20],
-  });
-};
-
-/**
- * Calculates map target center required to position `userCoords`
- * near the LOWER CENTER of the screen on North-Up map view.
- */
-function getLowerCenterMapTarget(
-  userCoords: [number, number],
-  zoom: number
-): [number, number] {
-  const [lat, lng] = userCoords;
-  const offsetMeters = 140 * Math.pow(2, 16 - zoom);
-  const metersPerDegreeLat = 111320;
-  const deltaLat = offsetMeters / metersPerDegreeLat;
-
-  return [lat + deltaLat, lng];
-}
-
-interface NavigationMapControllerProps {
-  userCoords: [number, number];
-  isFollowing: boolean;
-  onStopFollowing: () => void;
-  onRegisterMapInstance: (mapInstance: L.Map) => void;
-}
-
-const NavigationMapController: React.FC<NavigationMapControllerProps> = ({
-  userCoords,
-  isFollowing,
-  onStopFollowing,
-  onRegisterMapInstance,
-}) => {
-  const map = useMap();
-
-  // Register map instance for parent controls
-  useEffect(() => {
-    onRegisterMapInstance(map);
-    map.invalidateSize({ pan: false });
-  }, [map, onRegisterMapInstance]);
-
-  // Attach Leaflet interaction event listeners (dragstart, zoomstart, movestart with originalEvent)
-  useEffect(() => {
-    const handleUserGesture = () => {
-      if (isFollowing) {
-        onStopFollowing();
-      }
-    };
-
-    const handleMoveStart = (e: any) => {
-      if (e?.originalEvent && isFollowing) {
-        onStopFollowing();
-      }
-    };
-
-    map.on('dragstart', handleUserGesture);
-    map.on('zoomstart', handleUserGesture);
-    map.on('movestart', handleMoveStart);
-
-    return () => {
-      map.off('dragstart', handleUserGesture);
-      map.off('zoomstart', handleUserGesture);
-      map.off('movestart', handleMoveStart);
-    };
-  }, [map, isFollowing, onStopFollowing]);
-
-  // Camera Follow Engine (Executes panTo ONLY when isFollowing is true and map is not dragging or zooming)
-  useEffect(() => {
-    const leafletMap = map as any;
-    const isDragging = leafletMap.dragging?._draggable?._moving;
-    const isZooming = leafletMap._animatingZoom;
-
-    // STRICT GUARD: If Camera Follow is OFF, or map is dragging or zooming, NEVER call panTo!
-    if (!isFollowing || isDragging || isZooming) {
-      return;
-    }
-
-    const currentZoom = map.getZoom() || DEFAULT_FIXED_ZOOM;
-    const targetCenter = getLowerCenterMapTarget(userCoords, currentZoom);
-
-    map.panTo(targetCenter, { animate: true, duration: 0.35, easeLinearity: 0.25 });
-  }, [map, userCoords, isFollowing]);
-
-  return null;
-};
+// Fixed Navigation Zoom Level (Google Maps Navigation standard between 17 and 18)
+const DEFAULT_FIXED_ZOOM = 17.5;
 
 export interface GoogleMapsNavigationModeProps {
   destinationName: string;
@@ -195,44 +31,99 @@ export interface GoogleMapsNavigationModeProps {
   initialUserCoords?: [number, number] | null;
   accidentId?: string;
   navigationStatus?: string;
-  onStopNavigation: () => void;
+  ambulancePhone?: string;
+  hospitalPhone?: string;
   onArrival?: () => void;
+  onBackToHospitalSelect?: () => void;
 }
 
 export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> = ({
   destinationName,
   destinationAddress,
   destinationCoords,
-  destinationType = 'hospital',
-  initialUserCoords = null,
-  navigationStatus = 'Navigation Active',
-  onStopNavigation,
+  destinationType = 'accident',
+  initialUserCoords,
+  navigationStatus = 'En Route to Scene',
+  ambulancePhone,
+  hospitalPhone,
   onArrival,
+  onBackToHospitalSelect,
 }) => {
-  // 1. User Position State (smoothly lerped)
-  const [userPos, setUserPos] = useState<[number, number]>(() => {
-    if (initialUserCoords && (initialUserCoords[0] !== 0 || initialUserCoords[1] !== 0)) {
-      return initialUserCoords;
+  const navigate = useNavigate();
+
+  const [resolvedHospitalPhone, setResolvedHospitalPhone] = useState<string | null>(hospitalPhone || null);
+
+  useEffect(() => {
+    if (hospitalPhone) {
+      setResolvedHospitalPhone(hospitalPhone);
+      return;
     }
-    // Fallback starting position offset ~700 meters from destination
-    return [destinationCoords[0] - 0.006, destinationCoords[1] - 0.005];
+    if (destinationType !== 'hospital') return;
+
+    // Fetch hospital phone number from Google Places API if available
+    if (window.google && window.google.maps && window.google.maps.places) {
+      try {
+        const dummyElement = document.createElement('div');
+        const service = new google.maps.places.PlacesService(dummyElement);
+        const request: google.maps.places.TextSearchRequest = {
+          location: new google.maps.LatLng(destinationCoords[0], destinationCoords[1]),
+          radius: 500,
+          query: destinationName,
+        };
+
+        service.textSearch(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].place_id) {
+            service.getDetails(
+              { placeId: results[0].place_id, fields: ['formatted_phone_number', 'international_phone_number'] },
+              (place, detailStatus) => {
+                if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
+                  const phone = place.formatted_phone_number || place.international_phone_number || null;
+                  if (phone) {
+                    setResolvedHospitalPhone(phone);
+                  }
+                }
+              }
+            );
+          }
+        });
+      } catch (err) {
+        console.warn('Google Places phone lookup error:', err);
+      }
+    }
+  }, [destinationType, destinationName, destinationCoords, hospitalPhone]);
+
+  // 1. User Position State (Real GPS Coordinates)
+  const [userPos, setUserPos] = useState<[number, number] | null>(() => {
+    if (initialUserCoords && initialUserCoords[0] && initialUserCoords[1]) {
+      return [initialUserCoords[0], initialUserCoords[1]];
+    }
+    return null;
   });
 
-  const [renderedPos, setRenderedPos] = useState<[number, number]>(userPos);
+  const [renderedPos, setRenderedPos] = useState<[number, number] | null>(userPos);
 
-  // 2. Camera Follow & Auto Center State (Default ON when navigation starts)
+  // 2. Camera Navigation Mode (Auto Follow + Auto Rotate) & Camera State
+  const [isNavigationMode, setIsNavigationMode] = useState<boolean>(false);
   const [isFollowing, setIsFollowing] = useState<boolean>(true);
-  const [hasArrived, setHasArrived] = useState<boolean>(false);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const [heading, setHeading] = useState<number>(0);
+  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState<boolean>(false);
+  const [zoomSignal, setZoomSignal] = useState<{ type: 'in' | 'out'; timestamp: number } | null>(null);
 
-  // Arrival & Center Refs (Ensures arrival triggers ONLY after real GPS updates & physical movement)
+  const handleBackNavigation = () => {
+    if (destinationType === 'hospital' && onBackToHospitalSelect) {
+      onBackToHospitalSelect();
+    } else {
+      setShowLeaveConfirmDialog(true);
+    }
+  };
+
+  // Arrival & Center Refs
   const firstGpsPosRef = useRef<[number, number] | null>(null);
-  const initialMapCenterRef = useRef<[number, number]>(userPos);
   const hasReceivedGpsUpdateRef = useRef<boolean>(false);
   const hasUserMovedRef = useRef<boolean>(false);
 
   // 3. Route & Navigation Metrics
-  const [routePolyline, setRoutePolyline] = useState<[number, number][]>([]);
+  const [polylineString, setPolylineString] = useState<string>('');
   const [distanceMeters, setDistanceMeters] = useState<number>(0);
   const [durationSeconds, setDurationSeconds] = useState<number>(0);
   const [currentRoad, setCurrentRoad] = useState<string>('');
@@ -240,29 +131,51 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const prevPosRef = useRef<[number, number] | null>(null);
 
-  // Real GPS Geolocation Watcher
+  // Real GPS Geolocation Watcher (Immediate initial location + continuous watch)
   useEffect(() => {
     if (!('geolocation' in navigator)) return;
+
+    // Request immediate real GPS position on mount
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const initialLat = pos.coords.latitude;
+        const initialLng = pos.coords.longitude;
+        setUserPos([initialLat, initialLng]);
+        firstGpsPosRef.current = [initialLat, initialLng];
+        hasReceivedGpsUpdateRef.current = true;
+      },
+      (err) => {
+        console.warn('[GoogleMapsNav] Initial GPS error:', err.message);
+      },
+      { enableHighAccuracy: true }
+    );
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const newLat = pos.coords.latitude;
         const newLng = pos.coords.longitude;
 
-        // 1. Establish baseline starting position on the FIRST real GPS update
         if (!firstGpsPosRef.current) {
           firstGpsPosRef.current = [newLat, newLng];
           hasReceivedGpsUpdateRef.current = true;
         } else {
-          // 2. On subsequent updates: check if user has physically moved > 30m from baseline
           const distFromStart = calculateHaversineDistance(
             firstGpsPosRef.current[0],
             firstGpsPosRef.current[1],
             newLat,
             newLng
           );
-          if (distFromStart > 30) {
+          if (distFromStart > 10) {
             hasUserMovedRef.current = true;
+          }
+        }
+
+        if (prevPosRef.current && (prevPosRef.current[0] !== newLat || prevPosRef.current[1] !== newLng)) {
+          const dLat = newLat - prevPosRef.current[0];
+          const dLng = newLng - prevPosRef.current[1];
+          if (Math.abs(dLat) > 0.00001 || Math.abs(dLng) > 0.00001) {
+            const angle = (Math.atan2(dLng, dLat) * 180) / Math.PI;
+            setHeading((angle + 360) % 360);
           }
         }
 
@@ -280,69 +193,94 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     };
   }, []);
 
-  // Smooth position lerp frame loop (60fps continuous marker & camera animation)
+  // Smooth position linear interpolation (lerp) loop for 60fps marker movement
   useEffect(() => {
+    if (!userPos) return;
     let animFrame: number;
-    const lerp = () => {
+    let startTime: number | null = null;
+    const DURATION = 900; // 900ms smooth gliding transition between GPS updates
+
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / DURATION, 1);
+      // Smooth ease-out quad curve
+      const easeProgress = 1 - (1 - progress) * (1 - progress);
+
       setRenderedPos((prev) => {
-        const dLat = userPos[0] - prev[0];
-        const dLng = userPos[1] - prev[1];
-        if (Math.abs(dLat) < 0.000001 && Math.abs(dLng) < 0.000001) {
-          return userPos;
-        }
-        return [prev[0] + dLat * 0.25, prev[1] + dLng * 0.25];
+        if (!prev) return userPos;
+        const lat = prev[0] + (userPos[0] - prev[0]) * easeProgress;
+        const lng = prev[1] + (userPos[1] - prev[1]) * easeProgress;
+        return [lat, lng];
       });
-      animFrame = requestAnimationFrame(lerp);
+
+      if (progress < 1) {
+        animFrame = requestAnimationFrame(animate);
+      }
     };
-    animFrame = requestAnimationFrame(lerp);
+
+    animFrame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(animFrame);
   }, [userPos]);
 
-  // Fetch OSRM Route & Road Name dynamically
+  // Reset route state completely whenever destinationCoords changes
+  const prevDestinationRef = useRef<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (
+      !prevDestinationRef.current ||
+      prevDestinationRef.current[0] !== destinationCoords[0] ||
+      prevDestinationRef.current[1] !== destinationCoords[1]
+    ) {
+      prevDestinationRef.current = destinationCoords;
+      prevRoutePosRef.current = null;
+      setPolylineString('');
+      setDistanceMeters(0);
+      setDurationSeconds(0);
+    }
+  }, [destinationCoords]);
+
+  // Fetch Route & Road Name dynamically
   const prevRoutePosRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {
+    if (!userPos) return;
+
     const loadRoute = async () => {
-      if (prevRoutePosRef.current) {
+      const isSameDest =
+        prevDestinationRef.current &&
+        prevDestinationRef.current[0] === destinationCoords[0] &&
+        prevDestinationRef.current[1] === destinationCoords[1];
+
+      if (isSameDest && prevRoutePosRef.current) {
         const moveDist = calculateHaversineDistance(
           prevRoutePosRef.current[0],
           prevRoutePosRef.current[1],
           userPos[0],
           userPos[1]
         );
-        if (moveDist < 10 && routePolyline.length > 0) return;
+        if (moveDist < 10 && distanceMeters > 0) return;
       }
 
       prevRoutePosRef.current = userPos;
+      prevDestinationRef.current = destinationCoords;
       setLoadingRoute(true);
 
-      const route = await fetchOSRMRoute(userPos, destinationCoords);
-      setRoutePolyline(route.coordinates);
-      setDistanceMeters(route.distanceMeters);
-      setDurationSeconds(route.durationSeconds);
-      setLoadingRoute(false);
-
-      // Arrival detection check: ONLY trigger AFTER navigation active, real GPS received, user has physically travelled (>30m), and remaining distance <= 30m
-      const directDist = calculateHaversineDistance(
-        userPos[0],
-        userPos[1],
-        destinationCoords[0],
-        destinationCoords[1]
+      const googleRoute = await fetchGoogleRoute(
+        { lat: userPos[0], lng: userPos[1] },
+        { lat: destinationCoords[0], lng: destinationCoords[1] }
       );
 
-      const isWithinArrivalThreshold =
-        (route.distanceMeters > 0 && route.distanceMeters <= 30) || directDist <= 30;
-
-      if (
-        hasReceivedGpsUpdateRef.current &&
-        hasUserMovedRef.current &&
-        isWithinArrivalThreshold
-      ) {
-        setHasArrived(true);
-        if (onArrival) onArrival();
+      if (!googleRoute.error && googleRoute.polyline) {
+        setPolylineString(googleRoute.polyline);
+        setDistanceMeters(googleRoute.distanceMeters);
+        setDurationSeconds(googleRoute.durationSeconds);
+      } else {
+        const route = await fetchOSRMRoute(userPos, destinationCoords);
+        setDistanceMeters(route.distanceMeters);
+        setDurationSeconds(route.durationSeconds);
       }
+      setLoadingRoute(false);
 
-      // Reverse geocode current road if missing
       if (!currentRoad && userPos[0] && userPos[1]) {
         try {
           const res = await fetch(
@@ -365,27 +303,61 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     };
 
     loadRoute();
-  }, [userPos, destinationCoords, routePolyline.length, currentRoad, onArrival]);
+  }, [userPos, destinationCoords, distanceMeters, currentRoad]);
 
-  // Recenter button: Enables Camera Follow, flies smoothly to user location, & restores fixed zoom 16
-  const handleRecenter = () => {
-    setIsFollowing(true);
-    if (mapInstanceRef.current) {
-      const targetCenter = getLowerCenterMapTarget(userPos, DEFAULT_FIXED_ZOOM);
-      mapInstanceRef.current.flyTo(targetCenter, DEFAULT_FIXED_ZOOM, {
-        duration: 0.8,
-        easeLinearity: 0.25,
-      });
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [recenterTrigger, setRecenterTrigger] = useState<number>(0);
+  const autoRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleUserDrag = () => {
+    setIsFollowing(false);
+
+    if (autoRestoreTimerRef.current) {
+      clearTimeout(autoRestoreTimerRef.current);
+    }
+
+    if (isNavigationMode) {
+      autoRestoreTimerRef.current = setTimeout(() => {
+        setIsFollowing(true);
+      }, 2500);
     }
   };
 
-  const handleStopFollowing = useCallback(() => {
-    setIsFollowing((prev) => (prev ? false : prev));
+  useEffect(() => {
+    return () => {
+      if (autoRestoreTimerRef.current) {
+        clearTimeout(autoRestoreTimerRef.current);
+      }
+    };
   }, []);
 
-  const handleRegisterMapInstance = useCallback((mapInst: L.Map) => {
-    mapInstanceRef.current = mapInst;
-  }, []);
+  const handleRecenter = () => {
+    if (!userPos || !renderedPos) {
+      setToastMessage('Current location unavailable.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+    if (autoRestoreTimerRef.current) {
+      clearTimeout(autoRestoreTimerRef.current);
+    }
+
+    setRecenterTrigger(Date.now());
+    setIsFollowing(true);
+  };
+
+  const handleCallAmbulance = () => {
+    const targetPhone = ambulancePhone || '108';
+    window.location.href = `tel:${targetPhone}`;
+  };
+
+  const handleCallHospital = () => {
+    if (resolvedHospitalPhone && resolvedHospitalPhone.trim().length > 0) {
+      window.location.href = `tel:${resolvedHospitalPhone.trim()}`;
+    } else {
+      setToastMessage('Hospital phone number unavailable.');
+      setTimeout(() => setToastMessage(null), 3000);
+    }
+  };
 
   const getArrivalTimeString = (secs: number) => {
     const now = new Date();
@@ -393,9 +365,28 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     return arrival.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
+  if (!userPos || !renderedPos) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none">
+        <Loader2 className="w-9 h-9 text-emerald-400 animate-spin mb-3" />
+        <h3 className="text-sm font-black text-white">Acquiring Live Responder GPS Location...</h3>
+        <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
+          Connecting to device GPS positioning. Please ensure location services are enabled.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full overflow-hidden flex flex-col select-none touch-none bg-slate-100">
-      {/* ========================================================================= */}
+      {/* TOAST NOTIFICATION POPUP */}
+      {toastMessage && (
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[800] bg-slate-900/95 text-white px-4 py-2.5 rounded-full shadow-2xl border border-slate-700 text-xs font-bold flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
+          <AlertCircle className="w-4 h-4 text-amber-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* ROUTE CALCULATION OVERLAY INDICATOR */}
       {loadingRoute && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[600] bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-slate-700/80 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
@@ -404,39 +395,60 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         </div>
       )}
 
-      {/* ARRIVAL NOTIFICATION MODAL BANNER */}
-      {/* ========================================================================= */}
-      {hasArrived && (
-        <div className="absolute top-4 left-4 right-4 z-[600] bg-emerald-900/95 backdrop-blur-xl text-white p-4.5 rounded-3xl shadow-2xl border border-emerald-500/60 flex items-center justify-between animate-in fade-in zoom-in-95 duration-300">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
-              <CheckCircle2 className="w-6 h-6 stroke-[3]" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-white">
-                {destinationType === 'hospital'
-                  ? '✅ You have arrived at the hospital.'
-                  : destinationType === 'accident'
-                  ? '✅ You have arrived at the accident location.'
-                  : '✅ You have arrived at your destination.'}
+      {/* LEAVE NAVIGATION CONFIRMATION DIALOG MODAL */}
+      {showLeaveConfirmDialog && (
+        <div className="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl border border-slate-200 text-slate-900 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-6 h-6 text-amber-700" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900">
+                Leave Navigation?
               </h3>
-              <p className="text-xs text-emerald-200 font-medium">{destinationName}</p>
+            </div>
+
+            <p className="text-xs font-semibold text-slate-600 leading-relaxed">
+              Are you sure you want to leave navigation?
+            </p>
+
+            <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowLeaveConfirmDialog(false)}
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-200 transition-all active:scale-95"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLeaveConfirmDialog(false);
+                  navigate('/volunteer', { replace: true });
+                }}
+                className="w-full py-3 bg-red-700 hover:bg-red-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95"
+              >
+                Leave
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => setHasArrived(false)}
-            className="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition-colors"
-          >
-            Dismiss
-          </button>
         </div>
       )}
 
-      {/* ========================================================================= */}
       {/* 1. MATERIAL DESIGN 3 TOP FLOATING NAVIGATION CARD */}
-      {/* ========================================================================= */}
       <div className="absolute top-3 left-3 right-3 z-[500] bg-slate-900/95 backdrop-blur-xl text-white rounded-3xl p-4 shadow-2xl border border-slate-700/60 animate-in fade-in slide-in-from-top-4 duration-300">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
+          {/* Back App Bar Button (Min 44x44px touch target) */}
+          <button
+            type="button"
+            onClick={handleBackNavigation}
+            className="min-w-[44px] min-h-[44px] rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center shrink-0 transition-all active:scale-95 border border-slate-700 shadow-sm"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
+          </button>
+
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
               {destinationType === 'hospital' ? (
@@ -448,7 +460,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">
-                🏥 Destination Hospital
+                {destinationType === 'hospital' ? '🏥 Hospital Navigation' : '🚨 Live Scene Navigation'}
               </span>
               <h2 className="text-base font-black text-white truncate leading-tight">
                 {destinationName}
@@ -459,6 +471,14 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                   {currentRoad ? `On ${currentRoad}` : destinationAddress}
                 </span>
               </p>
+              {destinationType === 'hospital' && (
+                <p className="text-[11px] text-emerald-300 font-bold flex items-center gap-1 mt-0.5">
+                  <span>☎ Phone:</span>
+                  <span className="font-extrabold text-white">
+                    {resolvedHospitalPhone || 'Unavailable'}
+                  </span>
+                </p>
+              )}
             </div>
           </div>
 
@@ -475,85 +495,133 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 2. FULL-SCREEN MAP CANVAS (STATIC FIXED-ZOOM NORTH-UP MAP VIEW) */}
-      {/* ========================================================================= */}
+      {/* 2. FULL-SCREEN GOOGLE MAP CANVAS */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
-        <MapContainer
-          center={initialMapCenterRef.current}
-          zoom={DEFAULT_FIXED_ZOOM}
-          zoomControl={false}
-          scrollWheelZoom={true}
-          className="w-full h-full"
-          style={{ height: '100%', width: '100%' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            keepBuffer={4}
-            maxNativeZoom={19}
-            maxZoom={19}
-          />
+        {/* RIGHT SIDE FLOATING CAMERA & MAP CONTROLS STACK (Top to Bottom: Zoom Controls -> Re-center -> Navigation Mode) */}
+        <div className="absolute bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[600] flex flex-col items-end gap-4 pointer-events-auto select-none">
+          {/* 1. Zoom Controls (+ / -) */}
+          <div className="flex flex-col rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden bg-white/95 backdrop-blur-md shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setZoomSignal({ type: 'in', timestamp: Date.now() });
+                if (isNavigationMode) handleUserDrag();
+              }}
+              className="w-11 h-11 hover:bg-slate-100 text-slate-900 font-black text-xl flex items-center justify-center transition-colors active:scale-95 border-b border-slate-100 shrink-0"
+              aria-label="Zoom in map"
+            >
+              +
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setZoomSignal({ type: 'out', timestamp: Date.now() });
+                if (isNavigationMode) handleUserDrag();
+              }}
+              className="w-11 h-11 hover:bg-slate-100 text-slate-900 font-black text-xl flex items-center justify-center transition-colors active:scale-95 shrink-0"
+              aria-label="Zoom out map"
+            >
+              −
+            </button>
+          </div>
 
-          <NavigationMapController
-            userCoords={userPos}
-            isFollowing={isFollowing}
-            onStopFollowing={handleStopFollowing}
-            onRegisterMapInstance={handleRegisterMapInstance}
-          />
-
-          {/* OSRM Navigation Route Line */}
-          {routePolyline.length > 0 && (
-            <>
-              <Polyline
-                positions={routePolyline}
-                pathOptions={{ color: '#2563eb', weight: 10, opacity: 0.4, lineCap: 'round' }}
-              />
-              <Polyline
-                positions={routePolyline}
-                pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.95, lineCap: 'round' }}
-              />
-            </>
+          {/* 2. Re-center FAB Button (When camera is un-followed) */}
+          {!isFollowing && (
+            <button
+              type="button"
+              onClick={handleRecenter}
+              className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl border border-blue-400/90 flex items-center justify-center transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200 shrink-0"
+              aria-label="Re-center camera on volunteer"
+              title="Re-center camera on volunteer"
+            >
+              <LocateFixed className="w-5 h-5 text-white stroke-[2.5]" />
+            </button>
           )}
 
-          {/* User Navigation Chevron Marker */}
-          <Marker position={renderedPos} icon={createNavigationUserIcon()}>
-            <Popup>
-              <div className="p-1 text-xs font-sans">
-                <strong className="text-blue-600 block font-bold uppercase">
-                  Your Live Location
-                </strong>
-              </div>
-            </Popup>
-          </Marker>
-
-          {/* Destination Target Marker */}
-          <Marker position={destinationCoords} icon={createDestinationIcon(destinationType)}>
-            <Popup>
-              <div className="p-1 text-xs font-sans">
-                <strong className="text-red-600 block font-bold uppercase">{destinationName}</strong>
-                <span>{destinationAddress}</span>
-              </div>
-            </Popup>
-          </Marker>
-        </MapContainer>
-
-        {/* Floating 📍 Recenter Button (Appears when user performs ANY manual map interaction) */}
-        {!isFollowing && (
+          {/* 3. Compact Circular Navigation Mode Toggle FAB */}
           <button
-            onClick={handleRecenter}
-            className="absolute bottom-36 right-4 z-[500] bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-4 py-3 rounded-2xl shadow-2xl border border-blue-400 flex items-center gap-2 transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200"
-            aria-label="Recenter navigation camera"
+            type="button"
+            onClick={() => {
+              const nextMode = !isNavigationMode;
+              setIsNavigationMode(nextMode);
+              if (nextMode) {
+                setIsFollowing(true);
+              }
+              setToastMessage(nextMode ? 'Navigation Mode ON' : 'Navigation Mode OFF');
+              setTimeout(() => setToastMessage(null), 2000);
+            }}
+            className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 border shrink-0 ${
+              isNavigationMode
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-400 ring-2 ring-emerald-400/30'
+                : 'bg-white/95 hover:bg-white text-slate-700 border-slate-200 shadow-xl'
+            }`}
+            aria-label={`Navigation Mode: ${isNavigationMode ? 'ON' : 'OFF'}`}
+            title={`Navigation Mode: ${isNavigationMode ? 'ON' : 'OFF'}`}
           >
-            <span className="text-base">📍</span>
-            <span>Recenter</span>
+            <Compass className={`w-5 h-5 stroke-[2.2] ${isNavigationMode ? 'animate-spin text-white' : 'text-slate-700'}`} />
           </button>
-        )}
+        </div>
+
+        <GoogleMap
+          center={{ lat: renderedPos[0], lng: renderedPos[1] }}
+          zoom={DEFAULT_FIXED_ZOOM}
+          markers={[
+            {
+              id: 'user-nav-location',
+              lat: renderedPos[0],
+              lng: renderedPos[1],
+              title: 'Your Live Location',
+              type: 'volunteer' as const,
+            },
+            {
+              id: 'destination-target-location',
+              lat: destinationCoords[0],
+              lng: destinationCoords[1],
+              title: destinationName,
+              type: destinationType === 'hospital' ? ('hospital' as const) : ('accident' as const),
+            },
+          ]}
+          polylineString={polylineString}
+          heading={heading}
+          isNavigationMode={isNavigationMode}
+          isFollowing={isFollowing}
+          onUserDrag={handleUserDrag}
+          zoomSignal={zoomSignal}
+          recenterTrigger={recenterTrigger}
+          className="w-full h-full"
+        />
+
+        {/* QUICK EMERGENCY CALL ACTION BUTTONS (Above Bottom Action Bar) */}
+        <div className="absolute bottom-[calc(9.2rem+env(safe-area-inset-bottom,0px))] left-4 z-[550] flex items-center gap-2 max-w-[calc(100vw-8rem)] overflow-x-auto no-scrollbar pointer-events-auto">
+          {/* 1. Call Ambulance Button */}
+          <button
+            type="button"
+            onClick={handleCallAmbulance}
+            className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-rose-400 flex items-center gap-2 transition-all active:scale-95 shrink-0"
+            aria-label="Call Ambulance"
+            title="Call Ambulance"
+          >
+            <PhoneCall className="w-4 h-4 text-white stroke-[2.5]" />
+            <span>Call Ambulance</span>
+          </button>
+
+          {/* 2. Call Hospital Button (Hospital Navigation Screen only) */}
+          {destinationType === 'hospital' && (
+            <button
+              type="button"
+              onClick={handleCallHospital}
+              className="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-blue-400 flex items-center gap-2 transition-all active:scale-95 shrink-0"
+              aria-label="Call Hospital"
+              title="Call Hospital"
+            >
+              <Phone className="w-4 h-4 text-white stroke-[2.5]" />
+              <span>Call Hospital</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* ========================================================================= */}
       {/* 3. MATERIAL DESIGN 3 BOTTOM FLOATING NAVIGATION DASHBOARD CARD */}
-      {/* ========================================================================= */}
       <div className="absolute bottom-3 left-3 right-3 z-[500] bg-white/95 backdrop-blur-xl text-slate-900 rounded-3xl p-4 shadow-2xl border border-slate-200/80 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center justify-between gap-3">
           {/* Arrival Metrics */}
@@ -581,14 +649,32 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             </p>
           </div>
 
-          {/* Stop Navigation Action Button */}
-          <button
-            onClick={onStopNavigation}
-            className="px-5 py-3.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-red-500"
-          >
-            <Square className="w-4 h-4 fill-white" />
-            <span>Stop Navigation</span>
-          </button>
+          {/* Always Visible Primary Action Button: Reached Accident or Reached Hospital */}
+          {/* TESTING MODE / MANUAL PROGRESSION: Volunteer can manually confirm arrival without physical GPS location validation */}
+          {destinationType === 'accident' ? (
+            <button
+              type="button"
+              onClick={() => {
+                // Manual confirmation: Immediately triggers scene arrival & hospital selection without GPS distance gate
+                if (onArrival) onArrival();
+              }}
+              className="px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-emerald-500"
+            >
+              <CheckCircle2 className="w-4 h-4 text-white stroke-[3]" />
+              <span>Reached Accident</span>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                if (onArrival) onArrival();
+              }}
+              className="px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-indigo-500"
+            >
+              <HospitalIcon className="w-4 h-4 text-white stroke-[2.5]" />
+              <span>Reached Hospital</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -24,6 +24,7 @@ const NotificationsScreen = lazy(() => import('./pages/NotificationsScreen').the
 const CitizenHistoryScreen = lazy(() => import('./pages/CitizenHistoryScreen').then((m) => ({ default: m.CitizenHistoryScreen })));
 const VolunteerHistoryScreen = lazy(() => import('./pages/VolunteerHistoryScreen').then((m) => ({ default: m.VolunteerHistoryScreen })));
 const HistoryDetailsScreen = lazy(() => import('./pages/HistoryDetailsScreen').then((m) => ({ default: m.HistoryDetailsScreen })));
+const VolunteerMapPreviewScreen = lazy(() => import('./pages/VolunteerMapPreviewScreen').then((m) => ({ default: m.VolunteerMapPreviewScreen })));
 const GoogleMapTest = lazy(() => import('./components/common/GoogleMapTest').then((m) => ({ default: m.GoogleMapTest })));
 
 const AppContent: React.FC = () => {
@@ -33,7 +34,8 @@ const AppContent: React.FC = () => {
     location.pathname === '/signup' ||
     location.pathname === '/emergency' ||
     location.pathname === '/google-map-test' ||
-    location.pathname.startsWith('/navigation');
+    location.pathname.startsWith('/navigation') ||
+    location.pathname.startsWith('/volunteer/preview');
 
   return (
     <MobileContainer>
@@ -55,6 +57,7 @@ const AppContent: React.FC = () => {
           <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
           <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
           <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
+          <Route path="/volunteer/preview/:accidentId" element={<ProtectedRoute><VolunteerMapPreviewScreen /></ProtectedRoute>} />
           <Route path="/volunteer/history" element={<ProtectedRoute><VolunteerHistoryScreen /></ProtectedRoute>} />
           <Route path="/volunteer/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
           <Route path="/navigation" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />

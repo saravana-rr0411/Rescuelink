@@ -283,6 +283,7 @@ export const HomeScreen: React.FC = () => {
                         lat: a.latitude!,
                         lng: a.longitude!,
                         title: `${a.severity}: ${a.address}`,
+                        type: 'accident' as const,
                       }))}
                     className="w-full h-full"
                   />

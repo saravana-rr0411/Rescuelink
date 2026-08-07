@@ -77,11 +77,6 @@ export const EmergencyActionScreen: React.FC = () => {
     setViewMode('navigation');
   };
 
-  const handleStopNavigation = () => {
-    setSelectedHospital(null);
-    setViewMode('hospitals');
-  };
-
   const handleShareLocation = async () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -135,7 +130,6 @@ export const EmergencyActionScreen: React.FC = () => {
           destinationType="hospital"
           initialUserCoords={userCoords}
           navigationStatus="Navigating to Hospital"
-          onStopNavigation={handleStopNavigation}
         />
       </div>
     );

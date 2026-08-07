@@ -332,6 +332,7 @@ export const ReportAccidentScreen: React.FC = () => {
                       lat: latitude,
                       lng: longitude,
                       title: address || 'Emergency Location',
+                      type: 'accident' as const,
                     },
                   ]}
                   onMapClick={async ({ lat, lng }) => {

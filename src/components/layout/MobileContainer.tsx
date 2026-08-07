@@ -12,7 +12,8 @@ export const MobileContainer: React.FC<MobileContainerProps> = ({ children }) =>
     location.pathname === '/login' ||
     location.pathname === '/signup' ||
     location.pathname === '/emergency' ||
-    location.pathname.startsWith('/navigation');
+    location.pathname.startsWith('/navigation') ||
+    location.pathname.startsWith('/volunteer/preview');
 
   return (
     <div className="h-[100dvh] w-full bg-surface-container flex justify-center items-center overflow-hidden">

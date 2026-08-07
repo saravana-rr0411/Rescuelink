@@ -5,6 +5,7 @@ import { MapPin, PhoneCall, AlertCircle, Clock, Loader2, Camera, CheckCircle2, H
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
+import { fetchNearbyHospitals, type HospitalPlace } from '../services/googlePlaces';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 import { getStoredHospital, cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
@@ -143,6 +144,24 @@ export const EmergencyStatusScreen: React.FC = () => {
     };
   }, [accident?.id]);
 
+  // Nearby Hospitals via Google Places API
+  const [nearbyHospitals, setNearbyHospitals] = useState<HospitalPlace[]>([]);
+
+  useEffect(() => {
+    if (!accident?.latitude || !accident?.longitude) {
+      setNearbyHospitals([]);
+      return;
+    }
+
+    fetchNearbyHospitals({ lat: accident.latitude, lng: accident.longitude }, 5000)
+      .then((hospitals) => {
+        setNearbyHospitals(hospitals);
+      })
+      .catch((err) => {
+        console.warn('Failed to load nearby hospitals:', err);
+      });
+  }, [accident?.latitude, accident?.longitude]);
+
   // 3. Fetch Volunteer Profile Info when assigned
   const [volunteerProfile, setVolunteerProfile] = useState<{ full_name: string; phone_number: string } | null>(null);
 
@@ -208,7 +227,7 @@ export const EmergencyStatusScreen: React.FC = () => {
       return 6;
     if (s === 'Hospital Reached') return 5;
     if (s === 'Transporting to Hospital' || s === 'Hospital Transfer' || s === 'To Hospital') return 4;
-    if (s === 'Volunteer Arrived' || s === 'Arrived at Scene' || s === 'Volunteer Arrived at Scene') return 3;
+    if (s === 'Volunteer Reached' || s === 'Volunteer Arrived' || s === 'Arrived at Scene' || s === 'Volunteer Arrived at Scene') return 3;
     if (s === 'Volunteer En Route' || s === 'En Route') return 2;
     if (s === 'Volunteer Assigned' || s === 'Assigned') return 1;
     return 0; // Stage 0: SOS Sent
@@ -590,6 +609,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                         lat: accident.latitude,
                         lng: accident.longitude,
                         title: `${accident.severity} ACCIDENT: ${accident.address}`,
+                        type: 'accident' as const,
                       },
                       ...(hasVolunteer && accident.volunteer_latitude !== null && accident.volunteer_latitude !== undefined && accident.volunteer_longitude !== null && accident.volunteer_longitude !== undefined
                         ? [
@@ -598,9 +618,17 @@ export const EmergencyStatusScreen: React.FC = () => {
                               lat: accident.volunteer_latitude,
                               lng: accident.volunteer_longitude,
                               title: `Assigned Responder: ${volunteerProfile?.full_name || 'Volunteer'}`,
+                              type: 'volunteer' as const,
                             },
                           ]
                         : []),
+                      ...nearbyHospitals.map((hosp) => ({
+                        id: `hosp-${hosp.id}`,
+                        lat: hosp.lat,
+                        lng: hosp.lng,
+                        title: `🏥 ${hosp.name}`,
+                        type: 'hospital' as const,
+                      })),
                     ]}
                     className="w-full h-full"
                   />

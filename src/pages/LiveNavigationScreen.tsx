@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { getStoredHospital } from '../utils/routing';
+import { getStoredHospital, saveStoredHospital, fetchGooglePlacesDetails, type Hospital, type StoredHospital } from '../utils/routing';
 import { GoogleMapsNavigationMode } from '../components/common/GoogleMapsNavigationMode';
+import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 
 interface AccidentData {
   id: string;
@@ -27,15 +28,39 @@ export const LiveNavigationScreen: React.FC = () => {
 
   const mode: 'citizen' | 'volunteer' = locationState?.mode || 'citizen';
 
-  const [accident, setAccident] = useState<AccidentData>({
-    id: activeAccidentId,
-    address: locationState?.address || 'Emergency Incident Location',
-    severity: locationState?.severity || 'CRITICAL',
-    latitude: locationState?.latitude ?? 12.9716,
-    longitude: locationState?.longitude ?? 77.5946,
-    volunteer_latitude: locationState?.volunteerLatitude ?? null,
-    volunteer_longitude: locationState?.volunteerLongitude ?? null,
-    status: 'In Progress',
+  const [accident, setAccident] = useState<AccidentData | null>(() => {
+    if (locationState?.latitude && locationState?.longitude) {
+      return {
+        id: activeAccidentId,
+        address: locationState?.address || 'Emergency Incident Location',
+        severity: locationState?.severity || 'CRITICAL',
+        latitude: locationState.latitude,
+        longitude: locationState.longitude,
+        volunteer_latitude: locationState?.volunteerLatitude ?? null,
+        volunteer_longitude: locationState?.volunteerLongitude ?? null,
+        status: 'In Progress',
+      };
+    }
+    return null;
+  });
+
+  const [showHospitalSheet, setShowHospitalSheet] = useState<boolean>(false);
+  const [activeHospital, setActiveHospital] = useState<Hospital | null>(() => {
+    const stored = getStoredHospital(activeAccidentId);
+    if (stored && stored.latitude && stored.longitude) {
+      return {
+        id: stored.id || 'stored-hospital',
+        name: stored.name,
+        address: stored.address,
+        phone: stored.phone || '',
+        latitude: stored.latitude,
+        longitude: stored.longitude,
+        distanceMeters: stored.distanceMeters || 0,
+        emergencyDept: true,
+        bedsAvailable: 0,
+      };
+    }
+    return null;
   });
 
   // Fetch real accident record if available
@@ -50,18 +75,23 @@ export const LiveNavigationScreen: React.FC = () => {
 
         if (data && !error) {
           setAccident((prev) => ({
-            ...prev,
+            ...(prev || {}),
             id: data.id,
-            address: data.address || prev.address,
-            severity: data.severity || prev.severity,
-            latitude: data.latitude || prev.latitude,
-            longitude: data.longitude || prev.longitude,
-            volunteer_latitude: data.volunteer_latitude ?? prev.volunteer_latitude,
-            volunteer_longitude: data.volunteer_longitude ?? prev.volunteer_longitude,
-            status: data.status || prev.status,
-            description: data.description || prev.description,
-            created_at: data.created_at || prev.created_at,
+            address: data.address || prev?.address || 'Emergency Incident Location',
+            severity: data.severity || prev?.severity || 'CRITICAL',
+            latitude: data.latitude,
+            longitude: data.longitude,
+            volunteer_latitude: data.volunteer_latitude ?? prev?.volunteer_latitude,
+            volunteer_longitude: data.volunteer_longitude ?? prev?.volunteer_longitude,
+            status: data.status || prev?.status || 'In Progress',
+            description: data.description || prev?.description,
+            created_at: data.created_at || prev?.created_at,
           }));
+
+          // If current status is Volunteer Reached on load, open hospital selector automatically
+          if (data.status === 'Volunteer Reached' || data.status === 'Volunteer Arrived') {
+            setShowHospitalSheet(true);
+          }
         }
       }
     };
@@ -85,12 +115,20 @@ export const LiveNavigationScreen: React.FC = () => {
         (payload) => {
           if (payload.new) {
             const updated = payload.new as any;
-            setAccident((prev) => ({
-              ...prev,
-              status: updated.status || prev.status,
-              volunteer_latitude: updated.volunteer_latitude ?? prev.volunteer_latitude,
-              volunteer_longitude: updated.volunteer_longitude ?? prev.volunteer_longitude,
-            }));
+            setAccident((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    status: updated.status || prev.status,
+                    volunteer_latitude: updated.volunteer_latitude ?? prev.volunteer_latitude,
+                    volunteer_longitude: updated.volunteer_longitude ?? prev.volunteer_longitude,
+                  }
+                : null
+            );
+
+            if (updated.status === 'Volunteer Reached' || updated.status === 'Volunteer Arrived') {
+              setShowHospitalSheet(true);
+            }
           }
         }
       )
@@ -101,38 +139,106 @@ export const LiveNavigationScreen: React.FC = () => {
     };
   }, [activeAccidentId]);
 
-  const storedHosp = getStoredHospital(activeAccidentId);
+  if (!accident) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none">
+        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <h3 className="text-sm font-black text-white">Acquiring Emergency Location...</h3>
+      </div>
+    );
+  }
 
-  // Determine Destination:
-  // If hospital assigned / selected -> destination is the Hospital!
-  // Else -> destination is the Accident Location!
-  const isHospitalTarget = !!storedHosp || accident.status === 'Transporting to Hospital';
+  const isHospitalTarget = !!activeHospital || accident.status === 'Transporting to Hospital';
+
+  const handleArrival = async () => {
+    if (isHospitalTarget) {
+      // Volunteer reached hospital
+      if (activeAccidentId && activeAccidentId !== 'default-accident') {
+        console.log('[RescueLink Nav] Volunteer reached hospital destination. Updating status to Hospital Reached...');
+        await supabase
+          .from('accidents')
+          .update({ status: 'Hospital Reached', hospital_reached_at: new Date().toISOString() })
+          .eq('id', activeAccidentId);
+      }
+      navigate('/volunteer');
+    } else {
+      // Volunteer reached accident location
+      if (activeAccidentId && activeAccidentId !== 'default-accident') {
+        console.log('[RescueLink Nav] Volunteer confirmed arrival at accident scene. Updating status to Volunteer Reached...');
+        await supabase
+          .from('accidents')
+          .update({ status: 'Volunteer Reached', arrived_at: new Date().toISOString() })
+          .eq('id', activeAccidentId);
+
+        setAccident((prev) => (prev ? { ...prev, status: 'Volunteer Reached' } : null));
+      }
+      setShowHospitalSheet(true);
+    }
+  };
+
+  const handleSelectHospital = async (hosp: Hospital) => {
+    console.log('[RescueLink Nav] Hospital selected! Fetching Google Places details for:', hosp.name);
+
+    let phone = hosp.phone;
+    let intPhone: string | undefined;
+    let rating: number | undefined;
+    let website: string | undefined;
+    let address = hosp.address;
+
+    const placesData = await fetchGooglePlacesDetails(hosp.name, hosp.latitude, hosp.longitude);
+    if (placesData) {
+      if (placesData.phone) phone = placesData.phone;
+      if (placesData.internationalPhone) intPhone = placesData.internationalPhone;
+      if (placesData.rating) rating = placesData.rating;
+      if (placesData.website) website = placesData.website;
+      if (placesData.address) address = placesData.address;
+    }
+
+    const hospitalToStore: StoredHospital = {
+      id: hosp.id,
+      name: hosp.name,
+      address,
+      latitude: hosp.latitude,
+      longitude: hosp.longitude,
+      phone,
+      internationalPhone: intPhone,
+      rating,
+      website,
+      distanceMeters: hosp.distanceMeters,
+    };
+
+    saveStoredHospital(activeAccidentId, hospitalToStore);
+    setActiveHospital(hospitalToStore as Hospital);
+    setShowHospitalSheet(false);
+
+    if (activeAccidentId && activeAccidentId !== 'default-accident') {
+      await supabase
+        .from('accidents')
+        .update({ status: 'Transporting to Hospital' })
+        .eq('id', activeAccidentId);
+
+      setAccident((prev) => (prev ? { ...prev, status: 'Transporting to Hospital' } : null));
+    }
+  };
 
   const destinationName = isHospitalTarget
-    ? storedHosp?.name || 'Emergency Hospital'
+    ? activeHospital?.name || 'Emergency Hospital'
     : accident.address || 'Accident Incident Location';
 
   const destinationAddress = isHospitalTarget
-    ? storedHosp?.address || accident.address
+    ? activeHospital?.address || accident.address
     : accident.address;
 
   const destinationCoords: [number, number] = isHospitalTarget
-    ? [storedHosp?.latitude || accident.latitude + 0.008, storedHosp?.longitude || accident.longitude - 0.006]
+    ? [activeHospital?.latitude || accident.latitude, activeHospital?.longitude || accident.longitude]
     : [accident.latitude, accident.longitude];
 
   const destinationType: 'hospital' | 'accident' = isHospitalTarget ? 'hospital' : 'accident';
 
-  // Initial user coordinates:
+  // Initial user coordinates from real GPS if available:
   let initialUserCoords: [number, number] | null = null;
-  if (mode === 'volunteer') {
-    if (accident.volunteer_latitude && accident.volunteer_longitude) {
-      initialUserCoords = [accident.volunteer_latitude, accident.volunteer_longitude];
-    } else {
-      initialUserCoords = [accident.latitude + 0.006, accident.longitude + 0.006];
-    }
-  } else {
-    // Citizen user
-    initialUserCoords = [accident.latitude - 0.005, accident.longitude - 0.005];
+  if (accident.volunteer_latitude && accident.volunteer_longitude) {
+    initialUserCoords = [accident.volunteer_latitude, accident.volunteer_longitude];
   }
 
   const navStatus = isHospitalTarget
@@ -141,25 +247,29 @@ export const LiveNavigationScreen: React.FC = () => {
       ? 'En Route to Accident Scene'
       : 'Navigating to Incident';
 
-  const handleStopNavigation = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(mode === 'volunteer' ? '/volunteer' : '/status');
-    }
-  };
-
   return (
-    <GoogleMapsNavigationMode
-      destinationName={destinationName}
-      destinationAddress={destinationAddress}
-      destinationCoords={destinationCoords}
-      destinationType={destinationType}
-      initialUserCoords={initialUserCoords}
-      accidentId={activeAccidentId}
-      navigationStatus={navStatus}
-      onStopNavigation={handleStopNavigation}
-    />
+    <>
+      <GoogleMapsNavigationMode
+        destinationName={destinationName}
+        destinationAddress={destinationAddress}
+        destinationCoords={destinationCoords}
+        destinationType={destinationType}
+        initialUserCoords={initialUserCoords}
+        accidentId={activeAccidentId}
+        navigationStatus={navStatus}
+        hospitalPhone={activeHospital?.phone}
+        onArrival={handleArrival}
+        onBackToHospitalSelect={() => setShowHospitalSheet(true)}
+      />
+
+      <HospitalSelectorSheet
+        isOpen={showHospitalSheet}
+        onClose={() => setShowHospitalSheet(false)}
+        accidentLatitude={accident.latitude}
+        accidentLongitude={accident.longitude}
+        onSelectHospital={handleSelectHospital}
+      />
+    </>
   );
 };
 

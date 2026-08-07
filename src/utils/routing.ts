@@ -267,7 +267,73 @@ export interface StoredHospital {
   latitude: number;
   longitude: number;
   phone?: string;
+  internationalPhone?: string;
+  rating?: number;
+  website?: string;
   distanceMeters?: number;
+}
+
+/**
+ * Fetches Google Places Details for a hospital (Name, Address, International Phone Number, Rating, Website)
+ */
+export async function fetchGooglePlacesDetails(
+  name: string,
+  latitude: number,
+  longitude: number
+): Promise<{
+  name: string;
+  address?: string;
+  phone?: string;
+  internationalPhone?: string;
+  rating?: number;
+  website?: string;
+} | null> {
+  return new Promise((resolve) => {
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      resolve(null);
+      return;
+    }
+
+    try {
+      const dummyDiv = document.createElement('div');
+      const service = new google.maps.places.PlacesService(dummyDiv);
+      const searchRequest: google.maps.places.TextSearchRequest = {
+        location: new google.maps.LatLng(latitude, longitude),
+        radius: 500,
+        query: name,
+      };
+
+      service.textSearch(searchRequest, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].place_id) {
+          service.getDetails(
+            {
+              placeId: results[0].place_id,
+              fields: ['name', 'formatted_address', 'formatted_phone_number', 'international_phone_number', 'rating', 'website'],
+            },
+            (place, detailStatus) => {
+              if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
+                resolve({
+                  name: place.name || name,
+                  address: place.formatted_address || undefined,
+                  phone: place.international_phone_number || place.formatted_phone_number || undefined,
+                  internationalPhone: place.international_phone_number || undefined,
+                  rating: place.rating || undefined,
+                  website: place.website || undefined,
+                });
+              } else {
+                resolve(null);
+              }
+            }
+          );
+        } else {
+          resolve(null);
+        }
+      });
+    } catch (e) {
+      console.warn('[RescueLink Places] Places API search error:', e);
+      resolve(null);
+    }
+  });
 }
 
 /**
