@@ -172,7 +172,9 @@ export const LiveNavigationScreen: React.FC = () => {
 
         setAccident((prev) => (prev ? { ...prev, status: 'Volunteer Reached' } : null));
       }
-      setShowHospitalSheet(true);
+      if (mode === 'volunteer') {
+        setShowHospitalSheet(true);
+      }
     }
   };
 
@@ -278,16 +280,18 @@ export const LiveNavigationScreen: React.FC = () => {
         navigationStatus={navStatus}
         hospitalPhone={activeHospital?.phone}
         onArrival={handleArrival}
-        onBackToHospitalSelect={() => setShowHospitalSheet(true)}
+        onBackToHospitalSelect={mode === 'volunteer' ? () => setShowHospitalSheet(true) : undefined}
       />
 
-      <HospitalSelectorSheet
-        isOpen={showHospitalSheet}
-        onClose={() => setShowHospitalSheet(false)}
-        accidentLatitude={accident.latitude}
-        accidentLongitude={accident.longitude}
-        onSelectHospital={handleSelectHospital}
-      />
+      {mode === 'volunteer' && (
+        <HospitalSelectorSheet
+          isOpen={showHospitalSheet}
+          onClose={() => setShowHospitalSheet(false)}
+          accidentLatitude={accident.latitude}
+          accidentLongitude={accident.longitude}
+          onSelectHospital={handleSelectHospital}
+        />
+      )}
     </>
   );
 };
