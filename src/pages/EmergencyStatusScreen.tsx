@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
 import { fetchNearbyHospitals, type HospitalPlace } from '../services/googlePlaces';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
-import { getStoredHospital, cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
+import { cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
 
 const isActiveStatus = (status?: string | null): boolean => {
@@ -283,20 +283,18 @@ export const EmergencyStatusScreen: React.FC = () => {
   const [liveDurationSeconds, setLiveDurationSeconds] = useState<number | null>(null);
   const citizenPrevPosRef = React.useRef<[number, number] | null>(null);
 
-  const storedHosp = getStoredHospital(accident?.id);
-
   // Status Category Guards
   const isEnRoute = accident?.status === 'Assigned' || accident?.status === 'Volunteer Assigned' || accident?.status === 'En Route' || accident?.status === 'Volunteer En Route';
   const isArrivedOnScene = accident?.status === 'Volunteer Arrived' || accident?.status === 'Arrived at Scene' || accident?.status === 'Volunteer Arrived at Scene';
-  const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!storedHosp);
+  const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!accident?.hospital_name);
   const isHospitalReached = accident?.status === 'Hospital Reached';
   const isResolved = accident?.status === 'Emergency Completed' || accident?.status === 'Emergency Resolved' || accident?.status === 'Completed';
 
   // Determine Target Coordinates for OSRM Route & ETA:
   // If Transporting to Hospital or Hospital Reached -> Destination is the Hospital Coordinates!
   // Else (En Route / Arrived) -> Destination is the Accident Scene Coordinates!
-  const targetLat = (isTransporting || isHospitalReached) && storedHosp ? storedHosp.latitude : (accident?.latitude || 0);
-  const targetLng = (isTransporting || isHospitalReached) && storedHosp ? storedHosp.longitude : (accident?.longitude || 0);
+  const targetLat = (isTransporting || isHospitalReached) && accident?.hospital_latitude ? accident.hospital_latitude : (accident?.latitude || 0);
+  const targetLng = (isTransporting || isHospitalReached) && accident?.hospital_longitude ? accident.hospital_longitude : (accident?.longitude || 0);
 
   const volLat = hasVolunteer ? accident?.volunteer_latitude : null;
   const volLng = hasVolunteer ? accident?.volunteer_longitude : null;
@@ -371,7 +369,7 @@ export const EmergencyStatusScreen: React.FC = () => {
       );
       calculatedDistanceDisplay = formatDistance(distMeters);
       distanceLabel = 'Volunteer Distance to Accident';
-    } else if (isTransporting && storedHosp) {
+    } else if (isTransporting && accident.hospital_latitude) {
       // Distance: Volunteer Current Location -> Selected Hospital
       const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
         Number(accident.volunteer_latitude),
@@ -380,7 +378,7 @@ export const EmergencyStatusScreen: React.FC = () => {
         targetLng
       );
       calculatedDistanceDisplay = formatDistance(distMeters);
-      distanceLabel = 'Remaining Distance to Hospital';
+      distanceLabel = 'Distance to Hospital';
     } else {
       // Arrived at Scene / Hospital Reached / Emergency Resolved -> Hide numerical distance to accident
       calculatedDistanceDisplay = null;
@@ -493,7 +491,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
                   <span className="text-blue-100 font-bold flex items-center gap-1.5">
                     <span>🏥</span>
-                    <span>{storedHosp?.name || 'Selected Hospital'}</span>
+                    <span>{accident.hospital_name || 'Selected Hospital'}</span>
                   </span>
                   {calculatedDistanceDisplay && (
                     <span className="font-extrabold text-sm text-white bg-white/20 px-2.5 py-0.5 rounded-full">
@@ -539,17 +537,16 @@ export const EmergencyStatusScreen: React.FC = () => {
 
             {/* Dedicated Selected Hospital Card */}
             {(() => {
-              const storedHosp = getStoredHospital(accident.id);
-              const hospName = accident.hospital_name || storedHosp?.name || 'Nearest Regional Emergency Center';
-              const hospAddress = accident.hospital_address || storedHosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
-              const hospPhone = accident.hospital_phone || storedHosp?.phone || storedHosp?.internationalPhone;
+              const hospName = accident.hospital_name || 'Nearest Regional Emergency Center';
+              const hospAddress = accident.hospital_address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
+              const hospPhone = accident.hospital_phone;
 
               return (
                 <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5 animate-card-enter">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1 animate-badge-pop">
                       <Hospital className="w-3.5 h-3.5" />
-                      {accident.hospital_name || storedHosp?.name ? 'Selected Destination Hospital' : 'Assigned Emergency Hospital'}
+                      {accident.hospital_name ? 'Selected Destination Hospital' : 'Assigned Emergency Hospital'}
                     </span>
                     <button
                       onClick={() =>
