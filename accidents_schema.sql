@@ -105,3 +105,16 @@ CREATE TRIGGER trigger_accidents_updated_at
   BEFORE UPDATE ON public.accidents
   FOR EACH ROW EXECUTE FUNCTION public.update_accidents_updated_at();
 
+-- 8. Enable Supabase Realtime for public.accidents table
+ALTER TABLE public.accidents REPLICA IDENTITY FULL;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' AND tablename = 'accidents'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.accidents;
+  END IF;
+END $$;
+

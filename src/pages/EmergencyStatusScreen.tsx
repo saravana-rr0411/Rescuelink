@@ -121,25 +121,26 @@ export const EmergencyStatusScreen: React.FC = () => {
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'accidents',
           filter: `id=eq.${accident.id}`,
         },
         (payload) => {
-          console.log('[RescueLink Realtime Update Received] Payload:', payload.new);
+          console.log('[RescueLink Realtime Event Received] Type:', payload.eventType, 'Payload:', payload.new);
           if (payload.new) {
             const updated = payload.new as AccidentRecord;
-            console.log('[RescueLink Realtime GPS] Volunteer latitude received:', updated.volunteer_latitude ?? 'NULL');
-            console.log('[RescueLink Realtime GPS] Volunteer longitude received:', updated.volunteer_longitude ?? 'NULL');
-            setAccident(updated);
+            console.log('[RescueLink Realtime Status] Updated status:', updated.status);
+            console.log('[RescueLink Realtime Hospital] Updated hospital_name:', updated.hospital_name ?? 'NULL');
+            console.log('[RescueLink Realtime GPS] Volunteer lat/lng:', updated.volunteer_latitude, updated.volunteer_longitude);
+            setAccident((prev) => (prev ? { ...prev, ...updated } : updated));
           }
         }
       )
       .subscribe((status, err) => {
-        console.log(`[RescueLink Realtime] Channel status for accident ${accident.id}:`, status);
+        console.log(`[RescueLink Realtime] Channel subscription status for accident ${accident.id}:`, status);
         if (err) {
-          console.warn('[RescueLink Realtime] Channel subscription error (falling back to initial data):', err);
+          console.warn('[RescueLink Realtime] Channel subscription error:', err);
         }
       });
 
