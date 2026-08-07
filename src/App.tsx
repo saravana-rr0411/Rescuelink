@@ -24,6 +24,7 @@ const NotificationsScreen = lazy(() => import('./pages/NotificationsScreen').the
 const CitizenHistoryScreen = lazy(() => import('./pages/CitizenHistoryScreen').then((m) => ({ default: m.CitizenHistoryScreen })));
 const VolunteerHistoryScreen = lazy(() => import('./pages/VolunteerHistoryScreen').then((m) => ({ default: m.VolunteerHistoryScreen })));
 const HistoryDetailsScreen = lazy(() => import('./pages/HistoryDetailsScreen').then((m) => ({ default: m.HistoryDetailsScreen })));
+const GoogleMapTest = lazy(() => import('./components/common/GoogleMapTest').then((m) => ({ default: m.GoogleMapTest })));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -31,6 +32,7 @@ const AppContent: React.FC = () => {
     location.pathname === '/login' ||
     location.pathname === '/signup' ||
     location.pathname === '/emergency' ||
+    location.pathname === '/google-map-test' ||
     location.pathname.startsWith('/navigation');
 
   return (
@@ -59,6 +61,7 @@ const AppContent: React.FC = () => {
           <Route path="/navigation/:accidentId" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
           <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
+          <Route path="/google-map-test" element={<GoogleMapTest />} />
         </Routes>
       </Suspense>
       {!hideBottomNav && <BottomNavigation />}
