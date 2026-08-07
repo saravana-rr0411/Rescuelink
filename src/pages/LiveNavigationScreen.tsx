@@ -214,10 +214,29 @@ export const LiveNavigationScreen: React.FC = () => {
     if (activeAccidentId && activeAccidentId !== 'default-accident') {
       await supabase
         .from('accidents')
-        .update({ status: 'Transporting to Hospital' })
+        .update({
+          status: 'Transporting to Hospital',
+          hospital_name: hosp.name,
+          hospital_address: address,
+          hospital_phone: phone || intPhone || null,
+          hospital_latitude: hosp.latitude,
+          hospital_longitude: hosp.longitude,
+        })
         .eq('id', activeAccidentId);
 
-      setAccident((prev) => (prev ? { ...prev, status: 'Transporting to Hospital' } : null));
+      setAccident((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'Transporting to Hospital',
+              hospital_name: hosp.name,
+              hospital_address: address,
+              hospital_phone: phone || intPhone || null,
+              hospital_latitude: hosp.latitude,
+              hospital_longitude: hosp.longitude,
+            }
+          : null
+      );
     }
   };
 

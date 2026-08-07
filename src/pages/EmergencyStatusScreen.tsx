@@ -36,6 +36,11 @@ interface AccidentRecord {
   status: string;
   volunteer_latitude?: number | null;
   volunteer_longitude?: number | null;
+  hospital_name?: string | null;
+  hospital_address?: string | null;
+  hospital_phone?: string | null;
+  hospital_latitude?: number | null;
+  hospital_longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -534,20 +539,17 @@ export const EmergencyStatusScreen: React.FC = () => {
 
             {/* Dedicated Selected Hospital Card */}
             {(() => {
-              const hosp = getStoredHospital(accident.id);
-              if (!hosp && accident.status !== 'Transporting to Hospital') return null;
-
-              const hospName = hosp?.name || 'Nearest Regional Emergency Center';
-              const hospAddress = hosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
-              const distMeters = hosp?.distanceMeters || 1800;
-              const etaSecs = (distMeters / 1000 / 40) * 3600;
+              const storedHosp = getStoredHospital(accident.id);
+              const hospName = accident.hospital_name || storedHosp?.name || 'Nearest Regional Emergency Center';
+              const hospAddress = accident.hospital_address || storedHosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
+              const hospPhone = accident.hospital_phone || storedHosp?.phone || storedHosp?.internationalPhone;
 
               return (
                 <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5 animate-card-enter">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1 animate-badge-pop">
                       <Hospital className="w-3.5 h-3.5" />
-                      Selected Hospital
+                      {accident.hospital_name || storedHosp?.name ? 'Selected Destination Hospital' : 'Assigned Emergency Hospital'}
                     </span>
                     <button
                       onClick={() =>
@@ -576,10 +578,16 @@ export const EmergencyStatusScreen: React.FC = () => {
                     </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-xs text-blue-100 font-semibold pt-2 border-t border-blue-800/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-blue-100 font-semibold pt-2 border-t border-blue-800/60">
                     <span className="truncate">📍 {hospAddress}</span>
-                    <span>📏 {formatDistance(distMeters)}</span>
-                    <span>⏱ {formatETA(etaSecs)}</span>
+                    {hospPhone ? (
+                      <a href={`tel:${hospPhone}`} className="text-emerald-300 hover:underline flex items-center gap-1">
+                        <PhoneCall className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>☎ {hospPhone}</span>
+                      </a>
+                    ) : (
+                      <span className="text-slate-300">☎ Phone unavailable</span>
+                    )}
                   </div>
                 </div>
               );

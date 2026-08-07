@@ -26,6 +26,11 @@ interface AccidentRecord {
   status: string;
   volunteer_latitude?: number | null;
   volunteer_longitude?: number | null;
+  hospital_name?: string | null;
+  hospital_address?: string | null;
+  hospital_phone?: string | null;
+  hospital_latitude?: number | null;
+  hospital_longitude?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -483,11 +488,16 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       const cleanDesc = cleanDescriptionText(hospitalSheetMission.description);
 
-      // 2. Update status in database keeping description clean
+      // 2. Update status & hospital details in database keeping description clean
       const { data, error } = await supabase
         .from('accidents')
         .update({
           status: 'Transporting to Hospital',
+          hospital_name: hospital.name,
+          hospital_address: hospital.address,
+          hospital_phone: hospital.phone || (hospital as any).internationalPhone || null,
+          hospital_latitude: hospital.latitude,
+          hospital_longitude: hospital.longitude,
           description: cleanDesc,
           transported_at: new Date().toISOString(),
         })
@@ -502,6 +512,11 @@ export const VolunteerDashboardScreen: React.FC = () => {
               ? {
                 ...m,
                 status: 'Transporting to Hospital',
+                hospital_name: hospital.name,
+                hospital_address: hospital.address,
+                hospital_phone: hospital.phone || (hospital as any).internationalPhone || null,
+                hospital_latitude: hospital.latitude,
+                hospital_longitude: hospital.longitude,
                 description: cleanDesc,
               }
               : m
