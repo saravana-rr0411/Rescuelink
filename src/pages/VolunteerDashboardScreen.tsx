@@ -9,8 +9,7 @@ import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
-import { saveStoredHospital, getStoredHospital, cleanDescriptionText, formatETA, getStatusRank } from '../utils/routing';
-import { formatDistance } from '../utils/distance';
+import { saveStoredHospital, getStoredHospital, cleanDescriptionText, getStatusRank } from '../utils/routing';
 import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import { Inbox } from 'lucide-react';
 
@@ -91,7 +90,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       setLoading(true);
       try {
         console.log('[RescueLink Volunteer] Fetching active accident feeds from Supabase...');
-        
+
         // Fetch only active non-completed reported accidents directly from Supabase
         const { data: reportedData, error: reportedError } = await supabase
           .from('accidents')
@@ -485,10 +484,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
           prev.map((m) =>
             m.id === missionId
               ? {
-                  ...m,
-                  status: 'Transporting to Hospital',
-                  description: cleanDesc,
-                }
+                ...m,
+                status: 'Transporting to Hospital',
+                description: cleanDesc,
+              }
               : m
           )
         );
@@ -529,9 +528,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       <main className="flex-1 px-4 py-4 space-y-5">
         {/* On Duty Toggle Banner */}
-        <div className={`p-4 sm:p-5 rounded-3xl text-white shadow-sm transition-all flex items-center justify-between gap-3 ${
-          isOnDuty ? 'bg-gradient-to-r from-red-800 to-rose-900' : 'bg-white text-slate-800 border border-slate-200/80'
-        }`}>
+        <div className={`p-4 sm:p-5 rounded-3xl text-white shadow-sm transition-all flex items-center justify-between gap-3 ${isOnDuty ? 'bg-gradient-to-r from-red-800 to-rose-900' : 'bg-white text-slate-800 border border-slate-200/80'
+          }`}>
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 border-white/40 shadow-xs flex items-center justify-center bg-rose-700 text-white font-extrabold text-lg aspect-square">
               {avatarUrl ? (
@@ -563,9 +561,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
           <button
             onClick={() => setIsOnDuty(!isOnDuty)}
-            className={`px-3.5 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 shrink-0 ${
-              isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
-            }`}
+            className={`px-3.5 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 shrink-0 ${isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
+              }`}
           >
             {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
           </button>
@@ -951,9 +948,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
                 return (
                   <div
                     key={inc.id}
-                    className={`bg-white border rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-all ${
-                      isAssignedToOther ? 'border-amber-200 bg-amber-50/30 opacity-90' : 'border-slate-200/80 hover:border-slate-300'
-                    }`}
+                    className={`bg-white border rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-all ${isAssignedToOther ? 'border-amber-200 bg-amber-50/30 opacity-90' : 'border-slate-200/80 hover:border-slate-300'
+                      }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
