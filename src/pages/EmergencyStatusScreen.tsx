@@ -4,7 +4,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { MapPin, PhoneCall, AlertCircle, Clock, Loader2, Camera, CheckCircle2, Hospital, Ambulance, Navigation, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { MapWidget } from '../components/common/MapWidget';
+import { GoogleMap } from '../components/maps/GoogleMap';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 import { getStoredHospital, cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
@@ -579,18 +579,33 @@ export const EmergencyStatusScreen: React.FC = () => {
                 </span>
               </div>
 
-              <MapWidget
-                accidentId={accident.id}
-                latitude={accident.latitude}
-                longitude={accident.longitude}
-                address={accident.address}
-                severity={accident.severity}
-                height="h-56"
-                showNavigateBtn={true}
-                volunteerLatitude={hasVolunteer ? accident.volunteer_latitude : null}
-                volunteerLongitude={hasVolunteer ? accident.volunteer_longitude : null}
-                mode="citizen"
-              />
+              {accident.latitude !== null && accident.longitude !== null && (
+                <div className="w-full h-56 rounded-2xl overflow-hidden border border-outline-variant/60 shadow-xs relative">
+                  <GoogleMap
+                    center={{ lat: accident.latitude, lng: accident.longitude }}
+                    zoom={14}
+                    markers={[
+                      {
+                        id: `accident-${accident.id}`,
+                        lat: accident.latitude,
+                        lng: accident.longitude,
+                        title: `${accident.severity} ACCIDENT: ${accident.address}`,
+                      },
+                      ...(hasVolunteer && accident.volunteer_latitude !== null && accident.volunteer_latitude !== undefined && accident.volunteer_longitude !== null && accident.volunteer_longitude !== undefined
+                        ? [
+                            {
+                              id: `volunteer-${accident.id}`,
+                              lat: accident.volunteer_latitude,
+                              lng: accident.volunteer_longitude,
+                              title: `Assigned Responder: ${volunteerProfile?.full_name || 'Volunteer'}`,
+                            },
+                          ]
+                        : []),
+                    ]}
+                    className="w-full h-full"
+                  />
+                </div>
+              )}
 
               {/* Photo Preview if attached */}
               {accident.photo_url && (

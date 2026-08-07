@@ -5,6 +5,7 @@ import { Car, Stethoscope, Flame, ShieldAlert, MapPin, Camera, AlertTriangle, Se
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { isValidGpsCoordinate, formatSupabaseError } from '../utils/locationGuard';
+import { GoogleMap } from '../components/maps/GoogleMap';
 
 export const ReportAccidentScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -318,6 +319,45 @@ export const ReportAccidentScreen: React.FC = () => {
                 className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
+
+            {/* Interactive Google Map Location Picker */}
+            {latitude !== null && longitude !== null && (
+              <div className="w-full h-44 rounded-2xl overflow-hidden border border-outline-variant/60 shadow-xs mt-2">
+                <GoogleMap
+                  center={{ lat: latitude, lng: longitude }}
+                  zoom={15}
+                  markers={[
+                    {
+                      id: 'report-accident-loc-marker',
+                      lat: latitude,
+                      lng: longitude,
+                      title: address || 'Emergency Location',
+                    },
+                  ]}
+                  onMapClick={async ({ lat, lng }) => {
+                    setLatitude(lat);
+                    setLongitude(lng);
+                    try {
+                      const res = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`,
+                        { headers: { 'User-Agent': 'RescueLink/1.0' } }
+                      );
+                      if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.display_name) {
+                          setAddress(data.display_name);
+                          return;
+                        }
+                      }
+                    } catch (err) {
+                      console.warn('Reverse geocoding error:', err);
+                    }
+                    setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+                  }}
+                  className="w-full h-full"
+                />
+              </div>
+            )}
           </div>
 
           {/* Severity Radio Group */}
