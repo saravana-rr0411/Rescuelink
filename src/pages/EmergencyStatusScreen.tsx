@@ -64,7 +64,10 @@ export const EmergencyStatusScreen: React.FC = () => {
       setLoading(true);
       try {
         const searchParams = new URLSearchParams(location.search);
-        const targetAccidentId = locationState?.accidentId || searchParams.get('accidentId');
+        const targetAccidentId =
+          locationState?.accidentId ||
+          searchParams.get('accidentId') ||
+          localStorage.getItem('rescuelink_last_active_accident_id');
 
         let data: AccidentRecord | null = null;
         let error: any = null;
@@ -77,7 +80,10 @@ export const EmergencyStatusScreen: React.FC = () => {
             .single();
           data = res.data;
           error = res.error;
-        } else {
+        }
+
+        // Fallback to latest active accident query if targetAccidentId is not set or not found
+        if (!data) {
           const res = await supabase
             .from('accidents')
             .select('*')
@@ -90,16 +96,31 @@ export const EmergencyStatusScreen: React.FC = () => {
           error = res.error;
         }
 
-        if (error) {
+        if (error && !data) {
           console.warn('[RescueLink Status] Error fetching accident report:', error.message);
           setAccident(null);
         } else if (data) {
-          console.log('[RescueLink Status] Accident report loaded from Supabase:', {
-            id: data.id,
-            status: data.status,
-            hospital_name: data.hospital_name,
+          // Persist targetAccidentId locally so navigating away and returning preserves the ID
+          localStorage.setItem('rescuelink_last_active_accident_id', data.id);
+
+          const storedHosp = getStoredHospital(data.id);
+          const fullRecord: AccidentRecord = {
+            ...data,
+            hospital_name: data.hospital_name || storedHosp?.name || null,
+            hospital_address: data.hospital_address || storedHosp?.address || null,
+            hospital_phone: data.hospital_phone || storedHosp?.phone || null,
+            hospital_latitude: data.hospital_latitude ?? storedHosp?.latitude ?? null,
+            hospital_longitude: data.hospital_longitude ?? storedHosp?.longitude ?? null,
+          };
+
+          console.log('[Citizen Initial Accident Fetch]:', {
+            accidentId: fullRecord.id,
+            status: fullRecord.status,
+            hospital_name: fullRecord.hospital_name,
+            hospital_address: fullRecord.hospital_address,
           });
-          setAccident(data);
+
+          setAccident(fullRecord);
         } else {
           setAccident(null);
         }
