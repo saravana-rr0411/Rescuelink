@@ -422,6 +422,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       if (newStatus === 'Volunteer Arrived' || newStatus === 'Arrived at Scene') {
         statusPayload.arrived_at = nowIso;
+      } else if (newStatus === 'Transporting to Hospital') {
+        statusPayload.transported_at = nowIso;
       } else if (newStatus === 'Hospital Reached') {
         statusPayload.hospital_reached_at = nowIso;
       } else if (newStatus === 'Emergency Completed' || newStatus === 'Emergency Resolved') {
@@ -438,12 +440,12 @@ export const VolunteerDashboardScreen: React.FC = () => {
       setUpdatingStatusId(null);
 
       if (error) {
-        console.error('[RescueLink Volunteer] Failed to update status. Exact error:', error);
+        console.error('[RescueLink Workflow] Failed to update status. Exact error:', error);
         setErrorMessage(`Failed to update status: ${error.message || 'Database error occurred'}`);
         return;
       }
 
-      console.log('[RescueLink Volunteer] Status updated successfully in public.accidents:', data);
+      console.log('[RescueLink Workflow] Supabase update result for status change to', newStatus, ':', data);
       setSuccessMessage(`Status updated to "${newStatus}".`);
 
       const targetMission = assignedMissions.find((m) => m.id === accidentId);
@@ -454,8 +456,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
           .filter((m) => newStatus !== 'Emergency Resolved' && newStatus !== 'Emergency Completed' || m.id !== accidentId)
       );
 
-      // Automatically trigger Hospital Selector when Arrived at Scene
-      if (newStatus === 'Arrived at Scene' && targetMission) {
+      // Automatically trigger Hospital Selector when Arrived at Scene if no hospital is selected yet
+      if ((newStatus === 'Arrived at Scene' || newStatus === 'Volunteer Arrived') && targetMission && !targetMission.hospital_name) {
         setHospitalSheetMission(targetMission);
       }
 
@@ -463,7 +465,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
         setSuccessMessage(null);
       }, 2500);
     } catch (err: any) {
-      console.error('[RescueLink Volunteer] Unexpected error updating status:', err);
+      console.error('[RescueLink Workflow] Unexpected error updating status:', err);
       setErrorMessage('An error occurred while updating status.');
       setUpdatingStatusId(null);
     }
@@ -473,9 +475,11 @@ export const VolunteerDashboardScreen: React.FC = () => {
     if (!hospitalSheetMission) return;
     const missionId = hospitalSheetMission.id;
 
+    console.log('[RescueLink Workflow] Hospital selected:', hospital.name, 'for accident ID:', missionId);
+
     setUpdatingStatusId(missionId);
     try {
-      // 1. Save hospital separately without appending to description
+      // 1. Save stored hospital locally
       saveStoredHospital(missionId, {
         id: hospital.id,
         name: hospital.name,
@@ -487,34 +491,57 @@ export const VolunteerDashboardScreen: React.FC = () => {
       });
 
       const cleanDesc = cleanDescriptionText(hospitalSheetMission.description);
+      const phoneNum = hospital.phone || (hospital as any).internationalPhone || null;
 
-      // 2. Update status & hospital details in database keeping description clean
+      // 2. Save hospital details into public.accidents row without automatically changing status
       const { data, error } = await supabase
         .from('accidents')
         .update({
-          status: 'Transporting to Hospital',
           hospital_name: hospital.name,
           hospital_address: hospital.address,
-          hospital_phone: hospital.phone || (hospital as any).internationalPhone || null,
+          hospital_phone: phoneNum,
           hospital_latitude: hospital.latitude,
           hospital_longitude: hospital.longitude,
           description: cleanDesc,
-          transported_at: new Date().toISOString(),
         })
         .eq('id', missionId)
         .select()
         .single();
 
+      console.log('VOLUNTEER missionId =', missionId);
+      console.log('[VOLUNTEER UPDATE RETURNED DATA]:', {
+        missionId,
+        'data.id': data?.id,
+        'data.status': data?.status,
+        'data.hospital_name': data?.hospital_name,
+        'data.hospital_address': data?.hospital_address,
+        'data.hospital_phone': data?.hospital_phone,
+        'data.hospital_latitude': data?.hospital_latitude,
+        'data.hospital_longitude': data?.hospital_longitude,
+        error: error ? { code: error.code, message: error.message, details: error.details } : null,
+      });
+
       if (!error && data) {
+        // Fresh SELECT immediately after UPDATE succeeds using the SAME missionId
+        const { data: verifyData, error: verifyError } = await supabase
+          .from('accidents')
+          .select('id,status,hospital_name,hospital_address,hospital_phone,hospital_latitude,hospital_longitude')
+          .eq('id', missionId)
+          .single();
+
+        console.log('[VOLUNTEER FRESH SELECT RESULT]:', {
+          verifyData,
+          verifyError: verifyError ? { code: verifyError.code, message: verifyError.message } : null,
+        });
+
         setAssignedMissions((prev) =>
           prev.map((m) =>
             m.id === missionId
               ? {
                 ...m,
-                status: 'Transporting to Hospital',
                 hospital_name: hospital.name,
                 hospital_address: hospital.address,
-                hospital_phone: hospital.phone || (hospital as any).internationalPhone || null,
+                hospital_phone: phoneNum,
                 hospital_latitude: hospital.latitude,
                 hospital_longitude: hospital.longitude,
                 description: cleanDesc,
@@ -522,9 +549,9 @@ export const VolunteerDashboardScreen: React.FC = () => {
               : m
           )
         );
-        setSuccessMessage(`Hospital Selected: ${hospital.name}. Status updated to Transporting to Hospital.`);
+        setSuccessMessage(`Hospital Selected: ${hospital.name}. Click "En Route to Hospital" when ready.`);
       } else if (error) {
-        console.error('[RescueLink Volunteer] Error updating status:', error.message);
+        console.error('[RescueLink Volunteer] Error saving hospital selection:', error.message);
         setErrorMessage(`Error: ${error.message}`);
       }
     } catch (err: any) {
@@ -875,29 +902,71 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       </button>
                     )}
 
-                    {/* Stage 4: Volunteer Arrived -> Next is Select Hospital & Start Transport */}
+                    {/* Stage 4: Volunteer Arrived -> Hospital Selection & En Route to Hospital */}
                     {getStatusRank(mission.status) === 4 && (
-                      <button
-                        type="button"
-                        disabled={updatingStatusId === mission.id}
-                        onClick={() => setHospitalSheetMission(mission)}
-                        className="w-full p-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                      >
-                        {updatingStatusId === mission.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                      <div className="space-y-2">
+                        {!(mission.hospital_name || getStoredHospital(mission.id)) ? (
+                          <button
+                            type="button"
+                            disabled={updatingStatusId === mission.id}
+                            onClick={() => {
+                              console.log('[RescueLink Workflow] Volunteer opened hospital selector for accident ID:', mission.id);
+                              setHospitalSheetMission(mission);
+                            }}
+                            className="w-full p-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                          >
+                            {updatingStatusId === mission.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <HospitalIcon className="w-4 h-4" />
+                            )}
+                            <span>Select Hospital</span>
+                          </button>
                         ) : (
-                          <HospitalIcon className="w-4 h-4" />
+                          <div className="space-y-2">
+                            <button
+                              type="button"
+                              disabled={updatingStatusId === mission.id}
+                              onClick={() => {
+                                console.log('[RescueLink Workflow] En Route to Hospital button pressed for accident ID:', mission.id);
+                                handleUpdateStatus(mission.id, 'Transporting to Hospital');
+                              }}
+                              className="w-full p-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 border border-blue-500"
+                            >
+                              {updatingStatusId === mission.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Ambulance className="w-4 h-4" />
+                              )}
+                              <span>En Route to Hospital</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={updatingStatusId === mission.id}
+                              onClick={() => {
+                                console.log('[RescueLink Workflow] Volunteer changing hospital for accident ID:', mission.id);
+                                setHospitalSheetMission(mission);
+                              }}
+                              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold transition-all flex items-center justify-center gap-1.5 active:scale-95"
+                            >
+                              <HospitalIcon className="w-3.5 h-3.5 text-slate-500" />
+                              <span>Change Selected Hospital</span>
+                            </button>
+                          </div>
                         )}
-                        <span>Select Hospital & Start Transport</span>
-                      </button>
+                      </div>
                     )}
 
-                    {/* Stage 5: Transporting to Hospital -> Next is Hospital Reached */}
+                    {/* Stage 5: Transporting to Hospital -> Next is Mark Hospital Reached */}
                     {getStatusRank(mission.status) === 5 && (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
-                        onClick={() => handleUpdateStatus(mission.id, 'Hospital Reached')}
+                        onClick={() => {
+                          console.log('[RescueLink Workflow] Mark Hospital Reached pressed for accident ID:', mission.id);
+                          handleUpdateStatus(mission.id, 'Hospital Reached');
+                        }}
                         className="w-full p-3 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
                       >
                         {updatingStatusId === mission.id ? (

@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
 import { fetchNearbyHospitals, type HospitalPlace } from '../services/googlePlaces';
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
-import { cleanDescriptionText, formatETA, fetchOSRMRoute } from '../utils/routing';
+import { cleanDescriptionText, formatETA, fetchOSRMRoute, getStoredHospital } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
 
 const isActiveStatus = (status?: string | null): boolean => {
@@ -72,13 +72,24 @@ export const EmergencyStatusScreen: React.FC = () => {
         const targetAccidentId = locationState?.accidentId || searchParams.get('accidentId');
 
         if (targetAccidentId) {
-          const { data: specificData } = await supabase
+          const { data: specificData, error: specificErr } = await supabase
             .from('accidents')
             .select('*')
             .eq('id', targetAccidentId)
             .single();
 
           if (specificData) {
+            console.log('CITIZEN accident.id =', specificData.id);
+            console.log('[CITIZEN FETCH RESULT (targetAccidentId)]:', {
+              'accident.id': specificData.id,
+              status: specificData.status,
+              hospital_name: specificData.hospital_name,
+              hospital_address: specificData.hospital_address,
+              hospital_phone: specificData.hospital_phone,
+              hospital_latitude: specificData.hospital_latitude,
+              hospital_longitude: specificData.hospital_longitude,
+              error: specificErr ? { code: specificErr.code, message: specificErr.message } : null,
+            });
             setAccident(specificData);
             setLoading(false);
             return;
@@ -95,7 +106,17 @@ export const EmergencyStatusScreen: React.FC = () => {
           console.warn('[RescueLink Status] Error fetching latest active accident report:', error.message);
           setAccident(null);
         } else if (data && isActiveStatus(data.status)) {
-          console.log('[RescueLink Status] Loaded active accident report from Supabase:', data);
+          console.log('CITIZEN accident.id =', data.id);
+          console.log('[CITIZEN FETCH RESULT (latest)]:', {
+            'accident.id': data.id,
+            status: data.status,
+            hospital_name: data.hospital_name,
+            hospital_address: data.hospital_address,
+            hospital_phone: data.hospital_phone,
+            hospital_latitude: data.hospital_latitude,
+            hospital_longitude: data.hospital_longitude,
+            error: null,
+          });
           setAccident(data);
         } else {
           setAccident(null);
@@ -127,13 +148,29 @@ export const EmergencyStatusScreen: React.FC = () => {
           filter: `id=eq.${accident.id}`,
         },
         (payload) => {
-          console.log('[RescueLink Realtime Event Received] Type:', payload.eventType, 'Payload:', payload.new);
           if (payload.new) {
             const updated = payload.new as AccidentRecord;
-            console.log('[RescueLink Realtime Status] Updated status:', updated.status);
-            console.log('[RescueLink Realtime Hospital] Updated hospital_name:', updated.hospital_name ?? 'NULL');
-            console.log('[RescueLink Realtime GPS] Volunteer lat/lng:', updated.volunteer_latitude, updated.volunteer_longitude);
-            setAccident((prev) => (prev ? { ...prev, ...updated } : updated));
+            console.log('[CITIZEN REALTIME UPDATE PAYLOAD]:', {
+              'payload.new.id': updated.id,
+              'payload.new.status': updated.status,
+              'payload.new.hospital_name': updated.hospital_name,
+              'payload.new.hospital_address': updated.hospital_address,
+              'payload.new.hospital_phone': updated.hospital_phone,
+              'payload.new.hospital_latitude': updated.hospital_latitude,
+              'payload.new.hospital_longitude': updated.hospital_longitude,
+            });
+            setAccident((prev) => {
+              if (!prev) return updated;
+              return {
+                ...prev,
+                ...updated,
+                hospital_name: updated.hospital_name || prev.hospital_name,
+                hospital_address: updated.hospital_address || prev.hospital_address,
+                hospital_phone: updated.hospital_phone || prev.hospital_phone,
+                hospital_latitude: updated.hospital_latitude || prev.hospital_latitude,
+                hospital_longitude: updated.hospital_longitude || prev.hospital_longitude,
+              };
+            });
           }
         }
       )
@@ -147,6 +184,83 @@ export const EmergencyStatusScreen: React.FC = () => {
     return () => {
       console.log(`[RescueLink Realtime] Unsubscribing from accident channel: ${accident.id}`);
       supabase.removeChannel(channel);
+    };
+  }, [accident?.id]);
+
+  // 3. Fallback Polling Interval to guarantee status updates even if Realtime events are missed
+  useEffect(() => {
+    if (!user || !accident?.id) return;
+
+    console.log(`[RescueLink Polling] Starting 5s status polling fallback for accident ID: ${accident.id}`);
+
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('accidents')
+          .select('*')
+          .eq('id', accident.id)
+          .single();
+
+        if (data && !error) {
+          setAccident((prev) => {
+            if (!prev) return data;
+            if (
+              prev.status !== data.status ||
+              prev.hospital_name !== data.hospital_name ||
+              prev.volunteer_latitude !== data.volunteer_latitude ||
+              prev.volunteer_longitude !== data.volunteer_longitude
+            ) {
+              console.log('[RescueLink Polling Fallback] Updated accident state from polling:', {
+                status: data.status,
+                hospital_name: data.hospital_name,
+              });
+              return {
+                ...prev,
+                ...data,
+                hospital_name: data.hospital_name || prev.hospital_name,
+                hospital_address: data.hospital_address || prev.hospital_address,
+                hospital_phone: data.hospital_phone || prev.hospital_phone,
+                hospital_latitude: data.hospital_latitude || prev.hospital_latitude,
+                hospital_longitude: data.hospital_longitude || prev.hospital_longitude,
+              };
+            }
+            return prev;
+          });
+        }
+      } catch (e) {
+        // Silent background error handling
+      }
+    }, 5000);
+
+    return () => {
+      console.log(`[RescueLink Polling] Stopping 5s status polling fallback for accident ID: ${accident.id}`);
+      clearInterval(interval);
+    };
+  }, [user, accident?.id]);
+
+  // 4. Custom event listener for local hospital selection updates
+  useEffect(() => {
+    if (!accident?.id) return;
+    const handleHospitalUpdate = (e: any) => {
+      if (e.detail?.accidentId === accident.id && e.detail?.hospital) {
+        const h = e.detail.hospital;
+        setAccident((prev) =>
+          prev
+            ? {
+                ...prev,
+                hospital_name: h.name || prev.hospital_name,
+                hospital_address: h.address || prev.hospital_address,
+                hospital_phone: h.phone || prev.hospital_phone,
+                hospital_latitude: h.latitude || prev.hospital_latitude,
+                hospital_longitude: h.longitude || prev.hospital_longitude,
+              }
+            : prev
+        );
+      }
+    };
+    window.addEventListener('rescuelink_hospital_updated', handleHospitalUpdate);
+    return () => {
+      window.removeEventListener('rescuelink_hospital_updated', handleHospitalUpdate);
     };
   }, [accident?.id]);
 
@@ -256,13 +370,22 @@ export const EmergencyStatusScreen: React.FC = () => {
     return Math.min(100, Math.round(((idx + 1) / 7) * 100));
   };
 
+  const formatCitizenStatusDisplay = (status?: string | null): string => {
+    if (!status) return 'Waiting for Volunteer';
+    const s = status.trim();
+    if (s === 'Transporting to Hospital' || s === 'Hospital Transfer' || s === 'To Hospital') {
+      return 'En Route to Hospital';
+    }
+    return s;
+  };
+
   const getTimelineSteps = (status: string) => {
     const stages = [
       { title: 'SOS Sent', desc: 'Emergency SOS signal broadcasted to rescue network' },
       { title: 'Volunteer Assigned', desc: 'Emergency responder claimed dispatch' },
       { title: 'Volunteer En Route', desc: 'Responder is actively navigating to your location' },
       { title: 'Volunteer Arrived', desc: 'Responder has arrived at the incident scene' },
-      { title: 'Transporting to Hospital', desc: 'Ambulance transport in progress to trauma center' },
+      { title: 'En Route to Hospital', desc: 'Ambulance transport in progress to trauma center' },
       { title: 'Hospital Reached', desc: 'Safely arrived at destination hospital' },
       { title: 'Emergency Completed', desc: 'Medical handoff complete and emergency resolved' },
     ];
@@ -290,6 +413,9 @@ export const EmergencyStatusScreen: React.FC = () => {
   const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!accident?.hospital_name);
   const isHospitalReached = accident?.status === 'Hospital Reached';
   const isResolved = accident?.status === 'Emergency Completed' || accident?.status === 'Emergency Resolved' || accident?.status === 'Completed';
+
+  const displayedStatus = hasVolunteer ? formatCitizenStatusDisplay(accident?.status) : 'Waiting for Volunteer';
+  console.log('[RescueLink Status] Citizen displayed status:', displayedStatus, 'Hospital:', accident?.hospital_name ?? 'None');
 
   // Determine Target Coordinates for OSRM Route & ETA:
   // If Transporting to Hospital or Hospital Reached -> Destination is the Hospital Coordinates!
@@ -451,7 +577,7 @@ export const EmergencyStatusScreen: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full text-white backdrop-blur-xs flex items-center gap-1.5">
                   {accident.status === 'Emergency Resolved' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Status: {hasVolunteer ? accident.status : 'Waiting for Volunteer'}
+                  Status: {displayedStatus}
                 </span>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-100">
                   <span className={`w-2 h-2 rounded-full ${accident.status === 'Emergency Resolved' ? 'bg-white' : 'bg-amber-300 animate-ping'}`}></span>
@@ -538,16 +664,21 @@ export const EmergencyStatusScreen: React.FC = () => {
 
             {/* Dedicated Selected Hospital Card */}
             {(() => {
-              const hospName = accident.hospital_name || 'Nearest Regional Emergency Center';
-              const hospAddress = accident.hospital_address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
-              const hospPhone = accident.hospital_phone;
+              const storedHosp = getStoredHospital(accident.id);
+              const hospName = accident.hospital_name || storedHosp?.name;
+              const hospAddress = accident.hospital_address || storedHosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
+              const hospPhone = accident.hospital_phone || storedHosp?.phone;
+
+              if (!hospName) {
+                return null;
+              }
 
               return (
                 <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-4 rounded-3xl border border-blue-700/80 shadow-level-2 space-y-2.5 animate-card-enter">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1 animate-badge-pop">
                       <Hospital className="w-3.5 h-3.5" />
-                      {accident.hospital_name ? 'Selected Destination Hospital' : 'Assigned Emergency Hospital'}
+                      Selected Destination Hospital
                     </span>
                     <button
                       onClick={() =>

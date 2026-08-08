@@ -214,7 +214,8 @@ export const LiveNavigationScreen: React.FC = () => {
     setShowHospitalSheet(false);
 
     if (activeAccidentId && activeAccidentId !== 'default-accident') {
-      await supabase
+      console.log('[RescueLink Workflow] Hospital selected in Live Navigation mode for accident ID:', activeAccidentId);
+      const { data, error } = await supabase
         .from('accidents')
         .update({
           status: 'Transporting to Hospital',
@@ -223,8 +224,13 @@ export const LiveNavigationScreen: React.FC = () => {
           hospital_phone: phone || intPhone || null,
           hospital_latitude: hosp.latitude,
           hospital_longitude: hosp.longitude,
+          transported_at: new Date().toISOString(),
         })
-        .eq('id', activeAccidentId);
+        .eq('id', activeAccidentId)
+        .select()
+        .single();
+
+      console.log('[RescueLink Workflow] Supabase update result in Live Navigation:', { data, error });
 
       setAccident((prev) =>
         prev
