@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { MapPin, PhoneCall, AlertCircle, Clock, Loader2, Camera, CheckCircle2, Hospital, Ambulance, Navigation, ClipboardCheck } from 'lucide-react';
+import { MapPin, PhoneCall, AlertCircle, Clock, Loader2, Camera, CheckCircle2, Hospital, Ambulance, ClipboardCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
@@ -63,73 +63,55 @@ export const EmergencyStatusScreen: React.FC = () => {
 
       setLoading(true);
       try {
-        let query = supabase
-          .from('accidents')
-          .select('*')
-          .eq('reporter_id', user.id);
-
         const searchParams = new URLSearchParams(location.search);
         const targetAccidentId = locationState?.accidentId || searchParams.get('accidentId');
 
+        let data: AccidentRecord | null = null;
+        let error: any = null;
+
         if (targetAccidentId) {
-          const { data: specificData, error: specificErr } = await supabase
+          const res = await supabase
             .from('accidents')
             .select('*')
             .eq('id', targetAccidentId)
             .single();
-
-          if (specificData) {
-            console.log('CITIZEN accident.id =', specificData.id);
-            console.log('[CITIZEN FETCH RESULT (targetAccidentId)]:', {
-              'accident.id': specificData.id,
-              status: specificData.status,
-              hospital_name: specificData.hospital_name,
-              hospital_address: specificData.hospital_address,
-              hospital_phone: specificData.hospital_phone,
-              hospital_latitude: specificData.hospital_latitude,
-              hospital_longitude: specificData.hospital_longitude,
-              error: specificErr ? { code: specificErr.code, message: specificErr.message } : null,
-            });
-            setAccident(specificData);
-            setLoading(false);
-            return;
-          }
+          data = res.data;
+          error = res.error;
+        } else {
+          const res = await supabase
+            .from('accidents')
+            .select('*')
+            .eq('reporter_id', user.id)
+            .not('status', 'in', '("Emergency Completed","Emergency Resolved","Completed","Problem Resolved","Resolved")')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          data = res.data;
+          error = res.error;
         }
 
-        const { data, error } = await query
-          .not('status', 'in', '("Emergency Completed","Emergency Resolved","Completed","Problem Resolved","Resolved")')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
         if (error) {
-          console.warn('[RescueLink Status] Error fetching latest active accident report:', error.message);
+          console.warn('[RescueLink Status] Error fetching accident report:', error.message);
           setAccident(null);
-        } else if (data && isActiveStatus(data.status)) {
-          console.log('CITIZEN accident.id =', data.id);
-          console.log('[CITIZEN FETCH RESULT (latest)]:', {
-            'accident.id': data.id,
+        } else if (data) {
+          console.log('[RescueLink Status] Accident report loaded from Supabase:', {
+            id: data.id,
             status: data.status,
             hospital_name: data.hospital_name,
-            hospital_address: data.hospital_address,
-            hospital_phone: data.hospital_phone,
-            hospital_latitude: data.hospital_latitude,
-            hospital_longitude: data.hospital_longitude,
-            error: null,
           });
           setAccident(data);
         } else {
           setAccident(null);
         }
       } catch (err) {
-        console.error('[RescueLink Status] Unexpected error:', err);
+        console.error('[RescueLink Status] Unexpected error during fetch:', err);
       } finally {
         setLoading(false);
       }
     }
 
     fetchLatestAccident();
-  }, [user, locationState?.accidentId]);
+  }, [user, locationState?.accidentId, location.search]);
 
   // 2. Supabase Realtime Subscription for Live Status & Volunteer GPS Location Updates
   useEffect(() => {
@@ -680,24 +662,6 @@ export const EmergencyStatusScreen: React.FC = () => {
                       <Hospital className="w-3.5 h-3.5" />
                       Selected Destination Hospital
                     </span>
-                    <button
-                      onClick={() =>
-                        navigate(`/navigation/${accident.id}`, {
-                          state: {
-                            accidentId: accident.id,
-                            latitude: accident.latitude,
-                            longitude: accident.longitude,
-                            address: accident.address,
-                            severity: accident.severity,
-                            mode: 'citizen',
-                          },
-                        })
-                      }
-                      className="px-3 py-1 bg-white text-blue-900 font-extrabold text-xs rounded-xl shadow-xs hover:bg-blue-50 transition-colors flex items-center gap-1 btn-press"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      <span>Navigate</span>
-                    </button>
                   </div>
 
                   <div>
