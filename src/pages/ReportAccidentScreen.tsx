@@ -17,6 +17,7 @@ export const ReportAccidentScreen: React.FC = () => {
   const [address, setAddress] = useState('Detecting GPS location...');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM'>('CRITICAL');
+  const [bloodGroup, setBloodGroup] = useState<string>('Unknown');
   
   // Image Upload States
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -200,6 +201,7 @@ export const ReportAccidentScreen: React.FC = () => {
             address: address.trim(),
             severity: severity,
             description: description.trim(),
+            blood_group: bloodGroup,
             status: 'SOS Sent',
             photo_url: uploadedPhotoUrl,
           }
@@ -436,6 +438,35 @@ export const ReportAccidentScreen: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Patient Blood Group Dropdown */}
+          <div className="space-y-2">
+            <label htmlFor="patient-blood-group-select" className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+              <span>🩸 Patient Blood Group</span>
+            </label>
+            <div className="relative">
+              <select
+                id="patient-blood-group-select"
+                value={bloodGroup}
+                onChange={(e) => setBloodGroup(e.target.value)}
+                className="w-full p-3.5 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+              >
+                <option value="Unknown">Select Blood Group ▼</option>
+                <option value="A+">A+</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B-">B-</option>
+                <option value="AB+">AB+</option>
+                <option value="AB-">AB-</option>
+                <option value="O+">O+</option>
+                <option value="O-">O-</option>
+                <option value="Unknown">Unknown</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-on-surface-variant font-bold text-xs">
+                ▼
+              </div>
+            </div>
           </div>
 
           {/* Submit SOS Dispatch Button */}

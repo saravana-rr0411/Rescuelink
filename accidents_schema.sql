@@ -3,7 +3,7 @@
 -- (Updated with Volunteer Live Tracking Columns)
 -- ========================================================
 
--- 1. Add `volunteer_id`, `volunteer_latitude`, `volunteer_longitude`, and `hospital_*` columns to public.accidents
+-- 1. Add `volunteer_id`, `volunteer_latitude`, `volunteer_longitude`, `hospital_*`, and `blood_group` columns to public.accidents
 ALTER TABLE public.accidents 
   ADD COLUMN IF NOT EXISTS volunteer_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   ADD COLUMN IF NOT EXISTS volunteer_latitude DOUBLE PRECISION,
@@ -12,7 +12,8 @@ ALTER TABLE public.accidents
   ADD COLUMN IF NOT EXISTS hospital_address TEXT,
   ADD COLUMN IF NOT EXISTS hospital_phone TEXT,
   ADD COLUMN IF NOT EXISTS hospital_latitude DOUBLE PRECISION,
-  ADD COLUMN IF NOT EXISTS hospital_longitude DOUBLE PRECISION;
+  ADD COLUMN IF NOT EXISTS hospital_longitude DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS blood_group TEXT;
 
 -- 2. Create the `accidents` table if not exists
 CREATE TABLE IF NOT EXISTS public.accidents (
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.accidents (
   photo_url TEXT,
   severity TEXT NOT NULL,
   description TEXT,
+  blood_group TEXT,
   status TEXT NOT NULL DEFAULT 'Reported',
   volunteer_latitude DOUBLE PRECISION,
   volunteer_longitude DOUBLE PRECISION,

@@ -23,6 +23,7 @@ interface AccidentRecord {
   photo_url: string | null;
   severity: string;
   description: string | null;
+  blood_group?: string | null;
   status: string;
   volunteer_latitude?: number | null;
   volunteer_longitude?: number | null;
@@ -712,6 +713,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         Mission Accepted
                       </span>
                       <h3 className="font-extrabold text-sm text-slate-900 mt-2">{mission.address}</h3>
+                      <div className="mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1.5 w-fit">
+                        <span>🩸 Patient Blood Group:</span>
+                        <span className="font-black text-rose-900">{mission.blood_group || 'Not Provided'}</span>
+                      </div>
                     </div>
                     <span className="text-[10px] bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
                       {mission.severity}
@@ -1059,6 +1064,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         <h3 className="font-extrabold text-sm text-slate-900 mt-1.5">
                           Emergency SOS Incident
                         </h3>
+                        <div className="mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1.5 w-fit">
+                          <span>🩸 Patient Blood Group:</span>
+                          <span className="font-black text-rose-900">{inc.blood_group || 'Not Provided'}</span>
+                        </div>
                       </div>
                       <span className="text-xs text-slate-500 font-medium flex items-center gap-1 shrink-0">
                         <Clock className="w-3.5 h-3.5 text-slate-400" />
