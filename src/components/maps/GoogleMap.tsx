@@ -107,18 +107,20 @@ const GoogleMapCameraController: React.FC<{
   }, [recenterTrigger]);
 
   useEffect(() => {
-    if (!map || !isFollowing || !center) return;
+    if (!map) return;
+
+    if (!isNavigationMode) {
+      map.setHeading(0);
+      map.setTilt(0);
+      return;
+    }
+
+    if (!isFollowing || !center) return;
 
     isProgrammaticMoveRef.current = true;
     map.panTo({ lat: center.lat, lng: center.lng });
-
-    if (isNavigationMode) {
-      map.setHeading(heading || 0);
-      map.setTilt(45);
-    } else {
-      map.setHeading(0);
-      map.setTilt(0);
-    }
+    map.setHeading(heading || 0);
+    map.setTilt(45);
 
     const timer = setTimeout(() => {
       isProgrammaticMoveRef.current = false;
