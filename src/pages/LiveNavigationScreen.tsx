@@ -52,7 +52,7 @@ export const LiveNavigationScreen: React.FC = () => {
         id: stored.id || 'stored-hospital',
         name: stored.name,
         address: stored.address,
-        phone: stored.phone || '',
+        phone: (stored.phone || stored.internationalPhone || '').trim(),
         latitude: stored.latitude,
         longitude: stored.longitude,
         distanceMeters: stored.distanceMeters || 0,
@@ -87,6 +87,20 @@ export const LiveNavigationScreen: React.FC = () => {
             description: data.description || prev?.description,
             created_at: data.created_at || prev?.created_at,
           }));
+
+          if (data.hospital_name && data.hospital_latitude && data.hospital_longitude) {
+            setActiveHospital((prev) => ({
+              id: prev?.id || 'db-hospital',
+              name: data.hospital_name,
+              address: data.hospital_address || prev?.address || data.address,
+              phone: (data.hospital_phone || prev?.phone || '').trim(),
+              latitude: data.hospital_latitude,
+              longitude: data.hospital_longitude,
+              distanceMeters: prev?.distanceMeters || 0,
+              emergencyDept: true,
+              bedsAvailable: 0,
+            }));
+          }
 
           // If current status is Volunteer Reached on load, open hospital selector automatically
           if (data.status === 'Volunteer Reached' || data.status === 'Volunteer Arrived') {
@@ -196,13 +210,15 @@ export const LiveNavigationScreen: React.FC = () => {
       if (placesData.address) address = placesData.address;
     }
 
+    const finalPhone = (phone || intPhone || hosp.phone || '').trim();
+
     const hospitalToStore: StoredHospital = {
       id: hosp.id,
       name: hosp.name,
       address,
       latitude: hosp.latitude,
       longitude: hosp.longitude,
-      phone,
+      phone: finalPhone,
       internationalPhone: intPhone,
       rating,
       website,
@@ -210,7 +226,17 @@ export const LiveNavigationScreen: React.FC = () => {
     };
 
     saveStoredHospital(activeAccidentId, hospitalToStore);
-    setActiveHospital(hospitalToStore as Hospital);
+    setActiveHospital({
+      id: hosp.id || 'stored-hospital',
+      name: hosp.name,
+      address,
+      phone: finalPhone,
+      latitude: hosp.latitude,
+      longitude: hosp.longitude,
+      distanceMeters: hosp.distanceMeters || 0,
+      emergencyDept: true,
+      bedsAvailable: 0,
+    });
     setShowHospitalSheet(false);
 
     if (activeAccidentId && activeAccidentId !== 'default-accident') {
@@ -221,7 +247,7 @@ export const LiveNavigationScreen: React.FC = () => {
           status: 'Transporting to Hospital',
           hospital_name: hosp.name,
           hospital_address: address,
-          hospital_phone: phone || intPhone || null,
+          hospital_phone: finalPhone || null,
           hospital_latitude: hosp.latitude,
           hospital_longitude: hosp.longitude,
           transported_at: new Date().toISOString(),
@@ -239,7 +265,7 @@ export const LiveNavigationScreen: React.FC = () => {
               status: 'Transporting to Hospital',
               hospital_name: hosp.name,
               hospital_address: address,
-              hospital_phone: phone || intPhone || null,
+              hospital_phone: finalPhone || null,
               hospital_latitude: hosp.latitude,
               hospital_longitude: hosp.longitude,
             }

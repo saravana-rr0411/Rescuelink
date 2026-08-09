@@ -54,34 +54,39 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   const navigate = useNavigate();
 
   const [hospitalEnRoute, setHospitalEnRoute] = useState(false);
-  const [resolvedHospitalPhone, setResolvedHospitalPhone] = useState<string | null>(hospitalPhone || null);
+  const [resolvedHospitalPhone, setResolvedHospitalPhone] = useState<string | null>(
+    hospitalPhone && hospitalPhone.trim().length > 0 ? hospitalPhone.trim() : null
+  );
 
   useEffect(() => {
-    if (hospitalPhone) {
-      setResolvedHospitalPhone(hospitalPhone);
+    if (hospitalPhone && hospitalPhone.trim().length > 0) {
+      setResolvedHospitalPhone(hospitalPhone.trim());
       return;
     }
+
     if (destinationType !== 'hospital') return;
 
-    // Fetch hospital phone number from Google Places API if available
+    let isMounted = true;
     if (window.google && window.google.maps && window.google.maps.places) {
       try {
         const dummyElement = document.createElement('div');
         const service = new google.maps.places.PlacesService(dummyElement);
         const request: google.maps.places.TextSearchRequest = {
           location: new google.maps.LatLng(destinationCoords[0], destinationCoords[1]),
-          radius: 500,
+          radius: 2000,
           query: destinationName,
         };
 
         service.textSearch(request, (results, status) => {
+          if (!isMounted) return;
           if (status === google.maps.places.PlacesServiceStatus.OK && results && results[0] && results[0].place_id) {
             service.getDetails(
               { placeId: results[0].place_id, fields: ['formatted_phone_number', 'international_phone_number'] },
               (place, detailStatus) => {
+                if (!isMounted) return;
                 if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
-                  const phone = place.formatted_phone_number || place.international_phone_number || null;
-                  if (phone) {
+                  const phone = (place.formatted_phone_number || place.international_phone_number || '').trim();
+                  if (phone.length > 0) {
                     setResolvedHospitalPhone(phone);
                   }
                 }
@@ -93,6 +98,10 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         console.warn('Google Places phone lookup error:', err);
       }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [destinationType, destinationName, destinationCoords, hospitalPhone]);
 
   // 1. User Position State (Real GPS Coordinates)

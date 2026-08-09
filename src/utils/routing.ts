@@ -299,7 +299,7 @@ export async function fetchGooglePlacesDetails(
       const service = new google.maps.places.PlacesService(dummyDiv);
       const searchRequest: google.maps.places.TextSearchRequest = {
         location: new google.maps.LatLng(latitude, longitude),
-        radius: 500,
+        radius: 2000,
         query: name,
       };
 
@@ -312,10 +312,11 @@ export async function fetchGooglePlacesDetails(
             },
             (place, detailStatus) => {
               if (detailStatus === google.maps.places.PlacesServiceStatus.OK && place) {
+                const phoneNum = (place.formatted_phone_number || place.international_phone_number || '').trim();
                 resolve({
                   name: place.name || name,
                   address: place.formatted_address || undefined,
-                  phone: place.international_phone_number || place.formatted_phone_number || undefined,
+                  phone: phoneNum || undefined,
                   internationalPhone: place.international_phone_number || undefined,
                   rating: place.rating || undefined,
                   website: place.website || undefined,
