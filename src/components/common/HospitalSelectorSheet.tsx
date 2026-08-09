@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { Hospital } from '../../utils/routing';
 import { fetchNearbyHospitalsOverpass, formatETA } from '../../utils/routing';
 import { formatDistance } from '../../utils/distance';
-import { Hospital as HospitalIcon, MapPin, Clock, X, Navigation, Phone, ShieldCheck, Star } from 'lucide-react';
+import { Hospital as HospitalIcon, MapPin, Clock, X, Navigation, ShieldCheck, Star } from 'lucide-react';
 
 import { SpinnerLoader, EmptyState, HospitalSkeleton } from './SkeletonLoader';
 
@@ -155,19 +155,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-                    {hosp.phone ? (
-                      <a
-                        href={`tel:${hosp.phone}`}
-                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-                      >
-                        <Phone className="w-3.5 h-3.5" />
-                        <span>Call</span>
-                      </a>
-                    ) : (
-                      <span className="text-[11px] font-bold text-slate-400">Phone unavailable</span>
-                    )}
-
+                  <div className="flex items-center justify-end pt-2.5 border-t border-slate-100">
                     <button
                       onClick={() => {
                         setSelectedId(hosp.id);
