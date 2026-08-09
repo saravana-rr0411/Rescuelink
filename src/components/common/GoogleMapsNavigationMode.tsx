@@ -19,6 +19,7 @@ import { fetchOSRMRoute, formatETA } from '../../utils/routing';
 import { formatDistance, calculateHaversineDistance } from '../../utils/distance';
 import { GoogleMap } from '../maps/GoogleMap';
 import { fetchGoogleRoute } from '../../services/googleRoutes';
+import { supabase } from '../../lib/supabase';
 
 // Fixed Navigation Zoom Level (Google Maps Navigation standard between 17 and 18)
 const DEFAULT_FIXED_ZOOM = 17.5;
@@ -43,6 +44,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   destinationCoords,
   destinationType = 'accident',
   initialUserCoords,
+  accidentId,
   navigationStatus = 'En Route to Scene',
   ambulancePhone,
   hospitalPhone,
@@ -51,6 +53,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 }) => {
   const navigate = useNavigate();
 
+  const [hospitalEnRoute, setHospitalEnRoute] = useState(false);
   const [resolvedHospitalPhone, setResolvedHospitalPhone] = useState<string | null>(hospitalPhone || null);
 
   useEffect(() => {
@@ -662,6 +665,34 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             >
               <CheckCircle2 className="w-4 h-4 text-white stroke-[3]" />
               <span>Reached Accident</span>
+            </button>
+          ) : !hospitalEnRoute ? (
+            <button
+              type="button"
+              onClick={() => {
+                setHospitalEnRoute(true);
+                if (accidentId && accidentId !== 'default-accident') {
+                  console.log('[RescueLink Nav] Volunteer clicked En Route to Hospital. Updating status to Transporting to Hospital...');
+                  supabase
+                    .from('accidents')
+                    .update({
+                      status: 'Transporting to Hospital',
+                      transported_at: new Date().toISOString(),
+                    })
+                    .eq('id', accidentId)
+                    .then(({ data, error }) => {
+                      if (error) {
+                        console.error('[RescueLink Nav] Error updating status to Transporting to Hospital:', error);
+                      } else {
+                        console.log('[RescueLink Nav] Successfully updated status to Transporting to Hospital:', data);
+                      }
+                    });
+                }
+              }}
+              className="px-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-blue-500"
+            >
+              <Ambulance className="w-4 h-4 text-white stroke-[2.5]" />
+              <span>En Route to Hospital</span>
             </button>
           ) : (
             <button
