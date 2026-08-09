@@ -36,6 +36,7 @@ export interface GoogleMapsNavigationModeProps {
   hospitalPhone?: string;
   onArrival?: () => void;
   onBackToHospitalSelect?: () => void;
+  onLocationUpdate?: (pos: [number, number]) => void;
 }
 
 export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> = ({
@@ -50,6 +51,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   hospitalPhone,
   onArrival,
   onBackToHospitalSelect,
+  onLocationUpdate,
 }) => {
   const navigate = useNavigate();
 
@@ -153,6 +155,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         const initialLat = pos.coords.latitude;
         const initialLng = pos.coords.longitude;
         setUserPos([initialLat, initialLng]);
+        if (onLocationUpdate) onLocationUpdate([initialLat, initialLng]);
         firstGpsPosRef.current = [initialLat, initialLng];
         hasReceivedGpsUpdateRef.current = true;
       },
@@ -193,6 +196,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
         prevPosRef.current = [newLat, newLng];
         setUserPos([newLat, newLng]);
+        if (onLocationUpdate) onLocationUpdate([newLat, newLng]);
       },
       (err) => {
         console.warn('[GoogleMapsNav] Geolocation watch warning:', err.message);

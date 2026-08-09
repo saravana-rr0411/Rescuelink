@@ -294,6 +294,8 @@ export const LiveNavigationScreen: React.FC = () => {
     initialUserCoords = [accident.volunteer_latitude, accident.volunteer_longitude];
   }
 
+  const [liveVolunteerPos, setLiveVolunteerPos] = useState<[number, number] | null>(initialUserCoords);
+
   const navStatus = isHospitalTarget
     ? 'Transporting to Hospital'
     : mode === 'volunteer'
@@ -313,6 +315,7 @@ export const LiveNavigationScreen: React.FC = () => {
         hospitalPhone={activeHospital?.phone}
         onArrival={handleArrival}
         onBackToHospitalSelect={mode === 'volunteer' ? () => setShowHospitalSheet(true) : undefined}
+        onLocationUpdate={setLiveVolunteerPos}
       />
 
       {mode === 'volunteer' && (
@@ -322,6 +325,7 @@ export const LiveNavigationScreen: React.FC = () => {
           accidentLatitude={accident.latitude}
           accidentLongitude={accident.longitude}
           onSelectHospital={handleSelectHospital}
+          volunteerPosition={liveVolunteerPos}
         />
       )}
     </>

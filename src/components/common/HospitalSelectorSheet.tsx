@@ -13,6 +13,7 @@ export interface HospitalSelectorSheetProps {
   accidentLatitude: number;
   accidentLongitude: number;
   onSelectHospital: (hospital: Hospital) => void;
+  volunteerPosition?: [number, number] | null;
 }
 
 // Per-hospital route result (driving distance + duration from fetchGoogleRoute)
@@ -28,6 +29,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   accidentLatitude,
   accidentLongitude,
   onSelectHospital,
+  volunteerPosition,
 }) => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // Map of hospitalId → RouteInfo. undefined = still calculating, null entry = not yet started.
-  const [routeMap, setRouteMap] = useState<Map<string, RouteInfo>>(new Map());
+  const [routeMap, setRouteMap] = useState<Record<string, RouteInfo>>({});
   const routeFetchedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
 
     let isMounted = true;
     routeFetchedRef.current = new Set();
-    setRouteMap(new Map());
+    setRouteMap({});
     setLocationError(null);
 
     async function loadHospitals() {
@@ -52,74 +54,6 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
       if (!isMounted) return;
       setHospitals(list);
       setLoading(false);
-
-      if (!('geolocation' in navigator)) {
-        if (isMounted) setLocationError('Location unavailable');
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (!isMounted) return;
-          const vLat = pos.coords.latitude;
-          const vLng = pos.coords.longitude;
-
-          // Fetch real driving route for each hospital from the volunteer's current location
-          list.forEach(async (hosp) => {
-            if (routeFetchedRef.current.has(hosp.id)) return;
-            routeFetchedRef.current.add(hosp.id);
-
-            // 1. Primary: Google Routes API
-            const googleRes = await fetchGoogleRoute(
-              { lat: vLat, lng: vLng },
-              { lat: hosp.latitude, lng: hosp.longitude }
-            );
-
-            if (!isMounted) return;
-
-            if (!googleRes.error && googleRes.distanceMeters > 0) {
-              setRouteMap((prev) => new Map(prev).set(hosp.id, {
-                distanceMeters: googleRes.distanceMeters,
-                durationSeconds: googleRes.durationSeconds,
-                failed: false,
-              }));
-              return;
-            }
-
-            // 2. Fallback: OSRM
-            try {
-              const osrmRes = await fetchOSRMRoute(
-                [vLat, vLng],
-                [hosp.latitude, hosp.longitude]
-              );
-              if (!isMounted) return;
-              if (osrmRes.distanceMeters > 0) {
-                setRouteMap((prev) => new Map(prev).set(hosp.id, {
-                  distanceMeters: osrmRes.distanceMeters,
-                  durationSeconds: osrmRes.durationSeconds,
-                  failed: false,
-                }));
-                return;
-              }
-            } catch {
-              // fall through to failed state
-            }
-
-            if (!isMounted) return;
-            // Route unavailable
-            setRouteMap((prev) => new Map(prev).set(hosp.id, {
-              distanceMeters: 0,
-              durationSeconds: 0,
-              failed: true,
-            }));
-          });
-        },
-        (err) => {
-          console.warn('[HospitalSelectorSheet] GPS error:', err.message);
-          if (isMounted) setLocationError('Location unavailable');
-        },
-        { enableHighAccuracy: true }
-      );
     }
 
     loadHospitals();
@@ -128,6 +62,77 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
       isMounted = false;
     };
   }, [isOpen, accidentLatitude, accidentLongitude]);
+
+  // Separate effect to calculate routes once hospitals and volunteerPosition are available
+  useEffect(() => {
+    if (!isOpen || hospitals.length === 0) return;
+    if (!volunteerPosition) return; // Wait until we have the live location
+
+    let isMounted = true;
+    const [vLat, vLng] = volunteerPosition;
+
+    hospitals.forEach(async (hosp) => {
+      if (routeFetchedRef.current.has(hosp.id)) return;
+      routeFetchedRef.current.add(hosp.id);
+
+      // 1. Primary: Google Routes API
+      const googleRes = await fetchGoogleRoute(
+        { lat: vLat, lng: vLng },
+        { lat: hosp.latitude, lng: hosp.longitude }
+      );
+
+      if (!isMounted) return;
+
+      if (!googleRes.error && googleRes.distanceMeters > 0) {
+        setRouteMap((prev) => ({
+          ...prev,
+          [hosp.id]: {
+            distanceMeters: googleRes.distanceMeters,
+            durationSeconds: googleRes.durationSeconds,
+            failed: false,
+          }
+        }));
+        return;
+      }
+
+      // 2. Fallback: OSRM
+      try {
+        const osrmRes = await fetchOSRMRoute(
+          [vLat, vLng],
+          [hosp.latitude, hosp.longitude]
+        );
+        if (!isMounted) return;
+        if (osrmRes.distanceMeters > 0) {
+          setRouteMap((prev) => ({
+            ...prev,
+            [hosp.id]: {
+              distanceMeters: osrmRes.distanceMeters,
+              durationSeconds: osrmRes.durationSeconds,
+              failed: false,
+            }
+          }));
+          return;
+        }
+      } catch {
+        // fall through to failed state
+      }
+
+      if (!isMounted) return;
+      // Route unavailable
+      setRouteMap((prev) => ({
+        ...prev,
+        [hosp.id]: {
+          distanceMeters: 0,
+          durationSeconds: 0,
+          failed: true,
+        }
+      }));
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen, hospitals, volunteerPosition]);
 
   if (!isOpen) return null;
 
@@ -187,7 +192,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
             />
           ) : (
             hospitals.map((hosp) => {
-              const routeInfo = routeMap.get(hosp.id);
+              const routeInfo = routeMap[hosp.id];
               const isCalculating = routeInfo === undefined;
               const isSelected = selectedId === hosp.id;
 
@@ -228,10 +233,15 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                       </p>
                     </div>
 
-                    {/* Distance + ETA — from real driving route, same as Navigation screen */}
+                    {/* Distance + ETA */}
                     <div className="text-right shrink-0 min-w-[72px]">
                       {locationError ? (
                         <span className="text-[11px] font-bold text-slate-400 block">{locationError}</span>
+                      ) : !volunteerPosition ? (
+                        <span className="text-[11px] font-bold text-slate-400 flex flex-col items-end gap-1">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span className="leading-tight">Getting<br/>location...</span>
+                        </span>
                       ) : isCalculating ? (
                         <span className="text-[11px] font-bold text-slate-400 flex items-center justify-end gap-1">
                           <Loader2 className="w-3 h-3 animate-spin" />
