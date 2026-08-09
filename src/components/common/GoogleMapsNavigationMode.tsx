@@ -328,9 +328,12 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const handleUserDrag = () => {
     setIsFollowing(false);
+  };
 
-    if (autoRestoreTimerRef.current) {
-      clearTimeout(autoRestoreTimerRef.current);
+  const handleUserDragEnd = () => {
+    if (isNavigationMode) {
+      setIsFollowing(true);
+      setRecenterTrigger(Date.now());
     }
   };
 
@@ -589,6 +592,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           isNavigationMode={isNavigationMode}
           isFollowing={isFollowing}
           onUserDrag={handleUserDrag}
+          onUserDragEnd={handleUserDragEnd}
           zoomSignal={zoomSignal}
           recenterTrigger={recenterTrigger}
           className="w-full h-full"

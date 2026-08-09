@@ -30,6 +30,7 @@ export interface GoogleMapProps {
   isNavigationMode?: boolean;
   isFollowing?: boolean;
   onUserDrag?: () => void;
+  onUserDragEnd?: () => void;
   zoomSignal?: { type: 'in' | 'out'; timestamp: number } | null;
   showTrafficLayer?: boolean;
   recenterTrigger?: number;
@@ -64,8 +65,9 @@ const GoogleMapCameraController: React.FC<{
   isNavigationMode?: boolean;
   isFollowing?: boolean;
   onUserDrag?: () => void;
+  onUserDragEnd?: () => void;
   recenterTrigger?: number;
-}> = ({ center, heading = 0, isNavigationMode = false, isFollowing = true, onUserDrag, recenterTrigger = 0 }) => {
+}> = ({ center, heading = 0, isNavigationMode = false, isFollowing = true, onUserDrag, onUserDragEnd, recenterTrigger = 0 }) => {
   const map = useMap();
   const isProgrammaticMoveRef = useRef(false);
 
@@ -79,10 +81,18 @@ const GoogleMapCameraController: React.FC<{
       }
     });
 
+    const dragEndListener = map.addListener('dragend', () => {
+      if (isProgrammaticMoveRef.current) return;
+      if (onUserDragEnd) {
+        onUserDragEnd();
+      }
+    });
+
     return () => {
       google.maps.event.removeListener(dragListener);
+      google.maps.event.removeListener(dragEndListener);
     };
-  }, [map, onUserDrag]);
+  }, [map, onUserDrag, onUserDragEnd]);
 
   // Explicit recenter trigger effect (centers on volunteer & restores navigation zoom 17.5)
   useEffect(() => {
