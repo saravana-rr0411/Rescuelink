@@ -5,7 +5,6 @@ import {
   Clock,
   CheckCircle2,
   Hospital as HospitalIcon,
-  Navigation as NavigationIcon,
   Loader2,
   Ambulance,
   ArrowLeft,
@@ -185,7 +184,9 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           }
         }
 
-        if (prevPosRef.current && (prevPosRef.current[0] !== newLat || prevPosRef.current[1] !== newLng)) {
+        if (pos.coords.heading !== null && !Number.isNaN(pos.coords.heading)) {
+          setHeading(pos.coords.heading);
+        } else if (prevPosRef.current && (prevPosRef.current[0] !== newLat || prevPosRef.current[1] !== newLng)) {
           const dLat = newLat - prevPosRef.current[0];
           const dLng = newLng - prevPosRef.current[1];
           if (Math.abs(dLat) > 0.00001 || Math.abs(dLng) > 0.00001) {
@@ -331,12 +332,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     if (autoRestoreTimerRef.current) {
       clearTimeout(autoRestoreTimerRef.current);
     }
-
-    if (isNavigationMode) {
-      autoRestoreTimerRef.current = setTimeout(() => {
-        setIsFollowing(true);
-      }, 2500);
-    }
   };
 
   useEffect(() => {
@@ -466,14 +461,6 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           </button>
 
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black shadow-lg shrink-0">
-              {destinationType === 'hospital' ? (
-                <HospitalIcon className="w-6 h-6 stroke-[2.5]" />
-              ) : (
-                <NavigationIcon className="w-6 h-6 stroke-[2.5]" />
-              )}
-            </div>
-
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">
                 {destinationType === 'hospital' ? '🏥 Hospital Navigation' : '🚨 Live Scene Navigation'}
