@@ -293,7 +293,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <APIProvider apiKey={apiKey}>
+      <APIProvider apiKey={apiKey} libraries={['places']}>
         <Map
           defaultCenter={center}
           defaultZoom={zoom}

@@ -604,32 +604,37 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         />
 
         {/* QUICK EMERGENCY CALL ACTION BUTTONS (Above Bottom Action Bar) */}
-        <div className={`absolute bottom-[calc(9.2rem+env(safe-area-inset-bottom,0px))] left-4 z-[550] pointer-events-auto flex flex-col gap-2.5 ${destinationType === 'hospital' ? 'md:flex-row md:items-center' : ''} w-[calc(100vw-8rem)] md:w-auto`}>
-          {/* 1. Call Ambulance Button */}
-          <button
-            type="button"
-            onClick={handleCallAmbulance}
-            className="w-full md:w-auto px-3.5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-rose-400 flex items-center justify-center gap-2 transition-all active:scale-95"
-            aria-label="Call Ambulance"
-            title="Call Ambulance"
-          >
-            <PhoneCall className="w-4 h-4 text-white stroke-[2.5] shrink-0" />
-            <span>Call Ambulance</span>
-          </button>
-
-          {/* 2. Call Hospital Button (Hospital Navigation Screen only) */}
-          {destinationType === 'hospital' && (
-            <button
-              type="button"
-              onClick={handleCallHospital}
-              className="w-full md:w-auto px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-2xl border border-blue-400 flex items-center justify-center gap-2 transition-all active:scale-95"
-              aria-label="Call Hospital"
-              title="Call Hospital"
+        <div className="absolute bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] left-3 z-[550] pointer-events-auto">
+          <div className="flex flex-row items-center gap-2 bg-white/90 backdrop-blur-md rounded-2xl px-2.5 py-2 shadow-lg border border-slate-200/80">
+            {/* 1. Call Ambulance Button */}
+            <a
+              href={`tel:${ambulancePhone || '108'}`}
+              onClick={handleCallAmbulance}
+              className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none"
+              aria-label="Call Ambulance"
+              title="Call Ambulance"
             >
-              <Phone className="w-4 h-4 text-white stroke-[2.5] shrink-0" />
-              <span>Call Hospital</span>
-            </button>
-          )}
+              <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
+              <span>Call Ambulance</span>
+            </a>
+
+            {/* 2. Call Hospital Button (Hospital Navigation Screen only) */}
+            {destinationType === 'hospital' && (
+              <>
+                <div className="w-px h-5 bg-slate-200 shrink-0" />
+                <button
+                  type="button"
+                  onClick={handleCallHospital}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-200/80 transition-all active:scale-95 select-none"
+                  aria-label="Call Hospital"
+                  title="Call Hospital"
+                >
+                  <Phone className="w-3.5 h-3.5 shrink-0 stroke-2" />
+                  <span>Call Hospital</span>
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
