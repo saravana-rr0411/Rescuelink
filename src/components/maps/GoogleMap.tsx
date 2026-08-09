@@ -73,6 +73,7 @@ const GoogleMapCameraController: React.FC<{
     if (!map) return;
 
     const dragListener = map.addListener('dragstart', () => {
+      if (isProgrammaticMoveRef.current) return;
       if (onUserDrag) {
         onUserDrag();
       }
