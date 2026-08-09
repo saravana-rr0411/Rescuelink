@@ -503,8 +503,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
       {/* 2. FULL-SCREEN GOOGLE MAP CANVAS */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden bg-slate-100">
-        {/* RIGHT SIDE FLOATING CAMERA & MAP CONTROLS STACK (Top to Bottom: Zoom Controls -> Re-center -> Navigation Mode) */}
-        <div className="absolute bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))] right-4 sm:right-6 z-[600] flex flex-col items-end gap-4 pointer-events-auto select-none">
+        {/* RIGHT SIDE FLOATING CAMERA & MAP CONTROLS STACK (Top to Bottom: Zoom Controls -> Re-center) */}
+        <div className={`absolute right-4 sm:right-6 z-[600] flex flex-col items-end gap-4 pointer-events-auto select-none transition-all duration-300 ${destinationType === 'hospital' ? 'bottom-[calc(11.5rem+env(safe-area-inset-bottom,0px))]' : 'bottom-[calc(8.5rem+env(safe-area-inset-bottom,0px))]'}`}>
           {/* 1. Zoom Controls (+ / -) */}
           <div className="flex flex-col rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden bg-white/95 backdrop-blur-md shrink-0">
             <button
@@ -544,7 +544,11 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             </button>
           )}
 
-          {/* 3. Compact Circular Navigation Mode Toggle FAB */}
+        </div>
+
+        {/* LEFT SIDE FLOATING CAMERA CONTROLS (Navigation Mode) */}
+        <div className={`absolute left-4 sm:left-6 z-[600] flex flex-col items-start gap-4 pointer-events-auto select-none transition-all duration-300 ${destinationType === 'hospital' ? 'bottom-[calc(11.5rem+env(safe-area-inset-bottom,0px))]' : 'bottom-[calc(9.5rem+env(safe-area-inset-bottom,0px))]'}`}>
+          {/* Compact Circular Navigation Mode Toggle FAB */}
           <button
             type="button"
             onClick={() => {
@@ -599,75 +603,142 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
         />
 
         {/* QUICK EMERGENCY CALL ACTION BUTTONS (Above Bottom Action Bar) */}
-        <div className="absolute bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] left-3 z-[550] pointer-events-auto">
-          <div className="flex flex-row items-center gap-2 bg-white/90 backdrop-blur-md rounded-2xl px-2.5 py-2 shadow-lg border border-slate-200/80">
-            {/* 1. Call Ambulance Button */}
-            <a
-              href={`tel:${ambulancePhone || '108'}`}
-              onClick={handleCallAmbulance}
-              className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none"
-              aria-label="Call Ambulance"
-              title="Call Ambulance"
-            >
-              <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
-              <span>Call Ambulance</span>
-            </a>
-
-            {/* 2. Call Hospital Button (Hospital Navigation Screen only) */}
-            {destinationType === 'hospital' && (
-              <>
-                <div className="w-px h-5 bg-slate-200 shrink-0" />
-                <button
-                  type="button"
-                  onClick={handleCallHospital}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl border border-blue-200/80 transition-all active:scale-95 select-none"
-                  aria-label="Call Hospital"
-                  title="Call Hospital"
-                >
-                  <Phone className="w-3.5 h-3.5 shrink-0 stroke-2" />
-                  <span>Call Hospital</span>
-                </button>
-              </>
-            )}
+        {destinationType === 'accident' && (
+          <div className="absolute bottom-[calc(9rem+env(safe-area-inset-bottom,0px))] left-3 z-[550] pointer-events-auto">
+            <div className="flex flex-row items-center gap-2 bg-white/90 backdrop-blur-md rounded-2xl px-2.5 py-2 shadow-lg border border-slate-200/80">
+              <a
+                href={`tel:${ambulancePhone || '108'}`}
+                onClick={handleCallAmbulance}
+                className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none"
+                aria-label="Call Ambulance"
+                title="Call Ambulance"
+              >
+                <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
+                <span>Call Ambulance</span>
+              </a>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 3. MATERIAL DESIGN 3 BOTTOM FLOATING NAVIGATION DASHBOARD CARD */}
-      <div className="absolute bottom-3 left-3 right-3 z-[500] bg-white/95 backdrop-blur-xl text-slate-900 rounded-3xl p-4 shadow-2xl border border-slate-200/80 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        <div className="flex items-center justify-between gap-3">
-          {/* Arrival Metrics */}
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-              <span className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-                <Ambulance className="w-4 h-4 text-emerald-600" />
-                <span>🚑 {navigationStatus}</span>
+      <div className="absolute bottom-3 left-3 right-3 z-[500] bg-white/95 backdrop-blur-xl text-slate-900 rounded-3xl p-3 shadow-2xl border border-slate-200/80 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {destinationType === 'hospital' ? (
+          <div className="grid grid-cols-2 grid-rows-[auto_1fr] gap-x-3 gap-y-3 h-full">
+            {/* TOP LEFT */}
+            <div className="flex items-start">
+              <span className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-start gap-1.5 leading-tight">
+                <span className="relative flex h-3 w-3 mt-0.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+                <span>TRANSPORTING<br />TO HOSPITAL</span>
               </span>
             </div>
 
-            <div className="flex items-baseline gap-2 pt-0.5">
-              <span className="text-xl font-black text-slate-900">
-                {loadingRoute ? '...' : formatETA(durationSeconds)}
-              </span>
-              <span className="text-xs font-extrabold text-slate-500">
-                • {formatDistance(distanceMeters)}
-              </span>
+            {/* TOP RIGHT */}
+            <div className="flex flex-col items-end text-right justify-start">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-xl font-black text-slate-900 leading-none">
+                  {loadingRoute ? '...' : formatETA(durationSeconds)}
+                </span>
+                <span className="text-xs font-extrabold text-slate-500 leading-none">
+                  • {formatDistance(distanceMeters)}
+                </span>
+              </div>
+              <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mt-1.5">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <span>ETA {getArrivalTimeString(durationSeconds)}</span>
+              </p>
             </div>
 
-            <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>Estimated Arrival around {getArrivalTimeString(durationSeconds)}</span>
-            </p>
+            {/* BOTTOM LEFT */}
+            <div className="flex flex-col gap-2 justify-end">
+              <a
+                href={`tel:${ambulancePhone || '108'}`}
+                onClick={handleCallAmbulance}
+                className="flex items-center justify-center gap-1.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] sm:text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none w-full shadow-sm"
+              >
+                <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
+                <span>Call Ambulance</span>
+              </a>
+              <button
+                type="button"
+                onClick={handleCallHospital}
+                className="flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] sm:text-xs rounded-xl border border-blue-200/80 transition-all active:scale-95 select-none w-full shadow-sm"
+              >
+                <Phone className="w-3.5 h-3.5 shrink-0 stroke-2" />
+                <span>Call Hospital</span>
+              </button>
+            </div>
+
+            {/* BOTTOM RIGHT */}
+            <div className="flex items-stretch justify-end">
+              {!hospitalEnRoute ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHospitalEnRoute(true);
+                    if (accidentId && accidentId !== 'default-accident') {
+                      supabase
+                        .from('accidents')
+                        .update({
+                          status: 'Transporting to Hospital',
+                          transported_at: new Date().toISOString(),
+                        })
+                        .eq('id', accidentId)
+                        .then(() => {});
+                    }
+                  }}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-blue-500 p-2"
+                >
+                  <Ambulance className="w-5 h-5 text-white stroke-[2.5]" />
+                  <span className="text-center leading-tight">En Route<br />to Hospital</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onArrival) onArrival();
+                  }}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-indigo-500 p-2"
+                >
+                  <HospitalIcon className="w-5 h-5 text-white stroke-[2.5]" />
+                  <span className="text-center leading-tight">Reached<br />Hospital</span>
+                </button>
+              )}
+            </div>
           </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            {/* Arrival Metrics */}
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span className="text-xs font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
+                  <Ambulance className="w-4 h-4 text-emerald-600" />
+                  <span>🚑 {navigationStatus}</span>
+                </span>
+              </div>
 
-          {/* Always Visible Primary Action Button: Reached Accident or Reached Hospital */}
-          {/* TESTING MODE / MANUAL PROGRESSION: Volunteer can manually confirm arrival without physical GPS location validation */}
-          {destinationType === 'accident' ? (
+              <div className="flex items-baseline gap-2 pt-0.5">
+                <span className="text-xl font-black text-slate-900">
+                  {loadingRoute ? '...' : formatETA(durationSeconds)}
+                </span>
+                <span className="text-xs font-extrabold text-slate-500">
+                  • {formatDistance(distanceMeters)}
+                </span>
+              </div>
+
+              <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1">
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
+                <span>Estimated Arrival around {getArrivalTimeString(durationSeconds)}</span>
+              </p>
+            </div>
+
             <button
               type="button"
               onClick={() => {
-                // Manual confirmation: Immediately triggers scene arrival & hospital selection without GPS distance gate
                 if (onArrival) onArrival();
               }}
               className="px-5 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-emerald-500"
@@ -675,47 +746,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               <CheckCircle2 className="w-4 h-4 text-white stroke-[3]" />
               <span>Reached Accident</span>
             </button>
-          ) : !hospitalEnRoute ? (
-            <button
-              type="button"
-              onClick={() => {
-                setHospitalEnRoute(true);
-                if (accidentId && accidentId !== 'default-accident') {
-                  console.log('[RescueLink Nav] Volunteer clicked En Route to Hospital. Updating status to Transporting to Hospital...');
-                  supabase
-                    .from('accidents')
-                    .update({
-                      status: 'Transporting to Hospital',
-                      transported_at: new Date().toISOString(),
-                    })
-                    .eq('id', accidentId)
-                    .then(({ data, error }) => {
-                      if (error) {
-                        console.error('[RescueLink Nav] Error updating status to Transporting to Hospital:', error);
-                      } else {
-                        console.log('[RescueLink Nav] Successfully updated status to Transporting to Hospital:', data);
-                      }
-                    });
-                }
-              }}
-              className="px-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-blue-500"
-            >
-              <Ambulance className="w-4 h-4 text-white stroke-[2.5]" />
-              <span>En Route to Hospital</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                if (onArrival) onArrival();
-              }}
-              className="px-5 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-2xl shadow-xl transition-all active:scale-95 flex items-center gap-2 shrink-0 border border-indigo-500"
-            >
-              <HospitalIcon className="w-4 h-4 text-white stroke-[2.5]" />
-              <span>Reached Hospital</span>
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
