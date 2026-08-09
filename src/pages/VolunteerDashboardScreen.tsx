@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { mockUserProfile } from '../data/mockData';
-import { ShieldCheck, MapPin, Radio, CheckCircle, Navigation, Award, HeartPulse, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall, Maximize2 } from 'lucide-react';
+import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall, Maximize2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
@@ -648,32 +648,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
           </a>
         </div>
 
-        {/* Impact Stats Grid */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
-            <div className="w-8 h-8 rounded-full bg-rose-50 text-red-700 flex items-center justify-center mx-auto">
-              <Award className="w-4 h-4" />
-            </div>
-            <p className="text-base font-extrabold text-slate-900">12</p>
-            <p className="text-[10px] text-slate-500 font-medium">Missions</p>
-          </div>
 
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto">
-              <HeartPulse className="w-4 h-4" />
-            </div>
-            <p className="text-base font-extrabold text-slate-900">4.1m</p>
-            <p className="text-[10px] text-slate-500 font-medium">Avg Response</p>
-          </div>
-
-          <div className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-xs text-center space-y-1">
-            <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center mx-auto">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <p className="text-base font-extrabold text-slate-900">Lvl 2</p>
-            <p className="text-[10px] text-slate-500 font-medium">Certified</p>
-          </div>
-        </div>
 
         {errorMessage && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold rounded-2xl flex items-center gap-2">
