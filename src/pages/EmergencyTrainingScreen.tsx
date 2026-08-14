@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { HeartPulse, ShieldAlert, BookOpen, AlertCircle, Phone, Heart, Users, Play, X, Video } from 'lucide-react';
@@ -11,6 +11,13 @@ export const EmergencyTrainingScreen: React.FC = () => {
   const firstAidRef = useRef<HTMLElement>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
   const { isOnline } = useNetworkSync();
+
+  useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTop = 0;
+    }
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">

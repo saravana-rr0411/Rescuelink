@@ -22,6 +22,7 @@ export const MobileContainer: React.FC<MobileContainerProps> = ({ children }) =>
       >
         <OfflineBanner />
         <div
+          id="main-scroll-container"
           className={`flex-1 overflow-y-auto overflow-x-hidden ${
             hideBottomNav ? 'pb-0' : 'pb-[calc(5rem+env(safe-area-inset-bottom,0px))]'
           }`}
