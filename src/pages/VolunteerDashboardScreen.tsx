@@ -343,24 +343,14 @@ export const VolunteerDashboardScreen: React.FC = () => {
     try {
       console.log('[RescueLink Volunteer] Accepting emergency request for accident ID:', accidentId);
 
-      // Pre-check: Fetch latest record from database to verify if already assigned
-      const { data: latest } = await supabase
-        .from('accidents')
-        .select('volunteer_id, status')
-        .eq('id', accidentId)
-        .single();
+      // AVOID REDUNDANT PRE-CHECK: The atomic UPDATE below safely handles race conditions.
 
-      if (latest && latest.volunteer_id && latest.volunteer_id !== user.id) {
-        setRespondingId(null);
-        setErrorMessage('Already accepted by another volunteer.');
-        setRawIncidents((prev) =>
-          prev.map((item) => (item.id === accidentId ? { ...item, volunteer_id: latest.volunteer_id, status: latest.status } : item))
-        );
-        return;
+      // Use existing volunteerLocation if available to avoid blocking on GPS hardware
+      let pos = volunteerLocation;
+      if (!pos) {
+        console.log('[RescueLink Volunteer] Cached location unavailable, requesting fallback GPS...');
+        pos = await getVolunteerPosition();
       }
-
-      // Request GPS permission & get volunteer current location
-      const pos = await getVolunteerPosition();
 
       if (!pos) {
         setRespondingId(null);
