@@ -2,14 +2,14 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 
-import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall, Maximize2 } from 'lucide-react';
+import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, Ambulance, PhoneCall, Maximize2, CheckSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
 import { GoogleMap } from '../components/maps/GoogleMap';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
-import { saveStoredHospital, getStoredHospital, cleanDescriptionText, getStatusRank } from '../utils/routing';
+import { saveStoredHospital, getStoredHospital, cleanDescriptionText } from '../utils/routing';
 import { calculateHaversineDistance } from '../utils/distance';
 import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import { Inbox } from 'lucide-react';
@@ -82,6 +82,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
   // Action States
   const [respondingId, setRespondingId] = useState<string | null>(null);
   const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hospitalSheetMission, setHospitalSheetMission] = useState<AccidentRecord | null>(null);
@@ -425,81 +426,28 @@ export const VolunteerDashboardScreen: React.FC = () => {
     }
   };
 
-  // 2. Update Emergency Status Actions (Ambulance Requested, Ambulance Dispatched, Hospital Notified, Emergency Resolved)
-  const handleUpdateStatus = async (accidentId: string, newStatus: string) => {
-    if (!user) return;
 
-    const targetMission = assignedMissions.find((m) => m.id === accidentId);
-    if (targetMission) {
-      const currentRank = getStatusRank(targetMission.status);
-      const targetRank = getStatusRank(newStatus);
 
-      // Programmatic Guard: Enforce strict one-way progression!
-      if (targetRank <= currentRank) {
-        console.warn(`[RescueLink Workflow Guard] Rejected backward/duplicate transition from "${targetMission.status}" (rank ${currentRank}) to "${newStatus}" (rank ${targetRank}).`);
-        setErrorMessage(`Cannot move backward from "${targetMission.status}" to "${newStatus}". Workflow is strictly one-way.`);
-        setTimeout(() => setErrorMessage(null), 3000);
-        return;
-      }
-    }
-
+  const handleCompleteEmergency = async (accidentId: string) => {
     setUpdatingStatusId(accidentId);
     setErrorMessage(null);
-    setSuccessMessage(null);
-
     try {
-      console.log(`[RescueLink Volunteer] Updating accident ${accidentId} status to: ${newStatus}`);
-
-      const nowIso = new Date().toISOString();
-      const statusPayload: any = { status: newStatus };
-
-      if (newStatus === 'Volunteer Arrived' || newStatus === 'Arrived at Scene') {
-        statusPayload.arrived_at = nowIso;
-      } else if (newStatus === 'Transporting to Hospital') {
-        statusPayload.transported_at = nowIso;
-      } else if (newStatus === 'Hospital Reached') {
-        statusPayload.hospital_reached_at = nowIso;
-      } else if (newStatus === 'Emergency Completed' || newStatus === 'Emergency Resolved') {
-        statusPayload.completed_at = nowIso;
-      }
-
-      const { data, error } = await supabase
+      console.log(`[RescueLink Volunteer] Marking accident ${accidentId} as completed`);
+      const { error } = await supabase
         .from('accidents')
-        .update(statusPayload)
-        .eq('id', accidentId)
-        .select()
-        .single();
-
-      setUpdatingStatusId(null);
-
-      if (error) {
-        console.error('[RescueLink Workflow] Failed to update status. Exact error:', error);
-        setErrorMessage(`Failed to update status: ${error.message || 'Database error occurred'}`);
-        return;
-      }
-
-      console.log('[RescueLink Workflow] Supabase update result for status change to', newStatus, ':', data);
-      setSuccessMessage(`Status updated to "${newStatus}".`);
-
-      const targetMission = assignedMissions.find((m) => m.id === accidentId);
-
-      setAssignedMissions((prev) =>
-        prev
-          .map((m) => (m.id === accidentId ? { ...m, status: newStatus } : m))
-          .filter((m) => newStatus !== 'Emergency Resolved' && newStatus !== 'Emergency Completed' || m.id !== accidentId)
-      );
-
-      // Automatically trigger Hospital Selector when Arrived at Scene if no hospital is selected yet
-      if ((newStatus === 'Arrived at Scene' || newStatus === 'Volunteer Arrived') && targetMission && !targetMission.hospital_name) {
-        setHospitalSheetMission(targetMission);
-      }
-
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 2500);
+        .update({ status: 'Emergency Completed', completed_at: new Date().toISOString() })
+        .eq('id', accidentId);
+      
+      if (error) throw error;
+      
+      setSuccessMessage('Emergency marked as completed.');
+      setAssignedMissions((prev) => prev.filter(m => m.id !== accidentId));
+      
+      setTimeout(() => setSuccessMessage(null), 2500);
     } catch (err: any) {
-      console.error('[RescueLink Workflow] Unexpected error updating status:', err);
-      setErrorMessage('An error occurred while updating status.');
+      console.error('[RescueLink Workflow] Failed to complete emergency:', err);
+      setErrorMessage(err.message || 'Failed to complete emergency.');
+    } finally {
       setUpdatingStatusId(null);
     }
   };
@@ -510,7 +458,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
     console.log('[RescueLink Workflow] Hospital selected:', hospital.name, 'for accident ID:', missionId);
 
-    setUpdatingStatusId(missionId);
+
     try {
       // 1. Save stored hospital locally
       saveStoredHospital(missionId, {
@@ -591,7 +539,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       console.error('[RescueLink Volunteer] Failed to save hospital choice:', err);
       setErrorMessage('Failed to update hospital destination.');
     } finally {
-      setUpdatingStatusId(null);
+
       setHospitalSheetMission(null);
       setTimeout(() => {
         setSuccessMessage(null);
@@ -847,34 +795,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
                   {/* Status Action Buttons & Resume Navigation */}
                   <div className="pt-3 border-t border-slate-100 space-y-2.5">
-                    {/* Primary Resume Navigation Button */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigate(`/navigation/${mission.id}`, {
-                          state: {
-                            accidentId: mission.id,
-                            latitude: mission.latitude,
-                            longitude: mission.longitude,
-                            address: mission.address,
-                            severity: mission.severity,
-                            mode: 'volunteer',
-                          },
-                        });
-                      }}
-                      className="w-full p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-emerald-500"
-                    >
-                      <Navigation className="w-4 h-4 text-white fill-white" />
-                      <span>▶ Resume Navigation</span>
-                    </button>
-
-                    {/* Stage 2: Volunteer Assigned -> Next is Start Navigation (Volunteer En Route) */}
-                    {getStatusRank(mission.status) <= 2 && (
+                    {mission.status !== 'Hospital Reached' ? (
                       <button
                         type="button"
-                        disabled={updatingStatusId === mission.id}
                         onClick={() => {
-                          handleUpdateStatus(mission.id, 'Volunteer En Route');
                           navigate(`/navigation/${mission.id}`, {
                             state: {
                               accidentId: mission.id,
@@ -886,117 +810,17 @@ export const VolunteerDashboardScreen: React.FC = () => {
                             },
                           });
                         }}
-                        className="w-full p-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        className="w-full p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-emerald-500"
                       >
-                        {updatingStatusId === mission.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Navigation className="w-4 h-4" />
-                        )}
-                        <span>Start Navigation (Volunteer En Route)</span>
+                        <Navigation className="w-4 h-4 text-white fill-white" />
+                        <span>▶ Resume Navigation</span>
                       </button>
-                    )}
-
-                    {/* Stage 3: Volunteer En Route -> Next is Mark Arrived */}
-                    {getStatusRank(mission.status) === 3 && (
+                    ) : (
                       <button
                         type="button"
                         disabled={updatingStatusId === mission.id}
-                        onClick={() => handleUpdateStatus(mission.id, 'Volunteer Arrived')}
-                        className="w-full p-3 rounded-2xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                      >
-                        {updatingStatusId === mission.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <CheckSquare className="w-4 h-4" />
-                        )}
-                        <span>Mark Volunteer Arrived at Scene</span>
-                      </button>
-                    )}
-
-                    {/* Stage 4: Volunteer Arrived -> Hospital Selection & En Route to Hospital */}
-                    {getStatusRank(mission.status) === 4 && (
-                      <div className="space-y-2">
-                        {!(mission.hospital_name || getStoredHospital(mission.id)) ? (
-                          <button
-                            type="button"
-                            disabled={updatingStatusId === mission.id}
-                            onClick={() => {
-                              console.log('[RescueLink Workflow] Volunteer opened hospital selector for accident ID:', mission.id);
-                              setHospitalSheetMission(mission);
-                            }}
-                            className="w-full p-3 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                          >
-                            {updatingStatusId === mission.id ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <HospitalIcon className="w-4 h-4" />
-                            )}
-                            <span>Select Hospital</span>
-                          </button>
-                        ) : (
-                          <div className="space-y-2">
-                            <button
-                              type="button"
-                              disabled={updatingStatusId === mission.id}
-                              onClick={() => {
-                                console.log('[RescueLink Workflow] En Route to Hospital button pressed for accident ID:', mission.id);
-                                handleUpdateStatus(mission.id, 'Transporting to Hospital');
-                              }}
-                              className="w-full p-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50 border border-blue-500"
-                            >
-                              {updatingStatusId === mission.id ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Ambulance className="w-4 h-4" />
-                              )}
-                              <span>En Route to Hospital</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              disabled={updatingStatusId === mission.id}
-                              onClick={() => {
-                                console.log('[RescueLink Workflow] Volunteer changing hospital for accident ID:', mission.id);
-                                setHospitalSheetMission(mission);
-                              }}
-                              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-extrabold transition-all flex items-center justify-center gap-1.5 active:scale-95"
-                            >
-                              <HospitalIcon className="w-3.5 h-3.5 text-slate-500" />
-                              <span>Change Selected Hospital</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Stage 5: Transporting to Hospital -> Next is Mark Hospital Reached */}
-                    {getStatusRank(mission.status) === 5 && (
-                      <button
-                        type="button"
-                        disabled={updatingStatusId === mission.id}
-                        onClick={() => {
-                          console.log('[RescueLink Workflow] Mark Hospital Reached pressed for accident ID:', mission.id);
-                          handleUpdateStatus(mission.id, 'Hospital Reached');
-                        }}
-                        className="w-full p-3 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
-                      >
-                        {updatingStatusId === mission.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <CheckSquare className="w-4 h-4" />
-                        )}
-                        <span>Mark Hospital Reached</span>
-                      </button>
-                    )}
-
-                    {/* Stage 6: Hospital Reached -> Next is Complete Emergency */}
-                    {getStatusRank(mission.status) === 6 && (
-                      <button
-                        type="button"
-                        disabled={updatingStatusId === mission.id}
-                        onClick={() => handleUpdateStatus(mission.id, 'Emergency Completed')}
-                        className="w-full p-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-xs transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                        onClick={() => handleCompleteEmergency(mission.id)}
+                        className="w-full p-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-indigo-500 disabled:opacity-50"
                       >
                         {updatingStatusId === mission.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1005,14 +829,6 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         )}
                         <span>Complete Emergency</span>
                       </button>
-                    )}
-
-                    {/* Stage 7: Emergency Completed */}
-                    {getStatusRank(mission.status) >= 7 && (
-                      <div className="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2">
-                        <CheckSquare className="w-4 h-4 text-emerald-600" />
-                        <span>Emergency Completed</span>
-                      </div>
                     )}
                   </div>
                 </div>
