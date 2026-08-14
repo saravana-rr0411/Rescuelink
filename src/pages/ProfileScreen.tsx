@@ -363,7 +363,7 @@ export const ProfileScreen: React.FC = () => {
   const displayPhone = profile?.phone_number || 'No Phone Added';
   const displayBlood = profile?.blood_group || 'O-';
   const isVolunteer = stats.totalRescues > 0;
-  const userRoleText = isVolunteer ? 'Volunteer Responder' : 'Citizen Responder';
+  const userRoleText = isVolunteer ? t('profile.volunteerResponder') : t('profile.citizenResponder');
 
   const hasEmergencyContact = Boolean(
     profile?.emergency_contact_name?.trim() && profile?.emergency_contact_phone?.trim()
@@ -377,7 +377,7 @@ export const ProfileScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full bg-surface select-none">
-      <Navbar title="My Profile" showBack />
+      <Navbar title={t('profile.myProfile')} showBack />
 
       {/* Hidden File Input for Avatar Upload */}
       <input
@@ -392,7 +392,7 @@ export const ProfileScreen: React.FC = () => {
         {loading && (
           <div className="p-3 bg-primary/10 text-primary text-xs font-semibold rounded-2xl flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-            <span>Loading user profile...</span>
+            <span>{t('profile.loadingProfile')}</span>
           </div>
         )}
 
@@ -440,7 +440,7 @@ export const ProfileScreen: React.FC = () => {
                   avatarInputRef.current?.click();
                 }}
                 className="relative w-18 h-18 rounded-full ring-4 ring-primary/20 shrink-0 cursor-pointer group flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 to-rose-700 text-white font-black text-2xl uppercase shadow-md hover:ring-primary transition-all aspect-square"
-                title="Tap photo to change avatar"
+                title={t('profile.tapAvatar')}
               >
                 {uploadingAvatar ? (
                   <Loader2 className="w-6 h-6 animate-spin text-white shrink-0" />
@@ -480,10 +480,10 @@ export const ProfileScreen: React.FC = () => {
                       handleTriggerEditMode();
                     }}
                     className="px-2.5 py-1 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors shrink-0 flex items-center gap-1 active:scale-95"
-                    title="Edit Profile"
+                    title={t('profile.editProfile')}
                   >
                     <User className="w-3.5 h-3.5" />
-                    <span>Edit</span>
+                    <span>{t('profile.edit')}</span>
                   </button>
                 </div>
 
@@ -516,7 +516,7 @@ export const ProfileScreen: React.FC = () => {
               <div className="flex items-center justify-between border-b border-surface-container-high pb-2">
                 <h3 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
                   <User className="w-4 h-4 text-primary" />
-                  <span>Edit Profile Details</span>
+                  <span>{t('profile.editProfileDetails')}</span>
                 </h3>
                 <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">
                   Editing Mode
@@ -531,7 +531,7 @@ export const ProfileScreen: React.FC = () => {
                     avatarInputRef.current?.click();
                   }}
                   className="relative w-14 h-14 rounded-full ring-2 ring-primary shrink-0 cursor-pointer group flex items-center justify-center overflow-hidden bg-gradient-to-br from-red-600 to-rose-700 text-white font-black text-xl uppercase shadow-xs aspect-square"
-                  title="Tap photo to change avatar"
+                  title={t('profile.tapAvatar')}
                 >
                   {uploadingAvatar ? (
                     <Loader2 className="w-5 h-5 animate-spin text-white shrink-0" />
@@ -553,14 +553,14 @@ export const ProfileScreen: React.FC = () => {
                 </div>
 
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-on-surface">Profile Photo</p>
+                  <p className="text-xs font-bold text-on-surface">{t('profile.profilePhoto')}</p>
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
                     className="text-[11px] font-extrabold text-primary hover:underline flex items-center gap-1"
                   >
                     <Camera className="w-3 h-3" />
-                    <span>Tap to upload new photo</span>
+                    <span>{t('profile.uploadPhoto')}</span>
                   </button>
                 </div>
               </div>
@@ -569,7 +569,7 @@ export const ProfileScreen: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-on-surface-variant flex items-center gap-1">
                   <Mail className="w-3 h-3 text-outline" />
-                  <span>Email Address (Read-only)</span>
+                  <span>{t('profile.emailReadOnly')}</span>
                 </label>
                 <input
                   type="email"
@@ -584,14 +584,14 @@ export const ProfileScreen: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-on-surface flex items-center gap-1">
                   <User className="w-3 h-3 text-primary" />
-                  <span>Full Name</span>
+                  <span>{t('profile.fullName')}</span>
                 </label>
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   required
-                  placeholder="Enter your full name"
+                  placeholder={t('profile.enterFullName')}
                   className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                 />
               </div>
@@ -601,26 +601,26 @@ export const ProfileScreen: React.FC = () => {
                 <div className="space-y-1">
                   <label className="text-[11px] font-bold text-on-surface flex items-center gap-1">
                     <Phone className="w-3 h-3 text-secondary" />
-                    <span>Phone Number</span>
+                    <span>{t('profile.phoneNumber')}</span>
                   </label>
                   <input
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     required
-                    placeholder="+91 98765 43210"
+                    placeholder={t('profile.phonePlaceholder')}
                     className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-on-surface">Blood Group</label>
+                  <label className="text-[11px] font-bold text-on-surface">{t('profile.bloodGroup')}</label>
                   <select
                     value={bloodGroup}
                     onChange={(e) => setBloodGroup(e.target.value)}
                     className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   >
-                    <option value="O-">O- (Universal)</option>
+                    <option value="O-">{t('profile.bloodUniversal')}</option>
                     <option value="O+">O+</option>
                     <option value="A+">A+</option>
                     <option value="A-">A-</option>
@@ -635,10 +635,10 @@ export const ProfileScreen: React.FC = () => {
               {/* Medical Passport Details */}
               <div className="space-y-2 pt-2 border-t border-surface-container-high">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-on-surface">Known Allergies</label>
+                  <label className="text-[11px] font-bold text-on-surface">{t('profile.knownAllergies')}</label>
                   <input
                     type="text"
-                    placeholder="e.g. Penicillin, Peanuts (or None)"
+                    placeholder={t('profile.allergiesPlaceholder')}
                     value={allergies}
                     onChange={(e) => setAllergies(e.target.value)}
                     className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -646,10 +646,10 @@ export const ProfileScreen: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-on-surface">Medical Conditions</label>
+                  <label className="text-[11px] font-bold text-on-surface">{t('profile.medicalConditions')}</label>
                   <input
                     type="text"
-                    placeholder="e.g. Asthma, Diabetes (or None)"
+                    placeholder={t('profile.conditionsPlaceholder')}
                     value={medicalConditions}
                     onChange={(e) => setMedicalConditions(e.target.value)}
                     className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -664,7 +664,7 @@ export const ProfileScreen: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="Contact Name"
+                  placeholder={t('profile.contactName')}
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
                   className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium mb-1.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -672,14 +672,14 @@ export const ProfileScreen: React.FC = () => {
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="tel"
-                    placeholder="Phone Number"
+                    placeholder={t('profile.phoneNumber')}
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
                   />
                   <input
                     type="text"
-                    placeholder="Relation (e.g. Spouse)"
+                    placeholder={t('profile.relation')}
                     value={contactRelation}
                     onChange={(e) => setContactRelation(e.target.value)}
                     className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
@@ -710,7 +710,7 @@ export const ProfileScreen: React.FC = () => {
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>Save Changes</span>
+                      <span>{t('profile.saveChanges')}</span>
                     </>
                   )}
                 </button>
@@ -725,7 +725,7 @@ export const ProfileScreen: React.FC = () => {
         <div className="space-y-2">
           <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1 flex items-center gap-1.5">
             <Activity className="w-4 h-4 text-primary" />
-            <span>My Statistics</span>
+            <span>{t('profile.stats.myStatistics')}</span>
           </h3>
 
           {loadingStats ? (
@@ -739,31 +739,31 @@ export const ProfileScreen: React.FC = () => {
               {/* Volunteer Stat 1: Total Rescues */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">Total</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.stats.total')}</span>
                   <Ambulance className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-lg font-black text-on-surface">{stats.totalRescues}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium">Rescues</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.rescues')}</p>
               </div>
 
               {/* Volunteer Stat 2: Active Rescues */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-amber-700 uppercase">Active</span>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">{t('profile.stats.active')}</span>
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 </div>
                 <p className="text-lg font-black text-amber-700">{stats.activeRescues}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium">In Progress</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.inProgress')}</p>
               </div>
 
               {/* Volunteer Stat 3: Completed Rescues */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Completed</span>
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase">{t('profile.stats.completed')}</span>
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 </div>
                 <p className="text-lg font-black text-emerald-700">{stats.completedRescues}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium">Resolved</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.resolved')}</p>
               </div>
             </div>
           ) : (
@@ -771,31 +771,31 @@ export const ProfileScreen: React.FC = () => {
               {/* Citizen Stat 1: Total Reports */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">Reports</span>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.stats.reports')}</span>
                   <FileText className="w-4 h-4 text-primary" />
                 </div>
                 <p className="text-lg font-black text-on-surface">{stats.totalReports}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium font-sans">Total SOS</p>
+                <p className="text-[10px] text-on-surface-variant font-medium font-sans">{t('profile.stats.totalSos')}</p>
               </div>
 
               {/* Citizen Stat 2: Active Cases */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-amber-700 uppercase">Active</span>
+                  <span className="text-[10px] font-bold text-amber-700 uppercase">{t('profile.stats.active')}</span>
                   <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 </div>
                 <p className="text-lg font-black text-amber-700">{stats.activeCases}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium">Live Status</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.liveStatus')}</p>
               </div>
 
               {/* Citizen Stat 3: Completed Cases */}
               <div className="bg-surface-container-lowest p-3 rounded-2xl border border-outline-variant/60 shadow-xs flex flex-col justify-between space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-emerald-700 uppercase">Resolved</span>
+                  <span className="text-[10px] font-bold text-emerald-700 uppercase">{t('profile.stats.resolved')}</span>
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 </div>
                 <p className="text-lg font-black text-emerald-700">{stats.completedCases}</p>
-                <p className="text-[10px] text-on-surface-variant font-medium">Completed</p>
+                <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.completed')}</p>
               </div>
             </div>
           )}
@@ -823,7 +823,7 @@ export const ProfileScreen: React.FC = () => {
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">{t('profile.history')}</h4>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.history.title')}</h4>
                   <p className="text-[10px] text-on-surface-variant">{t('profile.historyDesc')}</p>
                 </div>
               </div>
@@ -1010,17 +1010,17 @@ export const ProfileScreen: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="bg-surface-container-low p-3 rounded-2xl">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">Blood Type</p>
+                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.bloodGroup')}</p>
                   <p className="text-sm font-black text-primary">{displayBlood}</p>
                 </div>
                 <div className="bg-surface-container-low p-3 rounded-2xl">
-                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">Known Allergies</p>
+                  <p className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.knownAllergies')}</p>
                   <p className="text-xs font-bold text-on-surface truncate">{displayAllergies}</p>
                 </div>
               </div>
 
               <div className="bg-surface-container-low p-3 rounded-2xl">
-                <p className="text-[10px] font-bold text-on-surface-variant uppercase">Medical Conditions</p>
+                <p className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.medicalConditions')}</p>
                 <p className="text-xs font-bold text-on-surface">{displayMedicalConditions}</p>
               </div>
             </div>
@@ -1036,7 +1036,7 @@ export const ProfileScreen: React.FC = () => {
                   onClick={handleTriggerEditMode}
                   className="text-xs font-bold text-secondary hover:underline"
                 >
-                  {hasEmergencyContact ? '+ Edit' : '+ Add'}
+                  {hasEmergencyContact ? t('profile.editAdd') : t('profile.addOption')}
                 </button>
               </div>
 
@@ -1106,7 +1106,7 @@ export const ProfileScreen: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-base font-black text-on-surface">Logout</h3>
+              <h3 className="text-base font-black text-on-surface">{t('profile.signOut')}</h3>
               <p className="text-xs text-on-surface-variant font-medium">
                 Are you sure you want to logout?
               </p>
@@ -1139,7 +1139,7 @@ export const ProfileScreen: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold shadow-xs">
                   <Key className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-black text-on-surface">Change Password</h3>
+                <h3 className="text-sm font-black text-on-surface">{t('profile.settings.changePassword')}</h3>
               </div>
               <button
                 onClick={() => setShowChangePassword(false)}
@@ -1151,7 +1151,7 @@ export const ProfileScreen: React.FC = () => {
 
             <form onSubmit={handleChangePassword} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-on-surface-variant uppercase">New Password</label>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.settings.newPassword')}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
                   <input
@@ -1159,7 +1159,7 @@ export const ProfileScreen: React.FC = () => {
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm(p => ({ ...p, newPassword: e.target.value }))}
                     className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-xl pl-10 pr-10 py-2.5 text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Min 6 characters"
+                    placeholder={t('profile.settings.passwordMin')}
                     required
                     minLength={6}
                   />
@@ -1174,7 +1174,7 @@ export const ProfileScreen: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-bold text-on-surface-variant uppercase">Confirm Password</label>
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase">{t('profile.settings.confirmPassword')}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
                   <input
@@ -1182,7 +1182,7 @@ export const ProfileScreen: React.FC = () => {
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm(p => ({ ...p, confirmPassword: e.target.value }))}
                     className="w-full bg-surface-container-lowest border border-outline-variant/60 rounded-xl pl-10 pr-10 py-2.5 text-sm font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Confirm new password"
+                    placeholder={t('profile.settings.confirmPasswordPlaceholder')}
                     required
                     minLength={6}
                   />
@@ -1211,7 +1211,7 @@ export const ProfileScreen: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold shadow-xs">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-black text-on-surface">Privacy & Security</h3>
+                <h3 className="text-sm font-black text-on-surface">{t('profile.settings.privacySecurity')}</h3>
               </div>
               <button
                 onClick={() => setShowPrivacySecurity(false)}
@@ -1230,13 +1230,13 @@ export const ProfileScreen: React.FC = () => {
               <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
                 <div className="flex items-center gap-2 mb-2">
                   <MapPin className="w-4 h-4 text-blue-600" />
-                  <h4 className="font-bold text-slate-900 text-sm">Location Privacy</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('profile.settings.locationPrivacy')}</h4>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 font-medium ml-1">
-                  <li>Used to accurately pinpoint emergency reports</li>
-                  <li>Matching nearby volunteer responders to your SOS</li>
-                  <li>Providing real-time live navigation when active</li>
-                  <li>Discovering nearby trauma and stroke hospitals</li>
+                  <li>{t('profile.settings.locationPrivacyDesc1')}</li>
+                  <li>{t('profile.settings.locationPrivacyDesc2')}</li>
+                  <li>{t('profile.settings.locationPrivacyDesc3')}</li>
+                  <li>{t('profile.settings.locationPrivacyDesc4')}</li>
                 </ul>
               </div>
 
@@ -1244,12 +1244,12 @@ export const ProfileScreen: React.FC = () => {
               <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50">
                 <div className="flex items-center gap-2 mb-2">
                   <HeartPulse className="w-4 h-4 text-rose-600" />
-                  <h4 className="font-bold text-slate-900 text-sm">Emergency Data</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('profile.settings.emergencyData')}</h4>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 font-medium ml-1">
-                  <li>Your medical passport is shared during emergencies</li>
-                  <li>Volunteer coordination utilizes contact details</li>
-                  <li>Relevant medical history is shared with receiving hospitals</li>
+                  <li>{t('profile.settings.emergencyDataDesc1')}</li>
+                  <li>{t('profile.settings.emergencyDataDesc2')}</li>
+                  <li>{t('profile.settings.emergencyDataDesc3')}</li>
                 </ul>
               </div>
 
@@ -1257,28 +1257,28 @@ export const ProfileScreen: React.FC = () => {
               <div className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100/50">
                 <div className="flex items-center gap-2 mb-2">
                   <WifiOff className="w-4 h-4 text-emerald-600" />
-                  <h4 className="font-bold text-slate-900 text-sm">Offline Data Storage</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('profile.settings.offlineData')}</h4>
                 </div>
-                <p className="text-slate-600 font-medium mb-1.5 ml-1">The following data is cached locally to work without internet:</p>
+                <p className="text-slate-600 font-medium mb-1.5 ml-1">{t('profile.settings.offlineDataDesc1')}</p>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 font-medium ml-1">
-                  <li>Last known GPS coordinates</li>
-                  <li>Emergency trauma hospital directory</li>
-                  <li>Pending/queued text-based emergency reports</li>
-                  <li>Network synchronization status</li>
+                  <li>{t('profile.settings.offlineDataDesc2')}</li>
+                  <li>{t('profile.settings.offlineDataDesc3')}</li>
+                  <li>{t('profile.settings.offlineDataDesc4')}</li>
+                  <li>{t('profile.settings.offlineDataDesc5')}</li>
                 </ul>
-                <p className="text-slate-500 font-medium mt-1.5 text-[10px] italic ml-1">Note: Photos are never queued or stored offline.</p>
+                <p className="text-slate-500 font-medium mt-1.5 text-[10px] italic ml-1">{t('profile.settings.offlineDataDesc6')}</p>
               </div>
 
               {/* ACCOUNT SECURITY */}
               <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/60">
                 <div className="flex items-center gap-2 mb-2">
                   <ShieldCheck className="w-4 h-4 text-slate-700" />
-                  <h4 className="font-bold text-slate-900 text-sm">Account Security</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{t('profile.accountSecurity')}</h4>
                 </div>
                 <ul className="list-disc list-inside text-slate-600 space-y-1 font-medium ml-1">
-                  <li>Encrypted session management via Supabase Auth</li>
-                  <li>Password-protected profile editing</li>
-                  <li>Secure sign-out capability</li>
+                  <li>{t('profile.settings.accountSecuritySub')}</li>
+                  <li>{t('profile.settings.accountSecuritySub2')}</li>
+                  <li>{t('profile.settings.accountSecuritySub3')}</li>
                 </ul>
               </div>
             </div>

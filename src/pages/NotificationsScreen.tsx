@@ -1,4 +1,6 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { getLocalizedNotification } from '../utils/statusUtils';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -17,6 +19,7 @@ import { useNotifications } from '../context/NotificationContext';
 import type { NotificationItem } from '../context/NotificationContext';
 
 export const NotificationsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const {
     notifications,
@@ -101,13 +104,13 @@ export const NotificationsScreen: React.FC = () => {
           <button
             onClick={() => navigate(-1)}
             className="p-2 rounded-full hover:bg-surface-container text-on-surface transition-colors"
-            aria-label="Go back"
+            aria-label={t('nav.goBack')}
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <h1 className="font-extrabold text-base sm:text-lg text-on-surface leading-tight flex items-center gap-2">
-              <span>Notification Center</span>
+              <span>{t('notifications.title')}</span>
               {unreadCount > 0 && (
                 <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full">
                   {unreadCount} new
@@ -124,10 +127,10 @@ export const NotificationsScreen: React.FC = () => {
           <button
             onClick={markAllAsRead}
             className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-primary rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
-            title="Mark all notifications as read"
+            title={t('notifications.markAllRead')}
           >
             <CheckCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">Mark all read</span>
+            <span className="hidden sm:inline">{t('notifications.markAllReadBtn')}</span>
           </button>
         )}
       </header>
@@ -140,7 +143,7 @@ export const NotificationsScreen: React.FC = () => {
           <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-3xl space-y-2 shadow-xs">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-blue-600 shrink-0" />
-              <h3 className="text-xs font-black text-blue-900">Enable Desktop & System Alerts</h3>
+              <h3 className="text-xs font-black text-blue-900">{t('notifications.enableAlerts')}</h3>
             </div>
             <p className="text-xs text-blue-700 leading-relaxed font-medium">
               Get instant browser pop-up notifications when an ambulance, responder, or hospital status updates.
@@ -158,12 +161,12 @@ export const NotificationsScreen: React.FC = () => {
         {loading ? (
           <div className="py-16 text-center space-y-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
-            <p className="text-xs font-bold text-on-surface">Loading notifications...</p>
+            <p className="text-xs font-bold text-on-surface">{t('notifications.loading')}</p>
           </div>
         ) : notifications.length === 0 ? (
           <div className="py-16 text-center space-y-3 bg-surface-container-lowest rounded-3xl border border-outline-variant/60 p-8 shadow-level-1">
             <Bell className="w-10 h-10 text-outline mx-auto" />
-            <h3 className="text-sm font-extrabold text-on-surface">No notifications added</h3>
+            <h3 className="text-sm font-extrabold text-on-surface">{t('notifications.empty')}</h3>
             <p className="text-xs text-on-surface-variant font-medium">
               You are all caught up! Emergency alerts and responder updates will appear here in real time.
             </p>
@@ -185,14 +188,14 @@ export const NotificationsScreen: React.FC = () => {
                   <div className="space-y-1 min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h4 className="text-sm font-extrabold text-on-surface leading-tight truncate">
-                        {item.title}
+                        {getLocalizedNotification(item.title, t)}
                       </h4>
                       {!item.is_read && (
                         <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0 animate-pulse"></span>
                       )}
                     </div>
                     <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
-                      {item.message}
+                      {getLocalizedNotification(item.message, t)}
                     </p>
                     <div className="flex items-center gap-1 text-[11px] text-outline font-semibold pt-1">
                       <Clock className="w-3 h-3" />

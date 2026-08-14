@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Hospital as HospitalIcon, Clock, MapPin, HeartPulse, Droplets } from 'lucide-react';
 
 export interface HospitalPreAlertCardProps {
@@ -20,6 +21,7 @@ export const HospitalPreAlertCard: React.FC<HospitalPreAlertCardProps> = ({
   className = '',
   variant = 'floating',
 }) => {
+  const { t } = useTranslation();
   const displayBloodGroup = bloodGroup && bloodGroup.trim().length > 0 ? bloodGroup : 'Blood group unavailable';
   const displaySeverity = severity && severity.trim().length > 0 ? severity.toUpperCase() : 'CRITICAL';
   const displayEta = eta && eta.trim().length > 0 ? eta : 'Calculating ETA...';
@@ -49,7 +51,7 @@ export const HospitalPreAlertCard: React.FC<HospitalPreAlertCardProps> = ({
 
         <div className="flex items-center gap-1.5 bg-rose-950/80 text-rose-200 px-2.5 py-1 rounded-full border border-rose-500/40 shadow-xs">
           <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
-          <span className="text-[10px] font-extrabold uppercase tracking-wide">🚨 Incoming Emergency</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-wide">{t('hospital.incomingEmergency')}</span>
         </div>
       </div>
 

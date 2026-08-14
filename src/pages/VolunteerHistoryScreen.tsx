@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,7 @@ interface HistoryAccidentRecord {
 }
 
 export const VolunteerHistoryScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -144,7 +146,7 @@ export const VolunteerHistoryScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full bg-surface">
-      <Navbar title="Volunteer Mission History" showBack />
+      <Navbar title={t('volunteerDashboard.history.missionHistory')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
         {errorMessage && (
@@ -158,7 +160,7 @@ export const VolunteerHistoryScreen: React.FC = () => {
               className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry</span>
+              <span>{t('volunteerDashboard.history.retry')}</span>
             </button>
           </div>
         )}
@@ -173,8 +175,8 @@ export const VolunteerHistoryScreen: React.FC = () => {
         ) : historyItems.length === 0 ? (
           <EmptyState
             icon={Award}
-            title="No rescue history yet."
-            description="You haven't completed any rescue missions yet. Accepted emergency alerts will appear here."
+            title={t('volunteerDashboard.history.noHistory')}
+            description={t("volunteerDashboard.history.emptyDescription")}
             actionText="Go to Volunteer Dashboard"
             onAction={() => navigate('/volunteer')}
           />
@@ -249,7 +251,7 @@ export const VolunteerHistoryScreen: React.FC = () => {
                     </div>
 
                     <div className="col-span-2 pt-1 border-t border-outline-variant/40 flex items-center justify-between text-[11px]">
-                      <span className="text-on-surface-variant font-medium">Rescue Time</span>
+                      <span className="text-on-surface-variant font-medium">{t('volunteerDashboard.history.rescueTime')}</span>
                       <span className="font-extrabold text-secondary">
                         ⏱ {calculateTotalResponseTime(item)}
                       </span>
@@ -261,7 +263,7 @@ export const VolunteerHistoryScreen: React.FC = () => {
                     onClick={() => navigate(`/volunteer/history/${item.id}`)}
                     className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 btn-press"
                   >
-                    <span>View Mission Record</span>
+                    <span>{t('volunteerDashboard.history.viewRecord')}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

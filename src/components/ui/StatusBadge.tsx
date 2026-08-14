@@ -1,10 +1,14 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { getLocalizedStatus } from '../../utils/statusUtils';
 
 interface StatusBadgeProps {
   status: 'DISPATCHED' | 'EN_ROUTE' | 'ON_SCENE' | 'RESOLVED' | string;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
+  const { t } = useTranslation();
+
   const getBadgeStyle = () => {
     switch (status) {
       case 'EN_ROUTE':
@@ -21,18 +25,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   };
 
   const getLabel = () => {
-    switch (status) {
-      case 'EN_ROUTE':
-        return 'Ambulance En Route';
-      case 'ON_SCENE':
-        return 'Responder On Scene';
-      case 'DISPATCHED':
-        return 'Dispatching Help';
-      case 'RESOLVED':
-        return 'Resolved';
-      default:
-        return status;
-    }
+    return getLocalizedStatus(status, t);
   };
 
   return (

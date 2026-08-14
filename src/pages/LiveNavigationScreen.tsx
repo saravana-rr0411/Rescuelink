@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getStoredHospital, saveStoredHospital, fetchGooglePlacesDetails, type Hospital, type StoredHospital } from '../utils/routing';
@@ -20,6 +21,7 @@ interface AccidentData {
 }
 
 export const LiveNavigationScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as any;
@@ -166,7 +168,7 @@ export const LiveNavigationScreen: React.FC = () => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none">
         <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-3"></div>
-        <h3 className="text-sm font-black text-white">Acquiring Emergency Location...</h3>
+        <h3 className="text-sm font-black text-white">{t('nav.acquiringLocation')}</h3>
       </div>
     );
   }

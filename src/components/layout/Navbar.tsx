@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ShieldAlert, ArrowLeft, Bell, User, WifiOff, Wifi } from 'lucide-react';
+import { ArrowLeft, Bell, User, WifiOff, Wifi } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useNetworkSync } from '../../hooks/useNetworkSync';
@@ -44,14 +44,12 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
             <button
               onClick={() => navigate(-1)}
               className="p-2 rounded-full hover:bg-surface-container text-on-surface transition-colors focus:outline-none"
-              aria-label="Go back"
+              aria-label={t('nav.goBack')}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
           ) : (
-            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold shadow-md">
-              <ShieldAlert className="w-6 h-6" />
-            </div>
+            <img src="/images/yi-logo.jpg" alt="Young Indians Yi Logo" className="h-10 w-auto object-contain shrink-0 rounded-sm" />
           )}
 
           <div>
@@ -72,7 +70,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
           <button 
             onClick={() => navigate('/notifications')}
             className="relative p-2 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors"
-            aria-label="Notification Center"
+            aria-label={t('nav.notificationCenter')}
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -85,12 +83,12 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
           <button 
             onClick={() => navigate('/profile')}
             className="p-1 rounded-full hover:bg-surface-container text-on-surface-variant transition-colors flex items-center justify-center shrink-0"
-            aria-label="User Profile"
+            aria-label={t('nav.userProfile')}
           >
             {avatarUrl ? (
               <img
                 src={avatarUrl}
-                alt="User Avatar"
+                alt={t('nav.userAvatar')}
                 loading="lazy"
                 decoding="async"
                 className="w-8 h-8 rounded-full object-cover shrink-0 aspect-square ring-2 ring-primary/30 shadow-xs"

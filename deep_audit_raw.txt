@@ -1,0 +1,37 @@
+[TERNARY] src/components/common/GoogleMapsNavigationMode.tsx:471 -> ? '🏥 Hospital Navigation' : '🚨 Live Scene Navigation'
+[TERNARY] src/components/common/GoogleMapsNavigationMode.tsx:562 -> ? 'Navigation Mode ON' : 'Navigation Mode OFF'
+[TERNARY] src/components/common/WhileHelpIsOnTheWayGuide.tsx:142 -> ? 'Collapse Golden Hour Guide' : 'Expand Golden Hour Guide'
+[TERNARY] src/components/layout/BottomNavigation.tsx:38 -> ? 'text-primary font-bold' : 'text-on-surface-variant/70 hover:text-on-surface'
+[TERNARY] src/components/layout/BottomNavigation.tsx:68 -> ? 'text-primary font-bold' : 'text-on-surface-variant/70 hover:text-on-surface'
+[TERNARY] src/components/ui/SOSButton.tsx:42 -> ? 'scale-95 shadow-inner' : 'hover:scale-105'
+[JSX] src/context/AuthContext.tsx:9 -> "Promise"
+[JSX] src/context/AuthContext.tsx:10 -> "Promise"
+[JSX] src/context/AuthContext.tsx:11 -> "Promise"
+[JSX] src/context/AuthContext.tsx:12 -> "Promise"
+[JSX] src/context/AuthContext.tsx:13 -> "Promise"
+[JSX] src/context/NotificationContext.tsx:30 -> "Promise"
+[JSX] src/context/NotificationContext.tsx:31 -> "Promise"
+[JSX] src/context/NotificationContext.tsx:32 -> "Promise"
+[JSX] src/context/NotificationContext.tsx:33 -> ") => Promise"
+[TERNARY] src/context/NotificationContext.tsx:136 -> ? 'hospital' : 'volunteer'
+[JSX] src/context/ProfileContext.tsx:23 -> "Promise"
+[TERNARY] src/pages/EmergencyStatusScreen.tsx:653 -> ? 'w-[70%] bg-emerald-400' : 'w-[25%] bg-amber-300 animate-pulse'
+[TERNARY] src/pages/EmergencyStatusScreen.tsx:865 -> ? 'bg-emerald-500' : 'bg-surface-container-high'
+[PROP] src/pages/EmergencyTrainingScreen.tsx:106 -> alt="Learn Hands-Only CPR in 60 seconds - AHA"
+[PROP] src/pages/EmergencyTrainingScreen.tsx:130 -> alt="Vinnie Jones' hard and fast Hands-only CPR - BHF"
+[PROP] src/pages/EmergencyTrainingScreen.tsx:272 -> title="Educational CPR Video"
+[TERNARY] src/pages/HistoryDetailsScreen.tsx:321 -> ? 'bg-emerald-500' : 'bg-surface-container-high'
+[TERNARY] src/pages/HistoryDetailsScreen.tsx:339 -> ? 'text-on-surface' : 'text-on-surface-variant/50'
+[TERNARY] src/pages/HistoryDetailsScreen.tsx:346 -> ? 'text-emerald-700 font-bold' : 'text-on-surface-variant/40'
+[TERNARY] src/pages/LiveNavigationScreen.tsx:311 -> ? 'hospital' : 'accident'
+[TERNARY] src/pages/ProfileScreen.tsx:183 -> ? '2.5 mins' : '3.8 mins'
+[TERNARY] src/pages/ProfileScreen.tsx:366 -> ? 'Volunteer Responder' : 'Citizen Responder'
+[TERNARY] src/pages/ProfileScreen.tsx:410 -> ? 'bg-emerald-100 text-emerald-900' : 'bg-red-100 text-red-800'
+[TERNARY] src/pages/ProfileScreen.tsx:1039 -> ? '+ Edit' : '+ Add'
+[TERNARY] src/pages/ProfileScreen.tsx:1158 -> ? 'text' : 'password'
+[TERNARY] src/pages/ProfileScreen.tsx:1181 -> ? 'text' : 'password'
+[TERNARY] src/pages/ReportAccidentScreen.tsx:453 -> ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+[FUNC] src/pages/SignUpScreen.tsx:39 -> setError('Please provide a valid email and password.'
+[FUNC] src/pages/SignUpScreen.tsx:44 -> setError('Password must be at least 6 characters long.'
+[TERNARY] src/pages/VolunteerDashboardScreen.tsx:323 -> ? 'minute' : 'minutes'
+[TERNARY] src/pages/VolunteerDashboardScreen.tsx:324 -> ? 'hour' : 'hours'

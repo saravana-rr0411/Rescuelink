@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -38,6 +39,7 @@ interface HistoryAccidentRecord {
 }
 
 export const CitizenHistoryScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -141,7 +143,7 @@ export const CitizenHistoryScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full bg-surface">
-      <Navbar title="Accident History" showBack />
+      <Navbar title={t('profile.history.accidentHistory')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
         {errorMessage && (
@@ -155,7 +157,7 @@ export const CitizenHistoryScreen: React.FC = () => {
               className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry</span>
+              <span>{t('profile.history.retry')}</span>
             </button>
           </div>
         )}
@@ -170,7 +172,7 @@ export const CitizenHistoryScreen: React.FC = () => {
         ) : historyItems.length === 0 ? (
           <EmptyState
             icon={History}
-            title="No accident history yet."
+            title={t('profile.history.noHistory')}
             description="You haven't reported any emergency incidents yet. Previous reports will appear here."
             actionText="Report Emergency Now"
             onAction={() => navigate('/report')}
@@ -246,7 +248,7 @@ export const CitizenHistoryScreen: React.FC = () => {
                     </div>
 
                     <div className="col-span-2 pt-1 border-t border-outline-variant/40 flex items-center justify-between text-[11px]">
-                      <span className="text-on-surface-variant font-medium">Response Duration</span>
+                      <span className="text-on-surface-variant font-medium">{t('profile.history.responseDuration')}</span>
                       <span className="font-extrabold text-secondary">
                         ⏱ {calculateResponseTime(item)}
                       </span>
@@ -258,7 +260,7 @@ export const CitizenHistoryScreen: React.FC = () => {
                     onClick={() => navigate(`/history/${item.id}`)}
                     className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 btn-press"
                   >
-                    <span>View Details</span>
+                    <span>{t('profile.history.viewDetails')}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

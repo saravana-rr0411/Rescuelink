@@ -219,7 +219,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors"
-            aria-label="Close hospital selector sheet"
+            aria-label={t('common.closeSheet')}
           >
             <X className="w-5 h-5" />
           </button>

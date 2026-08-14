@@ -41,7 +41,7 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onTrigger, size = 'large' 
           className={`relative z-10 ${buttonDimensions} rounded-full bg-gradient-to-br from-primary-container to-primary text-white flex flex-col items-center justify-center shadow-level-3 active:scale-95 transition-all duration-200 border-4 border-white/40 ${
             isPressing ? 'scale-95 shadow-inner' : 'hover:scale-105'
           }`}
-          aria-label="Emergency SOS Press"
+          aria-label={t('home.sosPress')}
         >
           <PhoneCall className="w-9 h-9 mb-0.5 animate-bounce" />
           <span className="text-xl font-extrabold tracking-wider">{t('home.sos')}</span>

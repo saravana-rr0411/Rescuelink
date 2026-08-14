@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { User, Phone, CheckCircle, ArrowLeft, AlertCircle, Lock, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
 export const SignUpScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -34,12 +36,12 @@ export const SignUpScreen: React.FC = () => {
     setSuccessMessage('');
 
     if (!email || !password) {
-      setError('Please provide a valid email and password.');
+      setError(t('auth.signup.errorInvalidEmail'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      setError(t('auth.signup.errorPasswordShort'));
       return;
     }
 
@@ -121,8 +123,8 @@ export const SignUpScreen: React.FC = () => {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-xl font-extrabold text-on-surface leading-tight">Create Account</h1>
-          <p className="text-xs text-on-surface-variant">Set up your Emergency Passport & Supabase Auth</p>
+          <h1 className="text-xl font-extrabold text-on-surface leading-tight">{t('auth.signup.createAccount')}</h1>
+          <p className="text-xs text-on-surface-variant">{t('auth.signup.setupPassport')}</p>
         </div>
       </div>
 
@@ -145,11 +147,11 @@ export const SignUpScreen: React.FC = () => {
         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/50 space-y-3.5 shadow-level-1">
           <h2 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
             <User className="w-4 h-4" />
-            <span>Personal Information</span>
+            <span>{t('auth.signup.personalInfo')}</span>
           </h2>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-on-surface">Full Name</label>
+            <label className="text-xs font-semibold text-on-surface">{t('profile.fullName')}</label>
             <input
               type="text"
               value={name}
@@ -161,7 +163,7 @@ export const SignUpScreen: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-on-surface">Mobile Number</label>
+              <label className="text-xs font-semibold text-on-surface">{t('auth.signup.mobileNumber')}</label>
               <input
                 type="tel"
                 value={phone}
@@ -172,13 +174,13 @@ export const SignUpScreen: React.FC = () => {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-on-surface">Blood Group</label>
+              <label className="text-xs font-semibold text-on-surface">{t('profile.bloodGroup')}</label>
               <select
                 value={bloodType}
                 onChange={(e) => setBloodType(e.target.value)}
                 className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary focus:outline-none focus:ring-2 focus:ring-secondary"
               >
-                <option value="O-">O- (Universal)</option>
+                <option value="O-">{t('profile.bloodUniversal')}</option>
                 <option value="O+">O+</option>
                 <option value="A+">A+</option>
                 <option value="A-">A-</option>
@@ -191,14 +193,14 @@ export const SignUpScreen: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-on-surface">Email Address (Supabase Login)</label>
+            <label className="text-xs font-semibold text-on-surface">{t('auth.emailLabel')}</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-outline absolute left-3 top-3" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 required
                 className="w-full pl-9 pr-3.5 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
               />
@@ -206,14 +208,14 @@ export const SignUpScreen: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-on-surface">Password</label>
+            <label className="text-xs font-semibold text-on-surface">{t('auth.passwordLabel')}</label>
             <div className="relative">
               <Lock className="w-4 h-4 text-outline absolute left-3 top-3" />
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 6 characters"
+                placeholder={t('auth.signup.passwordDesc')}
                 required
                 minLength={6}
                 className="w-full pl-9 pr-3.5 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
@@ -229,15 +231,15 @@ export const SignUpScreen: React.FC = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-xs font-bold text-secondary uppercase tracking-wider flex items-center gap-1.5">
               <Phone className="w-4 h-4" />
-              <span>Primary Emergency Contact</span>
+              <span>{t('auth.signup.primaryContact')}</span>
             </h2>
-            <span className="text-[10px] bg-secondary-fixed text-secondary px-2 py-0.5 rounded-full font-bold">Autodialed on SOS</span>
+            <span className="text-[10px] bg-secondary-fixed text-secondary px-2 py-0.5 rounded-full font-bold">{t('auth.signup.autodialedOnSos')}</span>
           </div>
 
           <div className="space-y-2">
             <input
               type="text"
-              placeholder="Contact Name"
+              placeholder={t('profile.contactName')}
               value={contactName}
               onChange={(e) => setContactName(e.target.value)}
               className="w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
@@ -245,14 +247,14 @@ export const SignUpScreen: React.FC = () => {
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="tel"
-                placeholder="Phone Number"
+                placeholder={t('profile.phoneNumber')}
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
                 className="w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
               />
               <input
                 type="text"
-                placeholder="Relationship (e.g. Parent)"
+                placeholder={t('auth.signup.relationship')}
                 value={contactRelation}
                 onChange={(e) => setContactRelation(e.target.value)}
                 className="w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface"
@@ -268,11 +270,11 @@ export const SignUpScreen: React.FC = () => {
           className="w-full py-3.5 bg-primary text-white font-bold text-sm rounded-xl shadow-level-2 hover:bg-primary-hover transition-all flex items-center justify-center gap-2"
         >
           {loading ? (
-            <span className="text-xs">Creating Account & Profile...</span>
+            <span className="text-xs">{t('auth.signup.creatingAccount')}</span>
           ) : (
             <>
               <CheckCircle className="w-5 h-5" />
-              <span>Complete Registration</span>
+              <span>{t('auth.signup.completeRegistration')}</span>
             </>
           )}
         </button>

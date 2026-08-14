@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -101,6 +102,7 @@ const MapWidgetComponent: React.FC<MapWidgetProps> = ({
   volunteerLongitude = null,
   mode = 'citizen',
 }) => {
+  const { t } = useTranslation();
   const shouldShowNavigateBtn = showNavigateBtn !== undefined ? showNavigateBtn : true;
   const navigate = useNavigate();
 
@@ -140,7 +142,7 @@ const MapWidgetComponent: React.FC<MapWidgetProps> = ({
         className={`w-full ${height} rounded-2xl bg-amber-50/60 border border-amber-200 flex flex-col items-center justify-center p-4 text-center space-y-2`}
       >
         <AlertCircle className="w-6 h-6 text-amber-600" />
-        <p className="text-xs font-bold text-amber-900">Location Coordinates Unavailable</p>
+        <p className="text-xs font-bold text-amber-900">{t('common.map.locationUnavailable')}</p>
         <p className="text-[11px] text-amber-800 max-w-xs">
           {address || 'No valid GPS coordinates provided for this accident report.'}
         </p>
@@ -168,7 +170,7 @@ const MapWidgetComponent: React.FC<MapWidgetProps> = ({
           style={{ height: '100%', width: '100%' }}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution={`&copy; <a href="https://www.openstreetmap.org/copyright">${t('common.map.openStreetMap')}</a> contributors`}
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
@@ -190,7 +192,7 @@ const MapWidgetComponent: React.FC<MapWidgetProps> = ({
             <Marker position={volunteerPos} icon={volunteerIcon}>
               <Popup>
                 <div className="p-1 text-xs">
-                  <strong className="text-emerald-600 block font-bold">Responder Active Location</strong>
+                  <strong className="text-emerald-600 block font-bold">{t('common.map.responderLocation')}</strong>
                   <span>
                     {volunteerLatitude?.toFixed(4)}, {volunteerLongitude?.toFixed(4)}
                   </span>
@@ -222,10 +224,10 @@ const MapWidgetComponent: React.FC<MapWidgetProps> = ({
           <button
             onClick={handleOpenNavigation}
             className="absolute bottom-3 right-3 bg-secondary hover:bg-secondary/90 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition-transform active:scale-95 z-[400]"
-            aria-label="Navigate via OpenStreetMap"
+            aria-label={t('common.map.navigateOsm')}
           >
             <Navigation className="w-4 h-4" />
-            <span>Navigate</span>
+            <span>{t('common.map.navigate')}</span>
           </button>
         )}
       </div>

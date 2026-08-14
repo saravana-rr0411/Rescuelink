@@ -10,6 +10,7 @@ import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 import { cleanDescriptionText, formatETA, fetchOSRMRoute, getStoredHospital } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
 import { useTranslation } from 'react-i18next';
+import { getLocalizedStatus } from '../utils/statusUtils';
 
 const isActiveStatus = (status?: string | null): boolean => {
   if (!status) return false;
@@ -526,10 +527,10 @@ export const EmergencyStatusScreen: React.FC = () => {
           <button
             onClick={() => navigate('/history')}
             className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-full border border-outline-variant/60 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
-            aria-label="View History"
+            aria-label={t('emergencyStatus.viewHistory')}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>{t('profile.history')}</span>
+            <span>{t('profile.history.title')}</span>
           </button>
         }
       />
@@ -767,7 +768,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                     {t('emergencyStatus.attachedScenePhoto')}
                   </span>
                   <div className="rounded-2xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-48">
-                    <img src={accident.photo_url} alt="Scene Evidence" loading="lazy" decoding="async" className="w-full h-44 object-cover" />
+                    <img src={accident.photo_url} alt={t('emergencyStatus.sceneEvidence')} loading="lazy" decoding="async" className="w-full h-44 object-cover" />
                   </div>
                 </div>
               )}
@@ -788,7 +789,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                         {volunteerProfile?.full_name || 'Emergency Responder'}
                       </h4>
                       <p className="text-[11px] text-on-surface-variant">
-                        {t('emergencyStatus.statusLabel')} <span className="font-bold text-secondary">{accident.status}</span>
+                        {t('emergencyStatus.statusLabel')} <span className="font-bold text-secondary">{getLocalizedStatus(accident.status, t)}</span>
                         {calculatedDistanceDisplay && (
                           <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} {t('emergencyStatus.away')})</span>
                         )}
@@ -799,7 +800,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                     <a
                       href={`tel:${volunteerProfile.phone_number}`}
                       className="p-3 bg-emerald-600 text-white rounded-2xl shadow-xs hover:bg-emerald-700 transition-colors"
-                      aria-label="Call Volunteer"
+                      aria-label={t('emergencyStatus.callVolunteer')}
                     >
                       <PhoneCall className="w-5 h-5" />
                     </a>
@@ -807,7 +808,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                     <a
                       href="tel:108"
                       className="p-3 bg-secondary text-white rounded-2xl shadow-xs hover:bg-secondary/90 transition-colors"
-                      aria-label="Call Emergency Hotline"
+                      aria-label={t('emergencyStatus.callHotline')}
                     >
                       <PhoneCall className="w-5 h-5" />
                     </a>
@@ -838,7 +839,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                       <span className="flex items-center gap-1.5">
                         <span>{t('emergencyStatus.resolutionProgress')}</span>
                         <span className="text-outline-variant">•</span>
-                        <span className="text-secondary font-bold">{accident.status}</span>
+                        <span className="text-secondary font-bold">{getLocalizedStatus(accident.status, t)}</span>
                       </span>
                       <span className="font-black text-emerald-700 text-sm">{pct}%</span>
                     </div>

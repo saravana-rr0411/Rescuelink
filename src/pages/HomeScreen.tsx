@@ -7,6 +7,7 @@ import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPi
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { getLocalizedStatus } from '../utils/statusUtils';
 import { CardSkeleton } from '../components/common/SkeletonLoader';
 import { GoogleMap } from '../components/maps/GoogleMap';
 
@@ -314,7 +315,7 @@ export const HomeScreen: React.FC = () => {
                         ? 'bg-amber-100 text-amber-900 border border-amber-300'
                         : 'bg-blue-100 text-blue-900'
                     }`}>
-                      {incident.status === 'Reported' || !incident.volunteer_id ? t('home.waitingVolunteer') : incident.status}
+                      {incident.status === 'Reported' || !incident.volunteer_id ? t('home.waitingVolunteer') : getLocalizedStatus(incident.status, t)}
                     </span>
                   </div>
 

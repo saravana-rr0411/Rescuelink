@@ -1,0 +1,325 @@
+[ADDRESS LABEL] src/components/common/EmergencyActionCenterSheet.tsx:727 -> <span>{selectedHospital.address}</span>
+[MIXED JSX] src/components/common/GoogleMapTest.tsx:13 -> "Google Maps API Key Missing"
+[MIXED JSX] src/components/common/GoogleMapTest.tsx:25 -> "Google Maps Platform - Phase 1 Verification Test"
+[MIXED JSX] src/components/common/GoogleMapTest.tsx:26 -> "Standalone verification map (Does not touch existing Leaflet functionality)"
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:29 -> destinationAddress: string;
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:44 -> destinationAddress,
+[KEYWORD] src/components/common/GoogleMapsNavigationMode.tsx:49 -> navigationStatus = 'En Route to Scene',
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:312 -> data.address?.road ||
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:313 -> data.address?.suburb ||
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:314 -> data.address?.neighbourhood ||
+[ADDRESS LABEL] src/components/common/GoogleMapsNavigationMode.tsx:479 -> {currentRoad ? `On ${currentRoad}` : destinationAddress}
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:619 -> <span>{t('emergencyStatus.transporting')}<br />{t('emergencyStatus.toHospital')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:647 -> <span>{t('emergencyStatus.callAmbulance')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:655 -> <span>{t('emergencyStatus.callHospital')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:680 -> <span className="text-center leading-tight">{t('emergencyStatus.enRoute')}<br />{t('emergencyStatus.toHospital')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:691 -> <span className="text-center leading-tight">{t('emergencyStatus.reached')}<br />{t('emergencyStatus.reached')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:705 -> <span>{navigationStatus}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:733 -> <span>{t('emergencyStatus.callAmbulance')}</span>
+[STATUS RENDER] src/components/common/GoogleMapsNavigationMode.tsx:747 -> <span className="text-center leading-tight">{t('emergencyStatus.reached')}<br />{t('emergencyStatus.accident')}</span>
+[ADDRESS LABEL] src/components/common/HospitalPreAlertCard.tsx:9 -> patientAddress?: string | null;
+[ADDRESS LABEL] src/components/common/HospitalPreAlertCard.tsx:19 -> patientAddress,
+[ADDRESS LABEL] src/components/common/HospitalPreAlertCard.tsx:28 -> const displayAddress = patientAddress && patientAddress.trim().length > 0 ? patientAddress : 'Location unavailable';
+[ADDRESS LABEL] src/components/common/HospitalPreAlertCard.tsx:130 -> {displayAddress}
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:84 -> address: string;
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:97 -> address,
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:129 -> address,
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:147 -> {address || 'No valid GPS coordinates provided for this accident report.'}
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:185 -> <span>{address}</span>
+[ADDRESS LABEL] src/components/common/MapWidget.tsx:235 -> {/* Address Bar */}
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:37 -> if (s === 'Volunteer En Route' || s === 'En Route') {
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:38 -> return 'Responder is En Route to Your Location';
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:40 -> if (s === 'Volunteer Arrived' || s === 'Arrived at Scene') {
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:41 -> return 'Responder Has Arrived on Scene';
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:46 -> if (s === 'Hospital Reached') {
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:47 -> return 'Safely Arrived at Hospital';
+[KEYWORD] src/components/common/WhileHelpIsOnTheWayGuide.tsx:49 -> if (s === 'Emergency Resolved' || s === 'Emergency Completed' || s === 'Completed') {
+[MIXED JSX] src/components/maps/GoogleMap.tsx:297 -> "Google Maps API Key Missing"
+[KEYWORD] src/components/ui/StatusBadge.tsx:26 -> return 'Ambulance En Route';
+[MIXED JSX] src/context/AuthContext.tsx:9 -> "Promise"
+[MIXED JSX] src/context/AuthContext.tsx:10 -> "Promise"
+[MIXED JSX] src/context/AuthContext.tsx:11 -> "Promise"
+[MIXED JSX] src/context/AuthContext.tsx:12 -> "Promise"
+[MIXED JSX] src/context/AuthContext.tsx:13 -> "Promise"
+[MIXED JSX] src/context/NotificationContext.tsx:30 -> "Promise"
+[MIXED JSX] src/context/NotificationContext.tsx:31 -> "Promise"
+[MIXED JSX] src/context/NotificationContext.tsx:32 -> "Promise"
+[MIXED JSX] src/context/NotificationContext.tsx:33 -> ") => Promise"
+[KEYWORD] src/context/NotificationContext.tsx:136 -> type: d.type || (d.status_type === 'case_completed' ? 'resolved' : d.status_type === 'patient_picked' || d.status_type === 'hospital_reached' ? 'hospital' : 'volunteer'),
+[MIXED JSX] src/context/ProfileContext.tsx:23 -> "Promise"
+[KEYWORD] src/data/mockData.ts:108 -> description: 'Smoke reported on 3rd floor. Fire brigade en route.',
+[ADDRESS LABEL] src/hooks/useNetworkSync.ts:9 -> address: string;
+[ADDRESS LABEL] src/hooks/useNetworkSync.ts:63 -> address: report.address,
+[ADDRESS LABEL] src/pages/CitizenHistoryScreen.tsx:28 -> address: string;
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:33 -> accepted_at?: string | null;
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:34 -> arrived_at?: string | null;
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:36 -> hospital_reached_at?: string | null;
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:37 -> completed_at?: string | null;
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:130 -> const endTime = item.completed_at
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:131 -> ? new Date(item.completed_at).getTime()
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:132 -> : item.accepted_at
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:133 -> ? new Date(item.accepted_at).getTime()
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:190 -> const isCompleted =
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:191 -> item.status === 'Emergency Completed' || item.status === 'Emergency Resolved';
+[KEYWORD] src/pages/CitizenHistoryScreen.tsx:206 -> isCompleted
+[ADDRESS LABEL] src/pages/CitizenHistoryScreen.tsx:216 -> {/* Address & Date */}
+[ADDRESS LABEL] src/pages/CitizenHistoryScreen.tsx:220 -> <span>{item.address}</span>
+[ADDRESS LABEL] src/pages/EmergencyActionScreen.tsx:299 -> destinationAddress={selectedHospital.address}
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:18 -> 'Emergency Completed',
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:20 -> 'Completed',
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:33 -> address: string;
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:41 -> hospital_address?: string | null;
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:112 -> hospital_address: data.hospital_address || storedHosp?.address || null,
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:122 -> hospital_address: fullRecord.hospital_address,
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:162 -> 'payload.new.hospital_address': updated.hospital_address,
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:173 -> hospital_address: updated.hospital_address || prev.hospital_address,
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:226 -> hospital_address: data.hospital_address || prev.hospital_address,
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:257 -> hospital_address: h.address || prev.hospital_address,
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:346 -> s === 'Emergency Completed' ||
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:348 -> s === 'Completed' ||
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:353 -> if (s === 'Hospital Reached') return 5;
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:355 -> if (s === 'Volunteer Reached' || s === 'Volunteer Arrived' || s === 'Arrived at Scene' || s === 'Volunteer Arrived at Scene') return 3;
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:356 -> if (s === 'Volunteer En Route' || s === 'En Route') return 2;
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:365 -> s === 'Emergency Completed' ||
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:367 -> s === 'Completed' ||
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:403 -> completed: idx <= currentIdx,
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:416 -> const isEnRoute = accident?.status === 'Assigned' || accident?.status === 'Volunteer Assigned' || accident?.status === 'En Route' || accident?.status === 'Volunteer En Route';
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:417 -> const isArrivedOnScene = accident?.status === 'Volunteer Arrived' || accident?.status === 'Arrived at Scene' || accident?.status === 'Volunteer Arrived at Scene';
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:418 -> const isTransporting = accident?.status === 'Transporting to Hospital' || accident?.status === 'Hospital Transfer' || accident?.status === 'To Hospital' || (isArrivedOnScene && !!accident?.hospital_name);
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:419 -> const isHospitalReached = accident?.status === 'Hospital Reached';
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:420 -> const isResolved = accident?.status === 'Emergency Completed' || accident?.status === 'Emergency Resolved' || accident?.status === 'Completed';
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:426 -> // If Transporting to Hospital or Hospital Reached -> Destination is the Hospital Coordinates!
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:427 -> // Else (En Route / Arrived) -> Destination is the Accident Scene Coordinates!
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:428 -> const targetLat = (isTransporting || isHospitalReached) && accident?.hospital_latitude ? accident.hospital_latitude : (accident?.latitude || 0);
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:429 -> const targetLng = (isTransporting || isHospitalReached) && accident?.hospital_longitude ? accident.hospital_longitude : (accident?.longitude || 0);
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:515 -> // Arrived at Scene / Hospital Reached / Emergency Resolved -> Hide numerical distance to accident
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:560 -> <h3 className="text-sm font-extrabold text-on-surface">{t('emergencyStatus.callAmbulance108')}</h3>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:561 -> <p className="text-[11px] text-on-surface-variant font-medium">{t('emergencyStatus.open108Dialer')}</p>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:570 -> <span>{t('emergencyStatus.call108Btn')}</span>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:597 -> <p className="text-xs text-blue-100 font-medium">{t('emergencyStatus.eta')}</p>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:603 -> <p className="text-xs text-blue-100">{t('emergencyStatus.reported')}</p>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:615 -> <span>{t('emergencyStatus.searchingVolunteer')}</span>
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:617 -> ) : isArrivedOnScene && !isTransporting ? (
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:620 -> <span>{t('emergencyStatus.volunteerArrivedAssessing')}</span>
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:634 -> ) : isHospitalReached ? (
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:637 -> <span>{t('emergencyStatus.hospitalReached')}</span>
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:674 -> const hospAddress = accident.hospital_address || storedHosp?.address || (accident.latitude && accident.longitude ? `GPS (${accident.latitude.toFixed(4)}, ${accident.longitude.toFixed(4)})` : accident.address);
+[ADDRESS LABEL] src/pages/EmergencyStatusScreen.tsx:735 -> title: `${accident.severity} ACCIDENT: ${accident.address}`,
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:779 -> <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('emergencyStatus.assignedVolunteerResponder')}</h3>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:791 -> {t('emergencyStatus.statusLabel')} <span className="font-bold text-secondary">{accident.status}</span>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:824 -> <span>{t('emergencyStatus.citizenProgressTimeline')}</span>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:839 -> <span>{t('emergencyStatus.resolutionProgress')}</span>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:841 -> <span className="text-secondary font-bold">{accident.status}</span>
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:857 -> const isCompleted = step.completed;
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:865 -> isCompleted && !isCurrent ? 'bg-emerald-500' : 'bg-surface-container-high'
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:874 -> : isCompleted
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:879 -> {isCompleted ? '✓' : idx + 1}
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:889 -> : isCompleted
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:905 -> : isCompleted
+[KEYWORD] src/pages/EmergencyStatusScreen.tsx:917 -> : isCompleted
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:935 -> <span>{t('emergencyStatus.whileWaiting')}</span>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:938 -> <li>{t('emergencyStatus.safetyInstruction1')}</li>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:939 -> <li>{t('emergencyStatus.safetyInstruction2')}</li>
+[STATUS RENDER] src/pages/EmergencyStatusScreen.tsx:940 -> <li>{t('emergencyStatus.safetyInstruction3')}</li>
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:60 -> "Recognising a possible cardiac emergency"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:61 -> "Look for unresponsiveness and abnormal or absent breathing."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:68 -> "Calling for emergency assistance"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:69 -> "Dial emergency services immediately. Ensure the dispatcher knows the exact location."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:76 -> "Basic CPR awareness"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:77 -> "CPR involves rhythmic chest compressions to maintain blood flow."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:84 -> "Following professional guidance"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:85 -> "Stay on the phone. Emergency dispatchers can provide step-by-step guidance."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:117 -> "Learn Hands-Only CPR (60s)"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:118 -> "American Heart Association (AHA)"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:141 -> "Hands-only CPR (Vinnie Jones)"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:142 -> "British Heart Foundation (BHF)"
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:176 -> "Check whether the scene is reasonably safe before approaching."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:186 -> "Contact emergency assistance and provide the accident location."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:196 -> "Provide clear information about the location and situation."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:206 -> "If it is safe to do so, provide reasonable assistance within your knowledge and ability."
+[MIXED JSX] src/pages/EmergencyTrainingScreen.tsx:216 -> "Follow appropriate guidance and cooperate with arriving responders."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:48 -> "Helping an injured person should not begin with fear."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:165 -> "Ensure that the scene is reasonably safe before approaching."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:175 -> "Report the emergency and provide the location and relevant information."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:185 -> "If it is safe to do so, provide reasonable assistance within your knowledge and comfort level."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:192 -> "Do not put yourself at risk while attempting to assist another person."
+[MIXED JSX] src/pages/GoodSamaritanScreen.tsx:223 -> "24/7 Samaritan Attorney Network"
+[ADDRESS LABEL] src/pages/HistoryDetailsScreen.tsx:29 -> address: string;
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:35 -> accepted_at?: string | null;
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:36 -> arrived_at?: string | null;
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:38 -> hospital_reached_at?: string | null;
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:39 -> completed_at?: string | null;
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:122 -> title: 'Volunteer Accepted',
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:123 -> timestamp: accident?.accepted_at,
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:127 -> title: 'Volunteer Arrived',
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:128 -> timestamp: accident?.arrived_at,
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:137 -> title: 'Hospital Reached',
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:138 -> timestamp: accident?.hospital_reached_at,
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:142 -> title: 'Completed',
+[KEYWORD] src/pages/HistoryDetailsScreen.tsx:143 -> timestamp: accident?.completed_at,
+[ADDRESS LABEL] src/pages/HistoryDetailsScreen.tsx:197 -> {accident.address}
+[ADDRESS LABEL] src/pages/HistoryDetailsScreen.tsx:221 -> address={accident.address}
+[ADDRESS LABEL] src/pages/HistoryDetailsScreen.tsx:289 -> {storedHosp.address}
+[ADDRESS LABEL] src/pages/HomeScreen.tsx:19 -> address: string;
+[KEYWORD] src/pages/HomeScreen.tsx:111 -> // 1. Fetch initial active accidents where status is not completed
+[KEYWORD] src/pages/HomeScreen.tsx:121 -> .neq('status', 'Emergency Completed')
+[KEYWORD] src/pages/HomeScreen.tsx:156 -> const isFinished = newRecord?.status === 'Emergency Completed' || newRecord?.status === 'Emergency Resolved' || newRecord?.status === 'Completed';
+[ADDRESS LABEL] src/pages/HomeScreen.tsx:288 -> title: `${a.severity}: ${a.address}`,
+[ADDRESS LABEL] src/pages/HomeScreen.tsx:307 -> {incident.address}
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:11 -> address: string;
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:37 -> address: locationState?.address || 'Emergency Incident Location',
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:56 -> address: stored.address,
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:91 -> address: data.address || prev?.address || 'Emergency Incident Location',
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:106 -> address: data.hospital_address || prev?.address || data.address,
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:116 -> // If current status is Volunteer Reached on load, open hospital selector automatically
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:117 -> if (data.status === 'Volunteer Reached' || data.status === 'Volunteer Arrived') {
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:154 -> if (updated.status === 'Volunteer Reached' || updated.status === 'Volunteer Arrived') {
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:180 -> // Volunteer reached hospital
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:186 -> .update({ status: 'Hospital Reached', hospital_reached_at: new Date().toISOString() })
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:194 -> // Volunteer reached accident location
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:208 -> .update({ status: 'Volunteer Reached', arrived_at: new Date().toISOString() })
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:224 -> let address = hosp.address;
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:232 -> if (placesData.address) address = placesData.address;
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:240 -> address,
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:254 -> address,
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:271 -> hospital_address: address,
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:289 -> hospital_address: address,
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:301 -> : accident.address || 'Accident Incident Location';
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:303 -> const destinationAddress = isHospitalTarget
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:304 -> ? activeHospital?.address || accident.address
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:305 -> : accident.address;
+[KEYWORD] src/pages/LiveNavigationScreen.tsx:322 -> ? 'En Route to Accident Scene'
+[ADDRESS LABEL] src/pages/LiveNavigationScreen.tsx:329 -> destinationAddress={destinationAddress}
+[MIXED JSX] src/pages/LoginScreen.tsx:87 -> "RescueLink"
+[KEYWORD] src/pages/ProfileScreen.tsx:78 -> completedCases: 0,
+[KEYWORD] src/pages/ProfileScreen.tsx:81 -> completedRescues: 0,
+[KEYWORD] src/pages/ProfileScreen.tsx:163 -> 'Emergency Completed',
+[KEYWORD] src/pages/ProfileScreen.tsx:165 -> 'Completed',
+[KEYWORD] src/pages/ProfileScreen.tsx:171 -> const completedReports = reports.filter((a) => inactiveStatuses.includes(a.status));
+[KEYWORD] src/pages/ProfileScreen.tsx:174 -> const completedRescuesList = rescues.filter((a) => inactiveStatuses.includes(a.status));
+[KEYWORD] src/pages/ProfileScreen.tsx:179 -> completedCases: completedReports.length,
+[KEYWORD] src/pages/ProfileScreen.tsx:182 -> completedRescues: completedRescuesList.length,
+[MIXED JSX] src/pages/ProfileScreen.tsx:629 -> "AB+"
+[KEYWORD] src/pages/ProfileScreen.tsx:759 -> {/* Volunteer Stat 3: Completed Rescues */}
+[STATUS RENDER] src/pages/ProfileScreen.tsx:788 -> <p className="text-[10px] text-on-surface-variant font-medium">{t('profile.stats.liveStatus')}</p>
+[KEYWORD] src/pages/ProfileScreen.tsx:791 -> {/* Citizen Stat 3: Completed Cases */}
+[MIXED JSX] src/pages/ProfileScreen.tsx:1008 -> "Supabase Live DB"
+[MIXED JSX] src/pages/ProfileScreen.tsx:1093 -> "RescueLink v1.0.0"
+[MIXED JSX] src/pages/ProfileScreen.tsx:1094 -> "Made with ❤️ for Emergency Response"
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:70 -> setAddress(data.display_name);
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:77 -> setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:174 -> address: address.trim(),
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:237 -> address: address.trim(),
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:354 -> value={address}
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:355 -> onChange={(e) => setAddress(e.target.value)}
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:372 -> title: address || 'Emergency Location',
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:387 -> setAddress(data.display_name);
+[ADDRESS LABEL] src/pages/ReportAccidentScreen.tsx:394 -> setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+[MIXED JSX] src/pages/ReportAccidentScreen.tsx:496 -> "AB+"
+[MIXED JSX] src/pages/SignUpScreen.tsx:189 -> "AB+"
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:25 -> address: string;
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:34 -> hospital_address?: string | null;
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:121 -> s === 'Emergency Completed' ||
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:123 -> s === 'Completed' ||
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:136 -> // Fetch only active non-completed reported accidents directly from Supabase
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:218 -> // Immediately remove completed/resolved incident across all connected dashboards
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:369 -> accepted_at: new Date().toISOString(),
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:410 -> address: data.address,
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:431 -> .update({ status: 'Emergency Completed', completed_at: new Date().toISOString() })
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:460 -> address: hospital.address,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:475 -> hospital_address: hospital.address,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:491 -> 'data.hospital_address': data?.hospital_address,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:517 -> hospital_address: hospital.address,
+[MIXED JSX] src/pages/VolunteerDashboardScreen.tsx:589 -> "10 km"
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:685 -> title: `${mission.severity} ACCIDENT: ${mission.address}`,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:706 -> const address = hosp?.address || mission.address;
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:727 -> 📍 {address}
+[KEYWORD] src/pages/VolunteerDashboardScreen.tsx:791 -> {mission.status !== 'Hospital Reached' ? (
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:800 -> address: mission.address,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:909 -> title: `${inc.severity} ACCIDENT: ${inc.address}`,
+[ADDRESS LABEL] src/pages/VolunteerDashboardScreen.tsx:938 -> {/* Full Accident Address (up to 2 lines, never truncated) */}
+[ADDRESS LABEL] src/pages/VolunteerHistoryScreen.tsx:28 -> address: string;
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:33 -> accepted_at?: string | null;
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:34 -> arrived_at?: string | null;
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:36 -> hospital_reached_at?: string | null;
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:37 -> completed_at?: string | null;
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:129 -> const startTime = item.accepted_at
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:130 -> ? new Date(item.accepted_at).getTime()
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:133 -> const endTime = item.completed_at
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:134 -> ? new Date(item.completed_at).getTime()
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:135 -> : item.hospital_reached_at
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:136 -> ? new Date(item.hospital_reached_at).getTime()
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:179 -> description="You haven't completed any rescue missions yet. Accepted emergency alerts will appear here."
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:193 -> const isCompleted =
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:194 -> item.status === 'Emergency Completed' || item.status === 'Emergency Resolved';
+[KEYWORD] src/pages/VolunteerHistoryScreen.tsx:209 -> isCompleted
+[ADDRESS LABEL] src/pages/VolunteerHistoryScreen.tsx:219 -> {/* Address & Date */}
+[ADDRESS LABEL] src/pages/VolunteerHistoryScreen.tsx:223 -> <span>{item.address}</span>
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:14 -> address: string;
+[KEYWORD] src/pages/VolunteerMapPreviewScreen.tsx:126 -> // 3. Prevent rendering preview screen for already accepted missions
+[KEYWORD] src/pages/VolunteerMapPreviewScreen.tsx:153 -> setErrorMessage('Already accepted by another volunteer.');
+[KEYWORD] src/pages/VolunteerMapPreviewScreen.tsx:186 -> accepted_at: new Date().toISOString(),
+[KEYWORD] src/pages/VolunteerMapPreviewScreen.tsx:200 -> setErrorMessage('Already accepted by another volunteer.');
+[KEYWORD] src/pages/VolunteerMapPreviewScreen.tsx:204 -> // Successfully accepted -> Replace preview in history and navigate directly to Live Navigation
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:211 -> address: incident.address,
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:259 -> title: `${incident.severity} ACCIDENT: ${incident.address}`,
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:277 -> {/* 1. TOP HEADER & ACCIDENT ADDRESS CARD */}
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:300 -> {/* Full Accident Address (Up to 2 lines, never truncated) */}
+[ADDRESS LABEL] src/pages/VolunteerMapPreviewScreen.tsx:302 -> {incident.address}
+[ADDRESS LABEL] src/services/googlePlaces.ts:4 -> address: string;
+[ADDRESS LABEL] src/services/googlePlaces.ts:30 -> 'places.id,places.displayName,places.formattedAddress,places.location,places.nationalPhoneNumber',
+[ADDRESS LABEL] src/services/googlePlaces.ts:56 -> address: place.formattedAddress || 'Regional Emergency Trauma Care',
+[ADDRESS LABEL] src/services/googlePlaces.ts:78 -> address: el.tags?.['addr:street'] || 'Regional Emergency Care',
+[KEYWORD] src/utils/notificationTypes.ts:12 -> // 1. Volunteer Accepted
+[KEYWORD] src/utils/notificationTypes.ts:14 -> statusType: 'volunteer_accepted',
+[KEYWORD] src/utils/notificationTypes.ts:16 -> title: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:17 -> message: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:20 -> statusType: 'volunteer_accepted',
+[KEYWORD] src/utils/notificationTypes.ts:22 -> title: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:23 -> message: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:25 -> 'Accepted': {
+[KEYWORD] src/utils/notificationTypes.ts:26 -> statusType: 'volunteer_accepted',
+[KEYWORD] src/utils/notificationTypes.ts:28 -> title: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:29 -> message: 'A volunteer has accepted your emergency request.',
+[KEYWORD] src/utils/notificationTypes.ts:33 -> 'En Route': {
+[KEYWORD] src/utils/notificationTypes.ts:39 -> 'En Route to Scene': {
+[KEYWORD] src/utils/notificationTypes.ts:45 -> 'Arrived at Scene': {
+[KEYWORD] src/utils/notificationTypes.ts:66 -> // 4. Hospital Reached
+[KEYWORD] src/utils/notificationTypes.ts:67 -> 'Hospital Reached': {
+[KEYWORD] src/utils/notificationTypes.ts:68 -> statusType: 'hospital_reached',
+[KEYWORD] src/utils/notificationTypes.ts:70 -> title: 'Hospital Reached',
+[KEYWORD] src/utils/notificationTypes.ts:71 -> message: 'The volunteer has reached the hospital.',
+[KEYWORD] src/utils/notificationTypes.ts:74 -> // 5. Case Completed
+[KEYWORD] src/utils/notificationTypes.ts:76 -> statusType: 'case_completed',
+[KEYWORD] src/utils/notificationTypes.ts:78 -> title: 'Case Completed',
+[KEYWORD] src/utils/notificationTypes.ts:79 -> message: 'Your emergency case has been successfully completed.',
+[KEYWORD] src/utils/notificationTypes.ts:81 -> 'Completed': {
+[KEYWORD] src/utils/notificationTypes.ts:82 -> statusType: 'case_completed',
+[KEYWORD] src/utils/notificationTypes.ts:84 -> title: 'Case Completed',
+[KEYWORD] src/utils/notificationTypes.ts:85 -> message: 'Your emergency case has been successfully completed.',
+[KEYWORD] src/utils/notificationTypes.ts:87 -> 'Emergency Completed': {
+[KEYWORD] src/utils/notificationTypes.ts:88 -> statusType: 'case_completed',
+[KEYWORD] src/utils/notificationTypes.ts:90 -> title: 'Case Completed',
+[KEYWORD] src/utils/notificationTypes.ts:91 -> message: 'Your emergency case has been successfully completed.',
+[MIXED JSX] src/utils/ripple.ts:7 -> "| React.TouchEvent"
+[ADDRESS LABEL] src/utils/routing.ts:12 -> address: string;
+[ADDRESS LABEL] src/utils/routing.ts:140 -> address: fullAddr.trim(),
+[ADDRESS LABEL] src/utils/routing.ts:184 -> const address = nameParts.slice(1, 3).join(',').trim() || `GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+[ADDRESS LABEL] src/utils/routing.ts:189 -> address,
+[KEYWORD] src/utils/routing.ts:223 -> case 'Volunteer En Route':
+[KEYWORD] src/utils/routing.ts:224 -> case 'En Route':
+[KEYWORD] src/utils/routing.ts:226 -> case 'Volunteer Arrived':
+[KEYWORD] src/utils/routing.ts:227 -> case 'Arrived at Scene':
+[KEYWORD] src/utils/routing.ts:228 -> case 'Volunteer Arrived at Scene':
+[KEYWORD] src/utils/routing.ts:234 -> case 'Hospital Reached':
+[KEYWORD] src/utils/routing.ts:236 -> case 'Emergency Completed':
+[KEYWORD] src/utils/routing.ts:238 -> case 'Completed':
+[KEYWORD] src/utils/routing.ts:246 -> * Helper to format duration in minutes/hours with Arrived state support
+[KEYWORD] src/utils/routing.ts:250 -> return 'Arrived';
+[KEYWORD] src/utils/routing.ts:253 -> return 'Arrived';
+[ADDRESS LABEL] src/utils/routing.ts:266 -> address: string;
+[ADDRESS LABEL] src/utils/routing.ts:277 -> * Fetches Google Places Details for a hospital (Name, Address, International Phone Number, Rating, Website)
+[ADDRESS LABEL] src/utils/routing.ts:285 -> address?: string;
+[ADDRESS LABEL] src/utils/routing.ts:311 -> fields: ['name', 'formatted_address', 'formatted_phone_number', 'international_phone_number', 'rating', 'website'],
+[ADDRESS LABEL] src/utils/routing.ts:318 -> address: place.formatted_address || undefined,
+[ADDRESS LABEL] src/utils/routing.ts:384 -> address: string;

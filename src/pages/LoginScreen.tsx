@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { LanguageSelector } from '../components/common/LanguageSelector';
+import { LanguageDropdown } from '../components/common/LanguageDropdown';
 
 const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
   <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -80,8 +80,8 @@ export const LoginScreen: React.FC = () => {
       <div className="space-y-6 max-w-sm mx-auto w-full">
         {/* Brand Header */}
         <div className="text-center space-y-3 pt-6">
-          <div className="w-16 h-16 rounded-3xl bg-primary text-white flex items-center justify-center mx-auto shadow-level-2 ring-4 ring-primary-fixed">
-            <ShieldAlert className="w-10 h-10" />
+          <div className="w-20 h-20 rounded-xl bg-white flex items-center justify-center mx-auto overflow-hidden">
+            <img src="/images/yi-logo.jpg" alt="Young Indians Yi Logo" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">RescueLink</h1>
@@ -91,7 +91,7 @@ export const LoginScreen: React.FC = () => {
 
         {/* Language Selector */}
         <div className="flex justify-center -mt-2">
-          <LanguageSelector className="w-full max-w-sm p-4 shadow-none border-dashed bg-transparent" />
+          <LanguageDropdown className="w-full max-w-sm z-50" />
         </div>
 
         {/* Login Form */}

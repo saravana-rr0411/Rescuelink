@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -106,6 +107,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
   isOpen,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // State Management
@@ -368,7 +370,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                   }
                 }}
                 className="p-1.5 rounded-full hover:bg-surface-container-high text-on-surface transition-colors"
-                aria-label="Back"
+                aria-label={t('actionCenter.back')}
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
@@ -395,7 +397,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors shrink-0"
-            aria-label="Close Emergency Action Center"
+            aria-label={t('actionCenter.closeSheet')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -434,7 +436,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-black leading-tight group-hover:translate-x-0.5 transition-transform">
                       🚑 Call Ambulance
                     </h3>
-                    <p className="text-[10px] text-red-100 font-medium">Emergency Dispatch</p>
+                    <p className="text-[10px] text-red-100 font-medium">{t('actionCenter.dispatch')}</p>
                   </div>
                 </button>
 
@@ -455,7 +457,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-black leading-tight group-hover:translate-x-0.5 transition-transform">
                       🏥 Nearby Hospitals
                     </h3>
-                    <p className="text-[10px] text-blue-100 font-medium">ER Trauma Centers</p>
+                    <p className="text-[10px] text-blue-100 font-medium">{t('actionCenter.erCenters')}</p>
                   </div>
                 </button>
 
@@ -476,7 +478,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-extrabold text-on-surface leading-tight group-hover:translate-x-0.5 transition-transform">
                       🩹 First Aid Guide
                     </h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">CPR & Trauma steps</p>
+                    <p className="text-[10px] text-on-surface-variant font-medium">{t('actionCenter.cprSteps')}</p>
                   </div>
                 </button>
 
@@ -494,7 +496,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-extrabold text-on-surface leading-tight group-hover:translate-x-0.5 transition-transform">
                       📍 Share Location
                     </h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">Send GPS link</p>
+                    <p className="text-[10px] text-on-surface-variant font-medium">{t('actionCenter.sendGps')}</p>
                   </div>
                 </button>
 
@@ -515,7 +517,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-extrabold text-on-surface leading-tight group-hover:translate-x-0.5 transition-transform">
                       📸 Report Accident
                     </h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">Photo SOS report</p>
+                    <p className="text-[10px] text-on-surface-variant font-medium">{t('actionCenter.photoSos')}</p>
                   </div>
                 </button>
 
@@ -536,7 +538,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     <h3 className="text-xs font-extrabold text-on-surface leading-tight group-hover:translate-x-0.5 transition-transform">
                       🚓 Call Police
                     </h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">100 / 112 Patrol</p>
+                    <p className="text-[10px] text-on-surface-variant font-medium">{t('actionCenter.patrol100')}</p>
                   </div>
                 </button>
               </div>
@@ -552,10 +554,10 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                   </div>
                   <div>
                     <h3 className="text-xs font-extrabold text-on-surface flex items-center gap-2">
-                      <span>🚒 Call Fire Service</span>
+                      <span>{t('actionCenter.callFire')}</span>
                       <span className="bg-orange-100 text-orange-900 text-[10px] px-2 py-0.5 rounded-full font-bold">101</span>
                     </h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">Direct line to fire & rescue squads</p>
+                    <p className="text-[10px] text-on-surface-variant font-medium">{t('actionCenter.fireDesc')}</p>
                   </div>
                 </div>
                 <PhoneCall className="w-5 h-5 text-orange-700 shrink-0 group-hover:scale-110 transition-transform" />
@@ -585,7 +587,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                     />
                     <MapController userCoords={userCoords} hospitalCoords={null} />
                     <Marker position={userCoords} icon={userGpsPin}>
-                      <Popup>Your Location</Popup>
+                      <Popup>{t('actionCenter.yourLocation')}</Popup>
                     </Marker>
                   </MapContainer>
                 </div>
@@ -594,14 +596,14 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
               {loadingHospitals ? (
                 <div className="py-8 text-center space-y-2">
                   <Loader2 className="w-7 h-7 text-primary animate-spin mx-auto" />
-                  <p className="text-xs font-bold text-on-surface">Discovering Nearby Emergency Hospitals...</p>
-                  <p className="text-[11px] text-on-surface-variant">Searching facilities within 5 km radius</p>
+                  <p className="text-xs font-bold text-on-surface">{t('actionCenter.discoveringHospitals')}</p>
+                  <p className="text-[11px] text-on-surface-variant">{t('actionCenter.searchingRadius')}</p>
                 </div>
               ) : hospitals.length === 0 ? (
                 <div className="py-6 text-center space-y-2">
                   <HospitalIcon className="w-8 h-8 text-outline mx-auto" />
-                  <p className="text-xs font-bold text-on-surface">No hospitals found nearby.</p>
-                  <p className="text-[11px] text-on-surface-variant">Try enabling high-accuracy GPS or checking connection.</p>
+                  <p className="text-xs font-bold text-on-surface">{t('actionCenter.noHospitalsFound')}</p>
+                  <p className="text-[11px] text-on-surface-variant">{t('actionCenter.tryEnablingGps')}</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
@@ -639,7 +641,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                                 Calc...
                               </span>
                             ) : routeInfo!.failed ? (
-                              <span className="text-[11px] font-bold text-on-surface-variant">Route error</span>
+                              <span className="text-[11px] font-bold text-on-surface-variant">{t('actionCenter.routeError')}</span>
                             ) : (
                               <>
                                 <span className="text-xs font-extrabold text-primary block text-right">
@@ -661,7 +663,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                               className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-on-surface rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
                             >
                               <PhoneCall className="w-3.5 h-3.5" />
-                              <span>Call</span>
+                              <span>{t('actionCenter.call')}</span>
                             </a>
                           ) : (
                             <button
@@ -669,7 +671,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                               className="px-3 py-1.5 bg-surface-container-high/50 text-on-surface-variant/50 rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-not-allowed"
                             >
                               <PhoneCall className="w-3.5 h-3.5" />
-                              <span>Phone unavailable</span>
+                              <span>{t('actionCenter.phoneUnavailable')}</span>
                             </button>
                           )}
 
@@ -678,7 +680,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                             className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
                           >
                             <Navigation className="w-3.5 h-3.5" />
-                            <span>Navigate</span>
+                            <span>{t('actionCenter.navigate')}</span>
                           </button>
                         </div>
                       </div>
@@ -713,7 +715,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                   {/* User Location Marker */}
                   {userCoords && (
                     <Marker position={userCoords} icon={userGpsPin}>
-                      <Popup>Current Location</Popup>
+                      <Popup>{t('actionCenter.currentLocation')}</Popup>
                     </Marker>
                   )}
 
@@ -742,7 +744,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                       <HospitalIcon className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Destination</p>
+                      <p className="text-[10px] font-bold text-primary uppercase tracking-wider">{t('actionCenter.destination')}</p>
                       <h3 className="text-xs font-extrabold text-on-surface truncate">{selectedHospital.name}</h3>
                       <p className="text-[10px] text-on-surface-variant truncate">{selectedHospital.address}</p>
                     </div>
@@ -752,21 +754,21 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                 {/* Live Stats Grid */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="bg-surface-container-low p-2.5 rounded-xl">
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">Distance</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">{t('actionCenter.distance')}</p>
                     <p className="text-xs font-extrabold text-primary">
                       {formatDistance(routeDistanceMeters || selectedHospital.distanceMeters)}
                     </p>
                   </div>
 
                   <div className="bg-surface-container-low p-2.5 rounded-xl">
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">Live ETA</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">{t('actionCenter.liveEta')}</p>
                     <p className="text-xs font-extrabold text-secondary">
                       {loadingRoute ? '...' : formatETA(routeDurationSeconds || 300)}
                     </p>
                   </div>
 
                   <div className="bg-surface-container-low p-2.5 rounded-xl">
-                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">Arrival</p>
+                    <p className="text-[9px] font-bold text-on-surface-variant uppercase">{t('actionCenter.arrival')}</p>
                     <p className="text-xs font-extrabold text-emerald-700">
                       {getEstimatedArrivalTime(routeDurationSeconds)}
                     </p>
@@ -776,7 +778,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                 {/* Guidance Status */}
                 <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold rounded-xl flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0"></span>
-                  <span className="text-[11px]">Active In-App Live Navigation Route Guidance</span>
+                  <span className="text-[11px]">{t('actionCenter.activeNavigation')}</span>
                 </div>
 
                 {/* Cancel Navigation Button */}
@@ -785,7 +787,7 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                   className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1.5"
                 >
                   <X className="w-4 h-4" />
-                  <span>Cancel Navigation</span>
+                  <span>{t('actionCenter.cancelNavigation')}</span>
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, {  useEffect, useState, useRef  } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
   MapPin,
@@ -52,6 +53,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
   onBackToHospitalSelect,
   onLocationUpdate,
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [hospitalEnRoute, setHospitalEnRoute] = useState(false);
@@ -383,7 +385,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     return (
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none">
         <Loader2 className="w-9 h-9 text-emerald-400 animate-spin mb-3" />
-        <h3 className="text-sm font-black text-white">Acquiring Live Responder GPS Location...</h3>
+        <h3 className="text-sm font-black text-white">{t('nav.acquiringResponderLocation')}</h3>
         <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
           Connecting to device GPS positioning. Please ensure location services are enabled.
         </p>
@@ -405,7 +407,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
       {loadingRoute && (
         <div className="absolute top-24 left-1/2 -translate-x-1/2 z-[600] bg-slate-900/90 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg border border-slate-700/80 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-200">
           <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
-          <span>Calculating route...</span>
+          <span>{t('nav.calculatingRoute')}</span>
         </div>
       )}
 
@@ -458,7 +460,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             type="button"
             onClick={handleBackNavigation}
             className="min-w-[44px] min-h-[44px] rounded-2xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center shrink-0 transition-all active:scale-95 border border-slate-700 shadow-sm"
-            aria-label="Back"
+            aria-label={t('actionCenter.back')}
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
@@ -466,7 +468,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <div className="min-w-0 flex-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 block">
-                {destinationType === 'hospital' ? '🏥 Hospital Navigation' : '🚨 Live Scene Navigation'}
+                {destinationType === 'hospital' ? t('nav.hospitalNavigation') : t('nav.liveSceneNavigation')}
               </span>
               <h2 className="text-base font-black text-white truncate leading-tight">
                 {destinationName}
@@ -479,7 +481,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               </p>
               {destinationType === 'hospital' && (
                 <p className="text-[11px] text-emerald-300 font-bold flex items-center gap-1 mt-0.5">
-                  <span>☎ Phone:</span>
+                  <span>{t('nav.phone')}</span>
                   <span className="font-extrabold text-white">
                     {resolvedHospitalPhone || 'Unavailable'}
                   </span>
@@ -514,7 +516,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 if (isNavigationMode) handleUserDrag();
               }}
               className="w-11 h-11 hover:bg-slate-100 text-slate-900 font-black text-xl flex items-center justify-center transition-colors active:scale-95 border-b border-slate-100 shrink-0"
-              aria-label="Zoom in map"
+              aria-label={t('nav.zoomIn')}
             >
               +
             </button>
@@ -525,7 +527,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 if (isNavigationMode) handleUserDrag();
               }}
               className="w-11 h-11 hover:bg-slate-100 text-slate-900 font-black text-xl flex items-center justify-center transition-colors active:scale-95 shrink-0"
-              aria-label="Zoom out map"
+              aria-label={t('nav.zoomOut')}
             >
               −
             </button>
@@ -537,8 +539,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               type="button"
               onClick={handleRecenter}
               className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl border border-blue-600 flex items-center justify-center transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200 shrink-0"
-              aria-label="Re-center camera on volunteer"
-              title="Re-center camera on volunteer"
+              aria-label={t('nav.recenter')}
+              title={t('nav.recenter')}
             >
               <LocateFixed className="w-5 h-5 text-white stroke-[2.5]" />
             </button>
@@ -557,7 +559,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               if (nextMode) {
                 setIsFollowing(true);
               }
-              setToastMessage(nextMode ? 'Navigation Mode ON' : 'Navigation Mode OFF');
+              setToastMessage(nextMode ? t('nav.modeOn') : t('nav.modeOff'));
               setTimeout(() => setToastMessage(null), 2000);
             }}
             className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 border shrink-0 ${
@@ -614,7 +616,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-                <span>TRANSPORTING<br />TO HOSPITAL</span>
+                <span>{t('emergencyStatus.transporting')}<br />{t('emergencyStatus.toHospital')}</span>
               </span>
             </div>
 
@@ -642,7 +644,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
-                <span>Call Ambulance</span>
+                <span>{t('emergencyStatus.callAmbulance')}</span>
               </a>
               <button
                 type="button"
@@ -650,7 +652,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5 shrink-0 stroke-2" />
-                <span>Call Hospital</span>
+                <span>{t('emergencyStatus.callHospital')}</span>
               </button>
             </div>
 
@@ -675,7 +677,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-blue-600 p-2"
                 >
                   <Ambulance className="w-5 h-5 text-white stroke-[2.5]" />
-                  <span className="text-center leading-tight">En Route<br />to Hospital</span>
+                  <span className="text-center leading-tight">{t('emergencyStatus.enRoute')}<br />{t('emergencyStatus.toHospital')}</span>
                 </button>
               ) : (
                 <button
@@ -686,7 +688,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                   className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-slate-900 p-2"
                 >
                   <HospitalIcon className="w-5 h-5 text-white stroke-[2.5]" />
-                  <span className="text-center leading-tight">Reached<br />Hospital</span>
+                  <span className="text-center leading-tight">{t('emergencyStatus.reached')}<br />{t('emergencyStatus.reached')}</span>
                 </button>
               )}
             </div>
@@ -728,7 +730,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
-                <span>Call Ambulance</span>
+                <span>{t('emergencyStatus.callAmbulance')}</span>
               </a>
             </div>
 
@@ -742,7 +744,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-slate-900 p-2"
               >
                 <CheckCircle2 className="w-5 h-5 text-white stroke-[2.5]" />
-                <span className="text-center leading-tight">Reached<br />Accident</span>
+                <span className="text-center leading-tight">{t('emergencyStatus.reached')}<br />{t('emergencyStatus.accident')}</span>
               </button>
             </div>
           </div>

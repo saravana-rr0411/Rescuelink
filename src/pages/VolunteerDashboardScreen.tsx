@@ -320,8 +320,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
     const diffHours = Math.floor(diffMins / 60);
 
     if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? t('common.min') : t('common.mins')} ago`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? t('common.hour') : t('common.hours')} ago`;
 
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -550,10 +550,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
           <button
             onClick={() => navigate('/volunteer/history')}
             className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-full border border-outline-variant/60 shadow-xs transition-all active:scale-95 flex items-center gap-1.5"
-            aria-label="View Volunteer History"
+            aria-label={t('volunteerDashboard.history.viewHistory')}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>{t('volunteerDashboard.history')}</span>
+            <span>{t('volunteerDashboard.history.title')}</span>
           </button>
         }
       />
@@ -782,7 +782,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   {/* Scene Photo Preview if present */}
                   {mission.photo_url && (
                     <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-32">
-                      <img src={mission.photo_url} alt="Scene Evidence" loading="lazy" decoding="async" className="w-full h-28 object-cover" />
+                      <img src={mission.photo_url} alt={t('volunteerDashboard.history.sceneEvidence')} loading="lazy" decoding="async" className="w-full h-28 object-cover" />
                     </div>
                   )}
 
@@ -929,7 +929,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           {t('volunteerDashboard.incidentScenePhoto')}
                         </span>
                         <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-40">
-                          <img src={inc.photo_url} alt="Accident Evidence" loading="lazy" decoding="async" className="w-full h-36 object-cover" />
+                          <img src={inc.photo_url} alt={t('volunteerDashboard.history.accidentEvidence')} loading="lazy" decoding="async" className="w-full h-36 object-cover" />
                         </div>
                       </div>
                     )}

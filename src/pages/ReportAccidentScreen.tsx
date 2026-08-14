@@ -74,7 +74,7 @@ export const ReportAccidentScreen: React.FC = () => {
           } catch (err) {
             console.warn('Reverse geocoding error:', err);
           }
-          setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+          setAddress(t('common.map.gpsLocation', { lat: lat.toFixed(5), lng: lng.toFixed(5) }));
         },
         (err) => {
           console.warn('Geolocation access declined or unavailable:', err.message);
@@ -391,7 +391,7 @@ export const ReportAccidentScreen: React.FC = () => {
                     } catch (err) {
                       console.warn('Reverse geocoding error:', err);
                     }
-                    setAddress(`GPS Location (${lat.toFixed(5)}, ${lng.toFixed(5)})`);
+                    setAddress(t('common.map.gpsLocation', { lat: lat.toFixed(5), lng: lng.toFixed(5) }));
                   }}
                   className="w-full h-full"
                 />
@@ -460,12 +460,12 @@ export const ReportAccidentScreen: React.FC = () => {
             {/* Selected Image Thumbnail Preview */}
             {previewUrl && (
               <div className="relative rounded-xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-40 flex items-center justify-center">
-                <img src={previewUrl} alt="Incident Scene Preview" className="w-full h-36 object-cover" />
+                <img src={previewUrl} alt={t('reportAccident.scenePreview')} className="w-full h-36 object-cover" />
                 <button
                   type="button"
                   onClick={handleRemoveImage}
                   className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"
-                  aria-label="Remove image"
+                  aria-label={t('reportAccident.removeImage')}
                 >
                   <X className="w-4 h-4" />
                 </button>

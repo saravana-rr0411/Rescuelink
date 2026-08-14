@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, Navigation, Clock, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,7 @@ export interface AccidentRecord {
 }
 
 export const VolunteerMapPreviewScreen: React.FC = () => {
+  const { t } = useTranslation();
   const { accidentId } = useParams<{ accidentId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -221,7 +223,7 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-slate-50 text-slate-700">
         <Loader2 className="w-8 h-8 text-red-700 animate-spin mb-3" />
-        <p className="text-sm font-bold">Loading Accident Map Preview...</p>
+        <p className="text-sm font-bold">{t('volunteerDashboard.mapPreview.loadingPreview')}</p>
       </div>
     );
   }
@@ -230,8 +232,8 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
     return (
       <div className="w-full h-full flex flex-col items-center justify-center p-6 bg-slate-50 text-center">
         <AlertCircle className="w-12 h-12 text-amber-600 mb-3" />
-        <h2 className="text-base font-black text-slate-900">Incident Not Found</h2>
-        <p className="text-xs text-slate-500 mt-1 mb-4">This accident alert may have been resolved or canceled.</p>
+        <h2 className="text-base font-black text-slate-900">{t('volunteerDashboard.mapPreview.incidentNotFound')}</h2>
+        <p className="text-xs text-slate-500 mt-1 mb-4">{t('volunteerDashboard.mapPreview.alertResolved')}</p>
         <button
           onClick={() => navigate('/volunteer')}
           className="px-5 py-2.5 bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md"
@@ -279,7 +281,7 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
             type="button"
             onClick={() => navigate('/volunteer')}
             className="min-w-[44px] min-h-[44px] rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 flex items-center justify-center shrink-0 transition-all active:scale-95 shadow-xs"
-            aria-label="Back to dashboard"
+            aria-label={t('volunteerDashboard.mapPreview.backToDashboard')}
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
@@ -306,7 +308,7 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
         <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs font-extrabold text-slate-700">
           <div className="flex items-center gap-1.5 text-emerald-700">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Route Preview Available</span>
+            <span>{t('volunteerDashboard.mapPreview.routePreview')}</span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -363,12 +365,12 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
             {isAccepting ? (
               <>
                 <Loader2 className="w-4.5 h-4.5 animate-spin" />
-                <span>Accepting Mission...</span>
+                <span>{t('volunteerDashboard.mapPreview.acceptingMission')}</span>
               </>
             ) : (
               <>
                 <Navigation className="w-4.5 h-4.5" />
-                <span>ACCEPT ACCIDENT MISSION</span>
+                <span>{t('volunteerDashboard.mapPreview.acceptMissionConfirm')}</span>
               </>
             )}
           </button>

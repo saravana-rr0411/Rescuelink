@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   PhoneCall,
   Droplets,
@@ -23,6 +24,7 @@ export const WhileHelpIsOnTheWayGuide: React.FC<WhileHelpIsOnTheWayGuideProps> =
   status,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   // Dynamic status text based on realtime accident status
@@ -33,16 +35,16 @@ export const WhileHelpIsOnTheWayGuide: React.FC<WhileHelpIsOnTheWayGuideProps> =
       return 'Responder Assigned – Preparing for Dispatch';
     }
     if (s === 'Volunteer En Route' || s === 'En Route') {
-      return 'Responder is En Route to Your Location';
+      return t('emergency.responderEnRoute');
     }
     if (s === 'Volunteer Arrived' || s === 'Arrived at Scene') {
-      return 'Responder Has Arrived on Scene';
+      return t('emergency.responderArrivedOnScene');
     }
     if (s === 'Transporting to Hospital' || s === 'Hospital Transfer') {
       return 'Transporting to Emergency Hospital';
     }
     if (s === 'Hospital Reached') {
-      return 'Safely Arrived at Hospital';
+      return t('emergency.safelyArrivedAtHospital');
     }
     if (s === 'Emergency Resolved' || s === 'Emergency Completed' || s === 'Completed') {
       return 'Emergency Handled & Resolved';
@@ -114,7 +116,7 @@ export const WhileHelpIsOnTheWayGuide: React.FC<WhileHelpIsOnTheWayGuideProps> =
 
         <span className="text-[10px] font-extrabold bg-rose-500/20 border border-rose-400/40 text-rose-200 px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1.5">
           <Radio className="w-3 h-3 text-rose-400 animate-pulse" />
-          <span>GOLDEN HOUR</span>
+          <span>{t('emergency.goldenHour')}</span>
         </span>
       </div>
 
@@ -137,7 +139,7 @@ export const WhileHelpIsOnTheWayGuide: React.FC<WhileHelpIsOnTheWayGuideProps> =
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 rounded-2xl bg-surface-container-high hover:bg-surface-container-highest text-on-surface transition-colors shrink-0 flex items-center gap-1 text-xs font-bold"
-            aria-label={isExpanded ? 'Collapse Golden Hour Guide' : 'Expand Golden Hour Guide'}
+            aria-label={isExpanded ? t('emergency.collapseGuide') : t('emergency.expandGuide')}
           >
             <span className="hidden sm:inline">{isExpanded ? 'Collapse' : 'Expand'}</span>
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -194,7 +196,7 @@ export const WhileHelpIsOnTheWayGuide: React.FC<WhileHelpIsOnTheWayGuideProps> =
           <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-[11px] text-amber-900 font-medium flex items-start gap-2">
             <LifeBuoy className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <strong>Emergency Guidance Notice:</strong> These steps provide immediate bystander guidance. Always prioritize calling trained emergency services (108/112) and avoid performing risky medical procedures.
+              <strong>{t('emergency.guidanceNotice')}</strong> These steps provide immediate bystander guidance. Always prioritize calling trained emergency services (108/112) and avoid performing risky medical procedures.
             </p>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ShieldAlert } from 'lucide-react';
@@ -8,6 +9,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { t } = useTranslation();
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -17,7 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <div className="w-12 h-12 rounded-full bg-primary/20 text-primary flex items-center justify-center animate-spin">
           <ShieldAlert className="w-6 h-6" />
         </div>
-        <p className="text-xs font-bold text-on-surface-variant">Verifying RescueLink Authentication...</p>
+        <p className="text-xs font-bold text-on-surface-variant">{t('auth.verifyingAuth')}</p>
       </div>
     );
   }

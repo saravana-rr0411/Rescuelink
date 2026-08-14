@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { supabase } from '../lib/supabase';
@@ -39,6 +40,7 @@ interface AccidentDetailsRecord {
 }
 
 export const HistoryDetailsScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -112,32 +114,32 @@ export const HistoryDetailsScreen: React.FC = () => {
 
   const timelineSteps = [
     {
-      title: 'Accident Reported',
+      title: t('history.timeline.accidentReported'),
       timestamp: accident?.created_at,
       icon: AlertCircle,
     },
     {
-      title: 'Volunteer Accepted',
+      title: t('history.timeline.volunteerAccepted'),
       timestamp: accident?.accepted_at,
       icon: UserCheck,
     },
     {
-      title: 'Volunteer Arrived',
+      title: t('history.timeline.volunteerArrived'),
       timestamp: accident?.arrived_at,
       icon: MapPin,
     },
     {
-      title: 'Transport Started',
+      title: t('history.timeline.transportStarted'),
       timestamp: accident?.transported_at,
       icon: HospitalIcon,
     },
     {
-      title: 'Hospital Reached',
+      title: t('history.timeline.hospitalReached'),
       timestamp: accident?.hospital_reached_at,
       icon: CheckCircle2,
     },
     {
-      title: 'Completed',
+      title: t('history.timeline.completed'),
       timestamp: accident?.completed_at,
       icon: ShieldCheck,
     },
@@ -145,7 +147,7 @@ export const HistoryDetailsScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full bg-surface">
-      <Navbar title="Accident History Details" showBack />
+      <Navbar title={t('profile.historyDetails.detailsTitle')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
         {errorMessage && (
@@ -159,7 +161,7 @@ export const HistoryDetailsScreen: React.FC = () => {
               className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 transition-colors"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>Retry</span>
+              <span>{t('profile.history.retry')}</span>
             </button>
           </div>
         )}
@@ -172,7 +174,7 @@ export const HistoryDetailsScreen: React.FC = () => {
         ) : !accident ? (
           <EmptyState
             icon={FileText}
-            title="Record Not Found"
+            title={t('profile.historyDetails.recordNotFound')}
             description="The requested accident history record could not be loaded or was removed."
             actionText="Go Back"
             onAction={() => navigate(-1)}
@@ -240,7 +242,7 @@ export const HistoryDetailsScreen: React.FC = () => {
             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
               <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                 <UserCheck className="w-4 h-4 text-secondary" />
-                <span>Volunteer Responder Details</span>
+                <span>{t('profile.historyDetails.volunteerDetails')}</span>
               </h3>
 
               {accident.volunteer_id ? (
@@ -257,7 +259,7 @@ export const HistoryDetailsScreen: React.FC = () => {
                     <a
                       href={`tel:${volunteerProfile.phone_number}`}
                       className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs hover:bg-emerald-700 transition-colors"
-                      aria-label="Call Volunteer"
+                      aria-label={t('emergencyStatus.callVolunteer')}
                     >
                       <PhoneCall className="w-4 h-4" />
                     </a>
@@ -274,7 +276,7 @@ export const HistoryDetailsScreen: React.FC = () => {
             <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
               <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                 <HospitalIcon className="w-4 h-4 text-tertiary" />
-                <span>Hospital Destination Details</span>
+                <span>{t('profile.historyDetails.hospitalDetails')}</span>
               </h3>
 
               {storedHosp ? (
@@ -303,7 +305,7 @@ export const HistoryDetailsScreen: React.FC = () => {
             <div className="bg-surface-container-lowest p-5 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-4">
               <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                 <Clock className="w-4 h-4 text-primary" />
-                <span>Incident Response Timeline</span>
+                <span>{t('profile.historyDetails.timeline')}</span>
               </h3>
 
               <div className="space-y-4 pt-1">
