@@ -203,7 +203,7 @@ export const HomeScreen: React.FC = () => {
         {/* SOS Central Trigger */}
         <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/40 shadow-level-1 text-center">
           <h2 className="text-base font-bold text-on-surface mb-1">In an Immediate Emergency?</h2>
-          <p className="text-xs text-on-surface-variant mb-2">Tap below for automatic GPS dispatch & audio SOS</p>
+          <p className="text-xs text-on-surface-variant mb-2">Tap SOS for immediate emergency response.</p>
           <SOSButton onTrigger={() => navigate('/emergency')} />
         </div>
 
