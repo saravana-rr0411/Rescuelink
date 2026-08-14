@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { ProfileProvider } from './context/ProfileContext';
@@ -44,7 +44,7 @@ const AppContent: React.FC = () => {
   return (
     <>
       {!splashFinished && <SplashScreen onComplete={() => setSplashFinished(true)} />}
-      <MobileContainer>
+      <MobileContainer className={!splashFinished ? 'hidden' : ''}>
         <Suspense fallback={<SpinnerLoader message="Loading RescueLink..." />}>
         <Routes>
           {/* Public Auth Routes */}
@@ -72,6 +72,7 @@ const AppContent: React.FC = () => {
           <Route path="/navigation/*" element={<ProtectedRoute><LiveNavigationScreen /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfileScreen /></ProtectedRoute>} />
           <Route path="/google-map-test" element={<GoogleMapTest />} />
+        </Routes>
         </Routes>
       </Suspense>
       {!hideBottomNav && <BottomNavigation />}
