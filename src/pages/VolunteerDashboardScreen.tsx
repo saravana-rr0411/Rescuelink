@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 
-import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, Ambulance, PhoneCall, Maximize2, CheckSquare } from 'lucide-react';
+import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, Ambulance, PhoneCall, CheckSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import { supabase } from '../lib/supabase';
@@ -941,15 +941,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           <span>Already accepted by another volunteer.</span>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-2 gap-2 pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/volunteer/preview/${inc.id}`, { state: { incident: inc } })}
-                            className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 flex items-center justify-center gap-1.5 transition-all active:scale-95"
-                          >
-                            <Maximize2 className="w-3.5 h-3.5 text-slate-600" />
-                            <span>Open Map</span>
-                          </button>
+                        <div className="pt-0.5">
 
                           <button
                             type="button"
