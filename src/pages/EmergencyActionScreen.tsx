@@ -238,6 +238,7 @@ export const EmergencyActionScreen: React.FC = () => {
           destinationType="hospital"
           initialUserCoords={userCoords}
           navigationStatus="Navigating to Hospital"
+          onBackToHospitalSelect={() => setViewMode('hospitals')}
         />
       </div>
     );
