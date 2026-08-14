@@ -3,6 +3,8 @@ import type { Hospital } from '../../utils/routing';
 import { fetchNearbyHospitalsOverpass, formatETA, fetchOSRMRoute } from '../../utils/routing';
 import { formatDistance } from '../../utils/distance';
 import { fetchGoogleRoute } from '../../services/googleRoutes';
+import { useNetworkSync } from '../../hooks/useNetworkSync';
+import { calculateHaversineDistance } from '../../utils/offlineDistance';
 import { Hospital as HospitalIcon, MapPin, Clock, X, Navigation, ShieldCheck, Star, Loader2 } from 'lucide-react';
 
 import { SpinnerLoader, EmptyState, HospitalSkeleton } from './SkeletonLoader';
@@ -36,6 +38,8 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
+  const { isOnline } = useNetworkSync();
+
   // Map of hospitalId → RouteInfo. undefined = still calculating, null entry = not yet started.
   const [routeMap, setRouteMap] = useState<Record<string, RouteInfo>>({});
   const routeFetchedRef = useRef<Set<string>>(new Set());
@@ -50,9 +54,29 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
 
     async function loadHospitals() {
       setLoading(true);
+
+      if (!isOnline) {
+        const cached = localStorage.getItem('rescuelink_cached_hospitals');
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            if (isMounted) setHospitals(parsed);
+          } catch (e) {
+            if (isMounted) setHospitals([]);
+          }
+        } else {
+          if (isMounted) setHospitals([]);
+        }
+        if (isMounted) setLoading(false);
+        return;
+      }
+
       const list = await fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude);
       if (!isMounted) return;
       setHospitals(list);
+      if (list.length > 0) {
+        localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
+      }
       setLoading(false);
     }
 
@@ -70,6 +94,21 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
 
     let isMounted = true;
     const [vLat, vLng] = volunteerPosition;
+
+    if (!isOnline) {
+      hospitals.forEach((hosp) => {
+        const dist = calculateHaversineDistance(vLat, vLng, hosp.latitude, hosp.longitude);
+        setRouteMap((prev) => ({
+          ...prev,
+          [hosp.id]: {
+            distanceMeters: dist,
+            durationSeconds: -1,
+            failed: false,
+          }
+        }));
+      });
+      return;
+    }
 
     hospitals.forEach(async (hosp) => {
       if (routeFetchedRef.current.has(hosp.id)) return;
@@ -134,8 +173,6 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
     };
   }, [isOpen, hospitals, volunteerPosition]);
 
-  if (!isOpen) return null;
-
   const sortedHospitals = useMemo(() => {
     return [...hospitals].sort((a, b) => {
       const routeA = routeMap[a.id];
@@ -152,6 +189,8 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
       return distA - distB;
     });
   }, [hospitals, routeMap]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center pointer-events-none p-0">
@@ -271,10 +310,17 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                           <span className="text-sm font-extrabold text-red-800 block">
                             {formatDistance(routeInfo!.distanceMeters)}
                           </span>
-                          <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            {formatETA(routeInfo!.durationSeconds)}
-                          </span>
+                          {routeInfo!.durationSeconds === -1 ? (
+                            <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
+                              <Clock className="w-3 h-3 text-slate-400 opacity-50" />
+                              Straight-line
+                            </span>
+                          ) : (
+                            <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
+                              <Clock className="w-3 h-3 text-slate-400" />
+                              {formatETA(routeInfo!.durationSeconds)}
+                            </span>
+                          )}
                         </>
                       )}
                     </div>
