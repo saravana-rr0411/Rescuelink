@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -24,6 +24,13 @@ import {
 import type { Hospital as HospitalType } from '../../utils/routing';
 import { fetchNearbyHospitalsOverpass, fetchOSRMRoute, formatETA } from '../../utils/routing';
 import { formatDistance } from '../../utils/distance';
+import { fetchGoogleRoute } from '../../services/googleRoutes';
+
+interface RouteInfo {
+  distanceMeters: number;
+  durationSeconds: number;
+  failed: boolean;
+}
 import 'leaflet/dist/leaflet.css';
 
 // Leaflet default marker icons fix for bundlers
@@ -111,6 +118,73 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
   const [loadingHospitals, setLoadingHospitals] = useState(false);
   const [selectedHospital, setSelectedHospital] = useState<HospitalType | null>(null);
 
+  // Route state (matching Volunteer Hospital Selector)
+  const [routeMap, setRouteMap] = useState<Record<string, RouteInfo>>({});
+  const routeFetchedRef = useRef<Set<string>>(new Set());
+
+  // Calculate routes whenever hospitals or userLocation changes
+  useEffect(() => {
+    if (viewMode !== 'hospitals' || hospitals.length === 0 || !userLocation) return;
+
+    let isMounted = true;
+    const { lat, lng } = userLocation;
+
+    hospitals.forEach(async (hosp) => {
+      if (routeFetchedRef.current.has(hosp.id)) return;
+      routeFetchedRef.current.add(hosp.id);
+
+      const googleRes = await fetchGoogleRoute(
+        { lat, lng },
+        { lat: hosp.latitude, lng: hosp.longitude }
+      );
+
+      if (!isMounted) return;
+
+      if (!googleRes.error && googleRes.distanceMeters > 0) {
+        setRouteMap((prev) => ({
+          ...prev,
+          [hosp.id]: {
+            distanceMeters: googleRes.distanceMeters,
+            durationSeconds: googleRes.durationSeconds,
+            failed: false,
+          }
+        }));
+        return;
+      }
+
+      try {
+        const osrmRes = await fetchOSRMRoute(
+          [lat, lng],
+          [hosp.latitude, hosp.longitude]
+        );
+        if (!isMounted) return;
+        if (osrmRes.distanceMeters > 0) {
+          setRouteMap((prev) => ({
+            ...prev,
+            [hosp.id]: {
+              distanceMeters: osrmRes.distanceMeters,
+              durationSeconds: osrmRes.durationSeconds,
+              failed: false,
+            }
+          }));
+          return;
+        }
+      } catch {
+        // fall through
+      }
+
+      if (!isMounted) return;
+      setRouteMap((prev) => ({
+        ...prev,
+        [hosp.id]: { distanceMeters: 0, durationSeconds: 0, failed: true }
+      }));
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [viewMode, hospitals, userLocation]);
+
   // Navigation state
   const [routePolyline, setRoutePolyline] = useState<[number, number][]>([]);
   const [routeDistanceMeters, setRouteDistanceMeters] = useState<number>(0);
@@ -149,6 +223,10 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
 
   // Open Nearby Hospitals list
   const handleOpenHospitals = () => {
+    // Reset route mapping state before opening
+    routeFetchedRef.current = new Set();
+    setRouteMap({});
+
     if (userLocation) {
       setViewMode('hospitals');
       fetchHospitals(userLocation.lat, userLocation.lng);
@@ -528,7 +606,8 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
               ) : (
                 <div className="space-y-2.5">
                   {hospitals.map((hosp) => {
-                    const estimatedSeconds = (hosp.distanceMeters / 1000 / 40) * 3600;
+                    const routeInfo = routeMap[hosp.id];
+                    const isCalculating = routeInfo === undefined;
                     return (
                       <div
                         key={hosp.id}
@@ -546,21 +625,32 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
                                 ER Ready
                               </span>
                             </div>
-                            <h3 className="text-xs font-extrabold text-on-surface truncate">{hosp.name}</h3>
-                            <p className="text-[11px] text-on-surface-variant flex items-center gap-1 font-medium truncate">
-                              <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
-                              <span className="truncate">{hosp.address}</span>
+                            <h3 className="text-xs font-extrabold text-on-surface">{hosp.name}</h3>
+                            <p className="text-[11px] text-on-surface-variant flex items-start gap-1 font-medium">
+                              <MapPin className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                              <span className="break-words">{hosp.address}</span>
                             </p>
                           </div>
 
-                          <div className="text-right shrink-0">
-                            <span className="text-xs font-extrabold text-primary block">
-                              {formatDistance(hosp.distanceMeters)}
-                            </span>
-                            <span className="text-[10px] font-semibold text-on-surface-variant flex items-center justify-end gap-1">
-                              <Clock className="w-3 h-3" />
-                              {formatETA(estimatedSeconds)}
-                            </span>
+                          <div className="text-right shrink-0 min-w-[80px]">
+                            {isCalculating ? (
+                              <span className="text-[11px] font-bold text-on-surface-variant flex items-center justify-end gap-1">
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                Calc...
+                              </span>
+                            ) : routeInfo!.failed ? (
+                              <span className="text-[11px] font-bold text-on-surface-variant">Route error</span>
+                            ) : (
+                              <>
+                                <span className="text-xs font-extrabold text-primary block text-right">
+                                  {formatDistance(routeInfo!.distanceMeters)}
+                                </span>
+                                <span className="text-[10px] font-semibold text-on-surface-variant flex items-center justify-end gap-1 mt-0.5">
+                                  <Clock className="w-3 h-3" />
+                                  {formatETA(routeInfo!.durationSeconds)}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 
