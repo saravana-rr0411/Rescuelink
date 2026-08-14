@@ -14,7 +14,6 @@ import {
   Star,
   Navigation,
   Loader2,
-  ShieldCheck,
 } from 'lucide-react';
 import type { Hospital } from '../utils/routing';
 import { fetchNearbyHospitalsOverpass } from '../utils/routing';
@@ -45,12 +44,9 @@ export const EmergencyActionScreen: React.FC = () => {
         },
         (err) => {
           console.warn('[Emergency Action Screen] GPS permission denied:', err.message);
-          setUserLocation({ lat: 12.9716, lng: 77.5946 });
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
-    } else {
-      setUserLocation({ lat: 12.9716, lng: 77.5946 });
     }
   }, []);
 
@@ -59,17 +55,50 @@ export const EmergencyActionScreen: React.FC = () => {
   };
 
   const handleOpenHospitals = async () => {
-    setViewMode('hospitals');
-    const coords = userLocation || { lat: 12.9716, lng: 77.5946 };
-    setLoadingHospitals(true);
-    try {
-      const list = await fetchNearbyHospitalsOverpass(coords.lat, coords.lng);
-      setHospitals(list);
-    } catch (err) {
-      console.error('[Emergency Action Screen] Error loading hospitals:', err);
-    } finally {
-      setLoadingHospitals(false);
+    if (userLocation) {
+      setViewMode('hospitals');
+      setLoadingHospitals(true);
+      try {
+        const list = await fetchNearbyHospitalsOverpass(userLocation.lat, userLocation.lng);
+        setHospitals(list);
+      } catch (err) {
+        console.error('[Emergency Action Screen] Error loading hospitals:', err);
+      } finally {
+        setLoadingHospitals(false);
+      }
+      return;
     }
+
+    if (!('geolocation' in navigator)) {
+      setToastMessage('Unable to get your current location. Please enable location access to find nearby hospitals.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
+
+    setToastMessage('Acquiring fresh GPS location...');
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const freshCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(freshCoords);
+        setViewMode('hospitals');
+        setLoadingHospitals(true);
+        try {
+          const list = await fetchNearbyHospitalsOverpass(freshCoords.lat, freshCoords.lng);
+          setHospitals(list);
+        } catch (err) {
+          console.error('[Emergency Action Screen] Error loading hospitals:', err);
+        } finally {
+          setLoadingHospitals(false);
+        }
+        setToastMessage(null);
+      },
+      (err) => {
+        console.warn('[Emergency Action Screen] Fresh GPS request failed:', err.message);
+        setToastMessage('Unable to get your current location. Please enable location access to find nearby hospitals.');
+        setTimeout(() => setToastMessage(null), 3000);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const handleStartNavigation = (hospital: Hospital) => {
@@ -317,17 +346,7 @@ export const EmergencyActionScreen: React.FC = () => {
         {/* ========================================================================= */}
         {viewMode === 'hospitals' && (
           <div className="space-y-3">
-            <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                <span className="text-xs font-bold text-emerald-900">
-                  Live Overpass OpenStreetMap Emergency Query
-                </span>
-              </div>
-              <span className="text-[10px] font-extrabold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">
-                {hospitals.length} Found
-              </span>
-            </div>
+
 
             {loadingHospitals ? (
               <div className="py-16 text-center space-y-3">

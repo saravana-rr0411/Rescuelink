@@ -126,8 +126,6 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
         },
         (err) => {
           console.warn('[Emergency Action Center] GPS permission denied:', err.message);
-          // Fallback to default coordinates if GPS unavailable
-          setUserLocation({ lat: 12.9716, lng: 77.5946 });
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -151,9 +149,30 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
 
   // Open Nearby Hospitals list
   const handleOpenHospitals = () => {
-    setViewMode('hospitals');
-    const coords = userLocation || { lat: 12.9716, lng: 77.5946 };
-    fetchHospitals(coords.lat, coords.lng);
+    if (userLocation) {
+      setViewMode('hospitals');
+      fetchHospitals(userLocation.lat, userLocation.lng);
+      return;
+    }
+
+    if (!('geolocation' in navigator)) {
+      alert('Unable to get your current location. Please enable location access to find nearby hospitals.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const freshCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(freshCoords);
+        setViewMode('hospitals');
+        fetchHospitals(freshCoords.lat, freshCoords.lng);
+      },
+      (err) => {
+        console.warn('[Emergency Action Center] Fresh GPS request failed:', err.message);
+        alert('Unable to get your current location. Please enable location access to find nearby hospitals.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const fetchHospitals = async (lat: number, lng: number) => {
