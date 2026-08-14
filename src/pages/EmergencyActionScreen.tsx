@@ -23,6 +23,7 @@ import { fetchGoogleRoute } from '../services/googleRoutes';
 import { GoogleMapsNavigationMode } from '../components/common/GoogleMapsNavigationMode';
 import { useNetworkSync } from '../hooks/useNetworkSync';
 import { calculateHaversineDistance, calculateBearing } from '../utils/offlineDistance';
+import { useTranslation } from 'react-i18next';
 
 interface RouteInfo {
   distanceMeters: number;
@@ -33,6 +34,7 @@ interface RouteInfo {
 export const EmergencyActionScreen: React.FC = () => {
   const navigate = useNavigate();
   const { isOnline } = useNetworkSync();
+  const { t } = useTranslation();
 
   // Mode: 'actions' | 'hospitals' | 'navigation'
   const [viewMode, setViewMode] = useState<'actions' | 'hospitals' | 'navigation'>('actions');
@@ -210,7 +212,7 @@ export const EmergencyActionScreen: React.FC = () => {
 
   const handleStartNavigation = (hospital: Hospital) => {
     if (!isOnline) {
-      setToastMessage('Navigation requires an internet connection.');
+      setToastMessage(t('emergency.navigationRequiresInternet'));
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -298,7 +300,7 @@ export const EmergencyActionScreen: React.FC = () => {
           destinationCoords={[selectedHospital.latitude, selectedHospital.longitude]}
           destinationType="hospital"
           initialUserCoords={userCoords}
-          navigationStatus="Navigating to Hospital"
+          navigationStatus={t('emergency.navigatingToHospital')}
           onArrival={() => {
             setSelectedHospital(null);
             setViewMode('actions');
@@ -331,13 +333,13 @@ export const EmergencyActionScreen: React.FC = () => {
           <div>
             <h1 className="text-base font-bold text-on-surface leading-tight">
               {viewMode === 'actions'
-                ? 'SOS Emergency Services'
-                : 'Nearby Hospitals & Trauma Centers'}
+                ? t('emergency.sosServices')
+                : t('emergency.nearbyHospitals')}
             </h1>
             <p className="text-xs text-on-surface-variant">
               {viewMode === 'actions'
-                ? 'Direct 24/7 Dispatch Hotline'
-                : 'Realtime OpenStreetMap Emergency Directory'}
+                ? t('emergency.dispatchHotline')
+                : t('emergency.osmDirectory')}
             </p>
           </div>
         </div>
@@ -370,11 +372,11 @@ export const EmergencyActionScreen: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                      Toll Free • National Emergency
+                      {t('emergency.tollFreeNational')}
                     </span>
-                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">Call Ambulance</h2>
+                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">{t('emergency.callAmbulance')}</h2>
                     <p className="text-xs text-slate-500 font-medium">
-                      24/7 Medical & Casualty Response
+                      {t('emergency.medicalCasualty')}
                     </p>
                   </div>
                 </div>
@@ -394,10 +396,10 @@ export const EmergencyActionScreen: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
-                      Law Enforcement Dispatch
+                      {t('emergency.lawEnforcement')}
                     </span>
-                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">Call Police</h2>
-                    <p className="text-xs text-slate-500 font-medium">Traffic & Crime Helpline</p>
+                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">{t('emergency.callPolice')}</h2>
+                    <p className="text-xs text-slate-500 font-medium">{t('emergency.trafficCrime')}</p>
                   </div>
                 </div>
                 <div className="w-12 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
@@ -418,11 +420,11 @@ export const EmergencyActionScreen: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center justify-between">
-                    <span>Nearby Hospitals</span>
+                    <span>{t('emergency.nearbyHospitalsBtn')}</span>
                     <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Live GPS distance & map navigation
+                    {t('emergency.liveGpsNav')}
                   </p>
                 </div>
               </button>
@@ -437,11 +439,11 @@ export const EmergencyActionScreen: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center justify-between">
-                    <span>Share Location</span>
+                    <span>{t('emergency.shareLocation')}</span>
                     <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Send exact GPS coordinates to contacts
+                    {t('emergency.sendGpsCoords')}
                   </p>
                 </div>
               </button>
@@ -456,11 +458,11 @@ export const EmergencyActionScreen: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center justify-between">
-                    <span>First Aid Guides</span>
+                    <span>{t('emergency.firstAidGuides')}</span>
                     <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Step-by-step CPR & trauma procedures
+                    {t('emergency.cprTrauma')}
                   </p>
                 </div>
               </button>
@@ -475,11 +477,11 @@ export const EmergencyActionScreen: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xs font-bold text-on-surface flex items-center justify-between">
-                    <span>Fire Brigade (101)</span>
+                    <span>{t('emergency.fireBrigade')}</span>
                     <ChevronRight className="w-4 h-4 text-on-surface-variant group-hover:translate-x-0.5 transition-transform" />
                   </h3>
                   <p className="text-[11px] text-on-surface-variant mt-0.5">
-                    Fire & rescue emergency hotline
+                    {t('emergency.fireRescue')}
                   </p>
                 </div>
               </button>
@@ -494,17 +496,17 @@ export const EmergencyActionScreen: React.FC = () => {
           <div className="space-y-3">
             {!isOnline && hospitals.length > 0 && (
               <div className="bg-amber-100 text-amber-900 px-4 py-2 text-xs font-bold rounded-lg border border-amber-200 animate-fade-in">
-                Offline — Showing previously loaded hospitals
+                {t('emergency.offlineHospitals')}
               </div>
             )}
             {!isOnline && hospitals.length === 0 && (
               <div className="bg-amber-100 text-amber-900 px-4 py-3 text-xs font-bold rounded-lg border border-amber-200 text-center animate-fade-in">
-                No hospital information is available offline. Connect to the internet to search for nearby hospitals.
+                {t('emergency.noHospitalsOffline')}
               </div>
             )}
             {!userLocation && !loadingHospitals && hospitals.length > 0 && (
               <div className="bg-slate-100 text-slate-700 px-4 py-2 text-xs font-medium rounded-lg border border-slate-200 text-center animate-fade-in">
-                Location unavailable. Distance and navigation features are disabled.
+                {t('emergency.locationUnavailable')}
               </div>
             )}
 
@@ -512,14 +514,14 @@ export const EmergencyActionScreen: React.FC = () => {
               <div className="py-16 text-center space-y-3">
                 <Loader2 className="w-8 h-8 text-primary animate-spin mx-auto" />
                 <p className="text-xs font-bold text-on-surface-variant">
-                  Querying nearest hospitals & emergency trauma centers...
+                  {t('emergency.queryingHospitals')}
                 </p>
               </div>
             ) : hospitals.length === 0 ? (
               <div className="py-12 text-center text-on-surface-variant space-y-2 bg-surface-container-lowest rounded-2xl border border-outline-variant/60">
                 <HospitalIcon className="w-10 h-10 mx-auto text-on-surface-variant/40" />
-                <p className="text-xs font-bold">No hospitals found within search radius.</p>
-                <p className="text-[11px]">Please call 108 emergency hotline immediately.</p>
+                <p className="text-xs font-bold">{t('emergency.noHospitalsFound')}</p>
+                <p className="text-[11px]">{t('emergency.call108Immediately')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -547,14 +549,14 @@ export const EmergencyActionScreen: React.FC = () => {
                           {isCalculating ? (
                             <span className="text-[11px] font-bold text-on-surface-variant flex items-center justify-end gap-1">
                               <Loader2 className="w-3 h-3 animate-spin" />
-                              Calc...
+                              {t('common.calc')}
                             </span>
                           ) : routeInfo!.failed ? (
-                            <span className="text-[11px] font-bold text-on-surface-variant">Route error</span>
+                            <span className="text-[11px] font-bold text-on-surface-variant">{t('common.routeError')}</span>
                           ) : (
                             <>
                               <span className="text-xs font-extrabold text-primary bg-primary-fixed px-2.5 py-1 rounded-full border border-primary/20 block text-center">
-                                {isOfflineCalculation ? `Approx. ${formatDistance(routeInfo!.distanceMeters)}` : formatDistance(routeInfo!.distanceMeters)}
+                                {isOfflineCalculation ? `${t('common.approx')} ${formatDistance(routeInfo!.distanceMeters)}` : formatDistance(routeInfo!.distanceMeters)}
                               </span>
                               {!isOfflineCalculation ? (
                                 <span className="text-[11px] font-bold text-on-surface-variant flex items-center justify-end gap-1 mt-1">
@@ -563,7 +565,7 @@ export const EmergencyActionScreen: React.FC = () => {
                                 </span>
                               ) : (
                                 <span className="text-[11px] font-bold text-amber-600 flex items-center justify-end gap-1 mt-1">
-                                  Dir: {calculateBearing(userLocation!.lat, userLocation!.lng, hosp.latitude, hosp.longitude)}
+                                  {t('common.dir')} {calculateBearing(userLocation!.lat, userLocation!.lng, hosp.latitude, hosp.longitude)}
                                 </span>
                               )}
                             </>
@@ -576,7 +578,7 @@ export const EmergencyActionScreen: React.FC = () => {
                           <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                           <span className="text-xs font-extrabold">4.8</span>
                           <span className="text-[11px] text-on-surface-variant font-medium">
-                            (Emergency Ready)
+                            {t('emergency.emergencyReady')}
                           </span>
                         </div>
 
@@ -587,7 +589,7 @@ export const EmergencyActionScreen: React.FC = () => {
                               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors border border-slate-200"
                             >
                               <PhoneCall className="w-3.5 h-3.5" />
-                              <span>Call</span>
+                              <span>{t('home.call', { defaultValue: 'Call' })}</span>
                             </a>
                           )}
 
@@ -596,7 +598,7 @@ export const EmergencyActionScreen: React.FC = () => {
                             className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95 border border-blue-600"
                           >
                             <Navigation className="w-4 h-4" />
-                            <span>Navigate</span>
+                            <span>{t('emergency.navigate')}</span>
                           </button>
                         </div>
                       </div>

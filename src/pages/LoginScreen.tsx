@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, Mail, Lock, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '../components/common/LanguageSelector';
 
 const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' }) => (
   <svg className={className} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -27,6 +29,7 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-5 h-5' })
 export const LoginScreen: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, signInWithGoogle, user } = useAuth();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +49,7 @@ export const LoginScreen: React.FC = () => {
     setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError(t('auth.errorBothFields'));
       return;
     }
 
@@ -55,7 +58,7 @@ export const LoginScreen: React.FC = () => {
     setLoading(false);
 
     if (authError) {
-      setError(authError.message || 'Authentication failed. Please check your credentials.');
+      setError(authError.message || t('auth.errorAuthFailed'));
     } else {
       navigate('/');
     }
@@ -68,7 +71,7 @@ export const LoginScreen: React.FC = () => {
     setGoogleLoading(false);
 
     if (googleError) {
-      setError(googleError.message || 'Google authentication failed. Please try again.');
+      setError(googleError.message || t('auth.errorAuthFailed'));
     }
   };
 
@@ -82,8 +85,13 @@ export const LoginScreen: React.FC = () => {
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-on-surface tracking-tight">RescueLink</h1>
-            <p className="text-xs font-semibold text-secondary mt-1">Emergency Dispatch & Volunteer Network</p>
+            <p className="text-xs font-semibold text-secondary mt-1">{t('auth.brandSubtitle')}</p>
           </div>
+        </div>
+
+        {/* Language Selector */}
+        <div className="flex justify-center -mt-2">
+          <LanguageSelector className="w-full max-w-sm p-4 shadow-none border-dashed bg-transparent" />
         </div>
 
         {/* Login Form */}
@@ -96,14 +104,14 @@ export const LoginScreen: React.FC = () => {
           )}
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">Email Address</label>
+            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('auth.emailLabel')}</label>
             <div className="relative">
               <Mail className="w-4 h-4 text-outline absolute left-3.5 top-3.5" />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
+                placeholder={t('auth.emailPlaceholder')}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
               />
@@ -112,8 +120,8 @@ export const LoginScreen: React.FC = () => {
 
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-on-surface uppercase tracking-wider">Password</label>
-              <button type="button" className="text-[11px] font-bold text-secondary hover:underline">Forgot?</button>
+              <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('auth.passwordLabel')}</label>
+              <button type="button" className="text-[11px] font-bold text-secondary hover:underline">{t('auth.forgotPassword')}</button>
             </div>
             <div className="relative">
               <Lock className="w-4 h-4 text-outline absolute left-3.5 top-3.5" />
@@ -121,7 +129,7 @@ export const LoginScreen: React.FC = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t('auth.passwordPlaceholder')}
                 required
                 className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
               />
@@ -134,10 +142,10 @@ export const LoginScreen: React.FC = () => {
             className="w-full py-3.5 bg-secondary text-white font-bold text-sm rounded-xl shadow-level-1 hover:bg-secondary/90 transition-all flex items-center justify-center gap-2 mt-4 btn-press active:scale-[0.98]"
           >
             {loading ? (
-              <span className="text-xs font-semibold">Logging in with Supabase...</span>
+              <span className="text-xs font-semibold">{t('auth.loggingIn')}</span>
             ) : (
               <>
-                <span>Sign In to Account</span>
+                <span>{t('auth.signIn')}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}
@@ -148,7 +156,7 @@ export const LoginScreen: React.FC = () => {
         <div className="relative flex items-center justify-center my-2">
           <div className="border-t border-outline-variant/50 w-full"></div>
           <span className="bg-surface px-3 text-[11px] font-extrabold uppercase text-on-surface-variant tracking-wider absolute">
-            OR
+            {t('auth.or')}
           </span>
         </div>
 
@@ -160,23 +168,23 @@ export const LoginScreen: React.FC = () => {
           className="w-full py-3.5 bg-surface-container-lowest border border-outline-variant/60 text-on-surface font-bold text-sm rounded-xl shadow-xs hover:bg-surface-container-low transition-all flex items-center justify-center gap-3 btn-press active:scale-[0.98]"
         >
           {googleLoading ? (
-            <span className="text-xs font-semibold">Connecting to Google...</span>
+            <span className="text-xs font-semibold">{t('auth.connectingGoogle')}</span>
           ) : (
             <>
               <GoogleIcon className="w-5 h-5 shrink-0" />
-              <span>Continue with Google</span>
+              <span>{t('auth.continueGoogle')}</span>
             </>
           )}
         </button>
 
         <div className="text-center pt-2">
           <p className="text-xs text-on-surface-variant">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <button
               onClick={() => navigate('/signup')}
               className="font-bold text-primary hover:underline ml-1"
             >
-              Register Account
+              {t('auth.register')}
             </button>
           </p>
         </div>
@@ -185,7 +193,7 @@ export const LoginScreen: React.FC = () => {
       {/* Footer Security Badge */}
       <div className="text-center text-[10px] text-on-surface-variant/70 flex items-center justify-center gap-1 mt-6">
         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-        <span>Official Emergency Dispatch Protocol Encrypted</span>
+        <span>{t('auth.securityBadge')}</span>
       </div>
     </div>
   );

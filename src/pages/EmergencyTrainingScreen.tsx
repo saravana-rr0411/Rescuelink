@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { HeartPulse, ShieldAlert, BookOpen, AlertCircle, Phone, Heart, Users, Play, X, Video } from 'lucide-react';
 import { useNetworkSync } from '../hooks/useNetworkSync';
+import { useTranslation } from 'react-i18next';
 
 export const EmergencyTrainingScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const cprRef = useRef<HTMLElement>(null);
   const responseRef = useRef<HTMLElement>(null);
@@ -21,13 +23,13 @@ export const EmergencyTrainingScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Navbar title="Emergency Response Training" showBack />
+      <Navbar title={t('training.title')} showBack />
 
       <main className="flex-1 pb-16">
         {/* HERO */}
         <section className="bg-slate-900 text-white px-6 py-12 border-b border-slate-800">
           <div className="max-w-3xl mx-auto">
-            <h1 className="text-3xl font-bold tracking-tight mb-3">Emergency Response Training</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-3">{t('training.title')}</h1>
             <p className="text-lg text-slate-300 max-w-xl leading-relaxed font-medium">
               Learn the basic knowledge needed to respond safely during an emergency.
             </p>
@@ -42,7 +44,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
           <section ref={cprRef} className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <HeartPulse className="w-6 h-6 text-rose-600" /> CPR Awareness
+                <HeartPulse className="w-6 h-6 text-rose-600" /> {t('training.cprAwareness')}
               </h2>
             </div>
             
@@ -89,13 +91,13 @@ export const EmergencyTrainingScreen: React.FC = () => {
               <div className="mb-6">
                 <h3 className="font-bold text-sm text-slate-900 mb-3 flex items-center gap-2">
                   <Video className="w-5 h-5 text-slate-500" />
-                  Educational CPR Videos
+                  {t('training.educationalCprVideos')}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   {/* VIDEO CARD 1 */}
                   <button 
-                    onClick={() => isOnline ? setActiveVideoId('M4ACYp75mjU') : alert('An internet connection is required to play educational videos.')}
+                    onClick={() => isOnline ? setActiveVideoId('M4ACYp75mjU') : alert(t('training.internetRequired'))}
                     className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
                   >
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
@@ -119,7 +121,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
 
                   {/* VIDEO CARD 2 */}
                   <button 
-                    onClick={() => isOnline ? setActiveVideoId('ILxjxfB4zNk') : alert('An internet connection is required to play educational videos.')}
+                    onClick={() => isOnline ? setActiveVideoId('ILxjxfB4zNk') : alert(t('training.internetRequired'))}
                     className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
                   >
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
@@ -145,7 +147,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
 
               <div className="bg-rose-50 border-l-4 border-rose-500 p-4 text-sm text-rose-900">
-                <p className="font-bold mb-1">Important Safety Note</p>
+                <p className="font-bold mb-1">{t('training.importantSafetyNote')}</p>
                 <p>
                   This information is provided for general awareness only. Viewing this content does not provide medical certification, nor does it replace professional, hands-on CPR training.
                 </p>
@@ -159,7 +161,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
           <section ref={responseRef} className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <ShieldAlert className="w-6 h-6 text-amber-600" /> Road Accident Response
+                <ShieldAlert className="w-6 h-6 text-amber-600" /> {t('training.roadAccidentResponse')}
               </h2>
             </div>
 
@@ -224,7 +226,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
           <section ref={firstAidRef} className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                <BookOpen className="w-6 h-6 text-blue-600" /> First Aid Basics
+                <BookOpen className="w-6 h-6 text-blue-600" /> {t('training.firstAidBasics')}
               </h2>
             </div>
             
@@ -238,7 +240,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
                 onClick={() => navigate('/first-aid')}
                 className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors whitespace-nowrap shrink-0 active:scale-95 shadow-sm"
               >
-                Open First Aid
+                {t('training.openFirstAid')}
               </button>
             </div>
           </section>
@@ -252,8 +254,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
           <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between p-4 border-b border-slate-800">
               <div>
-                <h3 className="font-bold text-white">Educational Video</h3>
-                <p className="text-xs text-slate-400">Press play to begin</p>
+                <h3 className="font-bold text-white">{t('training.educationalVideo')}</h3>
+                <p className="text-xs text-slate-400">{t('training.pressPlay')}</p>
               </div>
               <button
                 onClick={() => setActiveVideoId(null)}

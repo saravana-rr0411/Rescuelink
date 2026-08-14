@@ -9,6 +9,7 @@ import { fetchNearbyHospitals, type HospitalPlace } from '../services/googlePlac
 import { calculateHaversineDistance, formatDistance } from '../utils/distance';
 import { cleanDescriptionText, formatETA, fetchOSRMRoute, getStoredHospital } from '../utils/routing';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
+import { useTranslation } from 'react-i18next';
 
 const isActiveStatus = (status?: string | null): boolean => {
   if (!status) return false;
@@ -49,6 +50,7 @@ export const EmergencyStatusScreen: React.FC = () => {
   const navigate = useNavigate();
   const locationState = useLocation().state as { accidentId?: string } | undefined;
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   const [accident, setAccident] = useState<AccidentRecord | null>(null);
   const [loading, setLoading] = useState(true);
@@ -324,9 +326,9 @@ export const EmergencyStatusScreen: React.FC = () => {
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMins / 60);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'minute' : 'minutes'} ago`;
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffMins < 1) return t('common.justNow');
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? t('common.min') : t('common.mins')} ${t('common.ago')}`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? t('common.hour') : t('common.hours')} ${t('common.ago')}`;
 
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -374,23 +376,23 @@ export const EmergencyStatusScreen: React.FC = () => {
   };
 
   const formatCitizenStatusDisplay = (status?: string | null): string => {
-    if (!status) return 'Waiting for Volunteer';
+    if (!status) return t('emergencyStatus.waitingForVolunteer');
     const s = status.trim();
     if (s === 'Transporting to Hospital' || s === 'Hospital Transfer' || s === 'To Hospital') {
-      return 'En Route to Hospital';
+      return t('emergencyStatus.stepEnRouteHospTitle');
     }
     return s;
   };
 
   const getTimelineSteps = (status: string) => {
     const stages = [
-      { title: 'SOS Sent', desc: 'Emergency SOS signal broadcasted to rescue network' },
-      { title: 'Volunteer Assigned', desc: 'Emergency responder claimed dispatch' },
-      { title: 'Volunteer En Route', desc: 'Responder is actively navigating to your location' },
-      { title: 'Volunteer Arrived', desc: 'Responder has arrived at the incident scene' },
-      { title: 'En Route to Hospital', desc: 'Ambulance transport in progress to trauma center' },
-      { title: 'Hospital Reached', desc: 'Safely arrived at destination hospital' },
-      { title: 'Emergency Completed', desc: 'Medical handoff complete and emergency resolved' },
+      { title: t('emergencyStatus.stepSosTitle'), desc: t('emergencyStatus.stepSosDesc') },
+      { title: t('emergencyStatus.stepVolAssignedTitle'), desc: t('emergencyStatus.stepVolAssignedDesc') },
+      { title: t('emergencyStatus.stepVolEnRouteTitle'), desc: t('emergencyStatus.stepVolEnRouteDesc') },
+      { title: t('emergencyStatus.stepVolArrivedTitle'), desc: t('emergencyStatus.stepVolArrivedDesc') },
+      { title: t('emergencyStatus.stepEnRouteHospTitle'), desc: t('emergencyStatus.stepEnRouteHospDesc') },
+      { title: t('emergencyStatus.stepHospReachedTitle'), desc: t('emergencyStatus.stepHospReachedDesc') },
+      { title: t('emergencyStatus.stepCompletedTitle'), desc: t('emergencyStatus.stepCompletedDesc') },
     ];
 
     const currentIdx = getStatusStageIndex(status);
@@ -465,10 +467,10 @@ export const EmergencyStatusScreen: React.FC = () => {
   }, [hasVolunteer, volLat, volLng, targetLat, targetLng, accident?.id]);
 
   const getEtaDisplay = (): string => {
-    if (!accident || !hasVolunteer) return 'Waiting for Volunteer';
-    if (isResolved) return 'Resolved';
-    if (isHospitalReached) return 'Hospital Reached';
-    if (isArrivedOnScene && !isTransporting) return 'Arrived at Scene';
+    if (!accident || !hasVolunteer) return t('emergencyStatus.waitingForVolunteer');
+    if (isResolved) return t('emergencyStatus.stepCompletedTitle');
+    if (isHospitalReached) return t('emergencyStatus.stepHospReachedTitle');
+    if (isArrivedOnScene && !isTransporting) return t('emergencyStatus.stepVolArrivedTitle');
 
     if (liveDurationSeconds !== null && liveDistanceMeters !== null) {
       return formatETA(liveDurationSeconds, liveDistanceMeters);
@@ -478,7 +480,7 @@ export const EmergencyStatusScreen: React.FC = () => {
       const estSecs = (dist / 1000 / 40) * 3600;
       return formatETA(estSecs, dist);
     }
-    return 'Calculating...';
+    return t('emergencyStatus.calculating');
   };
 
   // Status-driven Distance Display (Volunteer -> Accident BEFORE arrival, Volunteer -> Hospital DURING transport)
@@ -498,7 +500,7 @@ export const EmergencyStatusScreen: React.FC = () => {
         Number(accident.longitude)
       );
       calculatedDistanceDisplay = formatDistance(distMeters);
-      distanceLabel = 'Volunteer Distance to Accident';
+      distanceLabel = t('emergencyStatus.distanceToAccident');
     } else if (isTransporting && accident.hospital_latitude) {
       // Distance: Volunteer Current Location -> Selected Hospital
       const distMeters = liveDistanceMeters !== null ? liveDistanceMeters : calculateHaversineDistance(
@@ -508,7 +510,7 @@ export const EmergencyStatusScreen: React.FC = () => {
         targetLng
       );
       calculatedDistanceDisplay = formatDistance(distMeters);
-      distanceLabel = 'Distance to Hospital';
+      distanceLabel = t('emergencyStatus.distanceToHospital');
     } else {
       // Arrived at Scene / Hospital Reached / Emergency Resolved -> Hide numerical distance to accident
       calculatedDistanceDisplay = null;
@@ -518,7 +520,7 @@ export const EmergencyStatusScreen: React.FC = () => {
   return (
     <div className="flex flex-col min-h-full">
       <Navbar
-        title="Emergency Live Status"
+        title={t('emergencyStatus.liveStatus')}
         showBack
         rightAction={
           <button
@@ -527,7 +529,7 @@ export const EmergencyStatusScreen: React.FC = () => {
             aria-label="View History"
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>History</span>
+            <span>{t('profile.history')}</span>
           </button>
         }
       />
@@ -535,15 +537,15 @@ export const EmergencyStatusScreen: React.FC = () => {
       <main className="flex-1 px-4 py-4 space-y-5">
         {loading ? (
           <div className="space-y-4">
-            <SpinnerLoader message="Loading live emergency status..." />
+            <SpinnerLoader message={t('emergencyStatus.loading')} />
             <StatusCardSkeleton />
           </div>
         ) : !accident || !isActiveStatus(accident.status) ? (
           <div className="space-y-4 py-4 animate-card-enter">
             <EmptyState
               icon={ClipboardCheck}
-              title="No Active Complaints"
-              description="You don't have any active accident reports. You can view your previous reports in History or create a new SOS report if needed."
+              title={t('emergencyStatus.noActiveComplaints')}
+              description={t('emergencyStatus.noActiveComplaintsDesc')}
             />
           </div>
         ) : (
@@ -555,8 +557,8 @@ export const EmergencyStatusScreen: React.FC = () => {
                   <Ambulance className="w-5 h-5 text-red-700" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-extrabold text-on-surface">Call Ambulance (108)</h3>
-                  <p className="text-[11px] text-on-surface-variant font-medium">Open 108 emergency phone dialer</p>
+                  <h3 className="text-sm font-extrabold text-on-surface">{t('emergencyStatus.callAmbulance108')}</h3>
+                  <p className="text-[11px] text-on-surface-variant font-medium">{t('emergencyStatus.open108Dialer')}</p>
                 </div>
               </div>
 
@@ -565,7 +567,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 className="px-4 py-2 bg-surface-container-high hover:bg-surface-container text-on-surface border border-outline-variant/60 font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 shrink-0"
               >
                 <PhoneCall className="w-4 h-4 text-blue-600" />
-                <span>Call 108</span>
+                <span>{t('emergencyStatus.call108Btn')}</span>
               </a>
             </div>
 
@@ -580,7 +582,7 @@ export const EmergencyStatusScreen: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider bg-white/20 px-3 py-1 rounded-full text-white backdrop-blur-xs flex items-center gap-1.5">
                   {accident.status === 'Emergency Resolved' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                  Status: {displayedStatus}
+                  {t('emergencyStatus.status')} {displayedStatus}
                 </span>
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-100">
                   <span className={`w-2 h-2 rounded-full ${accident.status === 'Emergency Resolved' ? 'bg-white' : 'bg-amber-300 animate-ping'}`}></span>
@@ -592,13 +594,13 @@ export const EmergencyStatusScreen: React.FC = () => {
 
               <div className="flex items-baseline justify-between pt-1">
                 <div>
-                  <p className="text-xs text-blue-100 font-medium">Estimated Arrival Time</p>
+                  <p className="text-xs text-blue-100 font-medium">{t('emergencyStatus.eta')}</p>
                   <h2 className="text-3xl font-extrabold tracking-tight mt-0.5">
                     {getEtaDisplay()}
                   </h2>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-blue-100">Reported</p>
+                  <p className="text-xs text-blue-100">{t('emergencyStatus.reported')}</p>
                   <p className="text-sm font-bold flex items-center gap-1 text-blue-100 justify-end">
                     <Clock className="w-3.5 h-3.5" />
                     {formatReportedTime(accident.created_at)}
@@ -610,12 +612,12 @@ export const EmergencyStatusScreen: React.FC = () => {
               {!hasVolunteer ? (
                 <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-amber-100">
                   <Loader2 className="w-4 h-4 animate-spin text-amber-200 shrink-0" />
-                  <span>Searching for nearby volunteer responders...</span>
+                  <span>{t('emergencyStatus.searchingVolunteer')}</span>
                 </div>
               ) : isArrivedOnScene && !isTransporting ? (
                 <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-blue-100">
                   <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span>Volunteer has arrived on scene. Assessing victim & selecting hospital...</span>
+                  <span>{t('emergencyStatus.volunteerArrivedAssessing')}</span>
                 </div>
               ) : isTransporting ? (
                 <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
@@ -625,14 +627,14 @@ export const EmergencyStatusScreen: React.FC = () => {
                   </span>
                   {calculatedDistanceDisplay && (
                     <span className="font-extrabold text-sm text-white bg-white/20 px-2.5 py-0.5 rounded-full">
-                      {calculatedDistanceDisplay} remaining
+                      {calculatedDistanceDisplay} {t('emergencyStatus.remaining')}
                     </span>
                   )}
                 </div>
               ) : isHospitalReached ? (
                 <div className="pt-2 border-t border-white/20 flex items-center gap-2.5 text-xs font-bold text-emerald-100">
                   <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
-                  <span>Emergency transport reached hospital successfully.</span>
+                  <span>{t('emergencyStatus.hospitalReached')}</span>
                 </div>
               ) : isEnRoute && calculatedDistanceDisplay ? (
                 <div className="pt-2 border-t border-white/20 flex items-center justify-between text-xs">
@@ -657,7 +659,7 @@ export const EmergencyStatusScreen: React.FC = () => {
             {accident.description && cleanDescriptionText(accident.description) && (
               <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1">
                 <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">
-                  Accident Incident Details
+                  {t('emergencyStatus.accidentIncidentDetails')}
                 </span>
                 <p className="text-xs text-on-surface-variant font-medium leading-relaxed">
                   {cleanDescriptionText(accident.description)}
@@ -681,7 +683,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-black uppercase tracking-wider bg-blue-800 text-blue-100 px-2.5 py-0.5 rounded-full border border-blue-600 flex items-center gap-1 animate-badge-pop">
                       <Hospital className="w-3.5 h-3.5" />
-                      Selected Destination Hospital
+                      {t('emergencyStatus.selectedDestinationHospital')}
                     </span>
                   </div>
 
@@ -700,7 +702,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                         <span>☎ {hospPhone}</span>
                       </a>
                     ) : (
-                      <span className="text-slate-300">☎ Phone unavailable</span>
+                      <span className="text-slate-300">☎ {t('emergencyStatus.phoneUnavailable')}</span>
                     )}
                   </div>
                 </div>
@@ -712,11 +714,11 @@ export const EmergencyStatusScreen: React.FC = () => {
               <div className="flex items-center justify-between text-xs font-bold text-on-surface">
                 <span className="flex items-center gap-1.5">
                   <MapPin className="w-4 h-4 text-primary" />
-                  Accident Location Radar
+                  {t('emergencyStatus.accidentLocationRadar')}
                 </span>
                 <span className="text-secondary font-semibold flex items-center gap-1">
                   <span className={`w-2 h-2 rounded-full ${hasVolunteer ? 'bg-emerald-500 animate-ping' : 'bg-amber-500 animate-pulse'}`}></span>
-                  {hasVolunteer ? 'Realtime Tracking' : 'Waiting for Volunteer'}
+                  {hasVolunteer ? t('emergencyStatus.realtimeTracking') : t('emergencyStatus.waitingForVolunteer')}
                 </span>
               </div>
 
@@ -739,7 +741,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                               id: `volunteer-${accident.id}`,
                               lat: accident.volunteer_latitude,
                               lng: accident.volunteer_longitude,
-                              title: `Assigned Responder: ${volunteerProfile?.full_name || 'Volunteer'}`,
+                              title: `${t('emergencyStatus.assignedResponder')} ${volunteerProfile?.full_name || 'Volunteer'}`,
                               type: 'volunteer' as const,
                             },
                           ]
@@ -762,7 +764,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                 <div className="space-y-1.5 pt-1">
                   <span className="text-[10px] font-bold text-on-surface-variant uppercase flex items-center gap-1">
                     <Camera className="w-3.5 h-3.5 text-secondary" />
-                    Attached Scene Photo
+                    {t('emergencyStatus.attachedScenePhoto')}
                   </span>
                   <div className="rounded-2xl overflow-hidden border border-outline-variant/60 bg-black/5 max-h-48">
                     <img src={accident.photo_url} alt="Scene Evidence" loading="lazy" decoding="async" className="w-full h-44 object-cover" />
@@ -774,7 +776,7 @@ export const EmergencyStatusScreen: React.FC = () => {
             {/* Assigned Responder Info Card (ONLY rendered after a real volunteer accepts) */}
             {hasVolunteer && (
               <div className="bg-surface-container-lowest p-4 rounded-3xl border border-outline-variant/50 shadow-level-1 space-y-3">
-                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">Assigned Volunteer Responder</h3>
+                <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('emergencyStatus.assignedVolunteerResponder')}</h3>
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -786,9 +788,9 @@ export const EmergencyStatusScreen: React.FC = () => {
                         {volunteerProfile?.full_name || 'Emergency Responder'}
                       </h4>
                       <p className="text-[11px] text-on-surface-variant">
-                        Status: <span className="font-bold text-secondary">{accident.status}</span>
+                        {t('emergencyStatus.statusLabel')} <span className="font-bold text-secondary">{accident.status}</span>
                         {calculatedDistanceDisplay && (
-                          <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} away)</span>
+                          <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} {t('emergencyStatus.away')})</span>
                         )}
                       </p>
                     </div>
@@ -819,11 +821,11 @@ export const EmergencyStatusScreen: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
                   <Clock className="w-4 h-4 text-primary" />
-                  <span>Citizen Emergency Progress Timeline</span>
+                  <span>{t('emergencyStatus.citizenProgressTimeline')}</span>
                 </h3>
                 <span className="text-[10px] font-extrabold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
-                  Realtime Tracking
+                  {t('emergencyStatus.realtimeTracking')}
                 </span>
               </div>
 
@@ -834,7 +836,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                   <div className="space-y-1.5 bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant/40">
                     <div className="flex items-center justify-between text-xs font-extrabold text-on-surface">
                       <span className="flex items-center gap-1.5">
-                        <span>Resolution Progress</span>
+                        <span>{t('emergencyStatus.resolutionProgress')}</span>
                         <span className="text-outline-variant">•</span>
                         <span className="text-secondary font-bold">{accident.status}</span>
                       </span>
@@ -893,7 +895,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                             </span>
                             {isCurrent && (
                               <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-xs">
-                                Current Stage
+                                {t('emergencyStatus.currentStage')}
                               </span>
                             )}
                           </div>
@@ -917,7 +919,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                               : 'text-on-surface-variant/40'
                           }`}
                         >
-                          {isCurrent ? 'In Progress' : isCompleted ? 'Completed' : 'Pending'}
+                          {isCurrent ? t('emergencyStatus.inProgress') : isCompleted ? t('emergencyStatus.completed') : t('emergencyStatus.pending')}
                         </span>
                       </div>
                     </div>
@@ -930,12 +932,12 @@ export const EmergencyStatusScreen: React.FC = () => {
             <div className="bg-amber-50 border border-amber-200 p-4 rounded-3xl space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
                 <AlertCircle className="w-4 h-4 text-amber-700" />
-                <span>While Waiting for Arrival</span>
+                <span>{t('emergencyStatus.whileWaiting')}</span>
               </div>
               <ul className="text-[11px] text-amber-800 space-y-1 list-disc list-inside">
-                <li>Keep caller phone line clear for dispatcher callbacks.</li>
-                <li>If safe, turn on outdoor porch lights for nighttime visibility.</li>
-                <li>Do not move victims with suspected head/neck injury.</li>
+                <li>{t('emergencyStatus.safetyInstruction1')}</li>
+                <li>{t('emergencyStatus.safetyInstruction2')}</li>
+                <li>{t('emergencyStatus.safetyInstruction3')}</li>
               </ul>
             </div>
           </>
@@ -947,7 +949,7 @@ export const EmergencyStatusScreen: React.FC = () => {
             onClick={() => navigate('/')}
             className="w-full py-3 bg-surface-container-high text-on-surface font-bold text-xs rounded-2xl hover:bg-surface-container-highest transition-colors"
           >
-            Return to RescueLink Dashboard
+            {t('emergencyStatus.returnToDashboard')}
           </button>
         </div>
       </main>

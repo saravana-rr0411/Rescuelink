@@ -14,6 +14,7 @@ import { saveStoredHospital, getStoredHospital, cleanDescriptionText } from '../
 import { calculateHaversineDistance } from '../utils/distance';
 import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import { Inbox } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AccidentRecord {
   id: string;
@@ -42,6 +43,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, avatarUrl } = useProfile();
+  const { t } = useTranslation();
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Data States
@@ -333,7 +335,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
   // 1. Accept Emergency Request with Exclusive Volunteer Check & Atomic Lock
   const handleAcceptMission = async (accidentId: string) => {
     if (!user) {
-      setErrorMessage('You must be logged in as a responder to accept alerts.');
+      setErrorMessage(t('volunteerDashboard.mustBeLoggedInToAccept'));
       return;
     }
 
@@ -355,7 +357,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       if (!pos) {
         setRespondingId(null);
-        setErrorMessage('GPS permission is required to accept emergency rescue missions. Please enable location access in your browser.');
+        setErrorMessage(t('volunteerDashboard.gpsPermissionRequired'));
         return;
       }
 
@@ -380,7 +382,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
       if (error || !data) {
         console.warn('[RescueLink Volunteer] Request already accepted by another volunteer.');
-        setErrorMessage('Already accepted by another volunteer.');
+        setErrorMessage(t('volunteerDashboard.alreadyAccepted'));
 
         const { data: fresh } = await supabase.from('accidents').select('*').eq('id', accidentId).single();
         if (fresh) {
@@ -390,7 +392,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       }
 
       console.log('[RescueLink Volunteer] Successfully assigned volunteer & saved status:', data);
-      setSuccessMessage('You have accepted this emergency request.');
+      setSuccessMessage(t('volunteerDashboard.missionAccepted'));
 
       setRawIncidents((prev) => prev.filter((item) => item.id !== accidentId));
       setAssignedMissions((prev) => [data, ...prev]);
@@ -412,7 +414,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       });
     } catch (err: any) {
       console.error('[RescueLink Volunteer] Unexpected error during assignment:', err);
-      setErrorMessage('An unexpected error occurred while accepting the alert.');
+      setErrorMessage(t('volunteerDashboard.unexpectedErrorAccepting'));
       setRespondingId(null);
     }
   };
@@ -431,13 +433,13 @@ export const VolunteerDashboardScreen: React.FC = () => {
       
       if (error) throw error;
       
-      setSuccessMessage('Emergency marked as completed.');
+      setSuccessMessage(t('volunteerDashboard.emergencyMarkedCompleted'));
       setAssignedMissions((prev) => prev.filter(m => m.id !== accidentId));
       
       setTimeout(() => setSuccessMessage(null), 2500);
     } catch (err: any) {
       console.error('[RescueLink Workflow] Failed to complete emergency:', err);
-      setErrorMessage(err.message || 'Failed to complete emergency.');
+      setErrorMessage(err.message || t('volunteerDashboard.failedToComplete'));
     } finally {
       setUpdatingStatusId(null);
     }
@@ -521,14 +523,14 @@ export const VolunteerDashboardScreen: React.FC = () => {
               : m
           )
         );
-        setSuccessMessage(`Hospital Selected: ${hospital.name}. Click "En Route to Hospital" when ready.`);
+        setSuccessMessage(`${t('volunteerDashboard.hospitalSelectedPrefix')} ${hospital.name}${t('volunteerDashboard.clickEnRoute')}`);
       } else if (error) {
         console.error('[RescueLink Volunteer] Error saving hospital selection:', error.message);
         setErrorMessage(`Error: ${error.message}`);
       }
     } catch (err: any) {
       console.error('[RescueLink Volunteer] Failed to save hospital choice:', err);
-      setErrorMessage('Failed to update hospital destination.');
+      setErrorMessage(t('volunteerDashboard.failedToUpdateHospital'));
     } finally {
 
       setHospitalSheetMission(null);
@@ -542,7 +544,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
   return (
     <div className="flex flex-col min-h-full bg-slate-50">
       <Navbar
-        title="Volunteer Responder HQ"
+        title={t('volunteerDashboard.volunteerHq')}
         showBack
         rightAction={
           <button
@@ -551,7 +553,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
             aria-label="View Volunteer History"
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>History</span>
+            <span>{t('volunteerDashboard.history')}</span>
           </button>
         }
       />
@@ -577,14 +579,14 @@ export const VolunteerDashboardScreen: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <Radio className={`w-3.5 h-3.5 shrink-0 ${isOnDuty ? 'animate-pulse text-rose-200' : 'text-slate-400'}`} />
                 <span className={`text-[10px] font-extrabold uppercase tracking-wider truncate ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
-                  {isOnDuty ? 'ON-DUTY BROADCAST ACTIVE' : 'RESPONDER OFF-DUTY'}
+                  {isOnDuty ? t('volunteerDashboard.onDutyActive') : t('volunteerDashboard.offDuty')}
                 </span>
               </div>
               <h2 className="text-sm sm:text-base font-extrabold truncate leading-tight">
-                {profile?.full_name || (isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode')}
+                {profile?.full_name || (isOnDuty ? t('volunteerDashboard.readyToAccept') : t('volunteerDashboard.standbyMode'))}
               </h2>
               <p className={`text-[11px] font-medium truncate ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
-                Response Radius: <span className="font-bold">10 km</span>
+                {t('volunteerDashboard.responseRadius')} <span className="font-bold">10 km</span>
               </p>
             </div>
           </div>
@@ -594,7 +596,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
             className={`px-3.5 py-2.5 rounded-2xl font-extrabold text-xs shadow-xs transition-all active:scale-95 shrink-0 ${isOnDuty ? 'bg-white text-red-900 hover:bg-rose-50' : 'bg-red-800 text-white hover:bg-red-900'
               }`}
           >
-            {isOnDuty ? 'Go Off Duty' : 'Go On Duty'}
+            {isOnDuty ? t('volunteerDashboard.goOffDuty') : t('volunteerDashboard.goOnDuty')}
           </button>
         </div>
 
@@ -605,8 +607,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
               <Ambulance className="w-5 h-5 text-red-700" />
             </div>
             <div>
-              <h3 className="text-xs font-extrabold text-slate-900">Call Ambulance (108)</h3>
-              <p className="text-[11px] text-slate-500 font-medium">Open 108 emergency phone dialer</p>
+              <h3 className="text-xs font-extrabold text-slate-900">{t('volunteerDashboard.callAmbulance108')}</h3>
+              <p className="text-[11px] text-slate-500 font-medium">{t('volunteerDashboard.open108Dialer')}</p>
             </div>
           </div>
 
@@ -615,7 +617,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
             className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-extrabold text-xs rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 shrink-0"
           >
             <PhoneCall className="w-3.5 h-3.5 text-blue-600" />
-            <span>Call 108</span>
+            <span>{t('volunteerDashboard.call108')}</span>
           </a>
         </div>
 
@@ -641,11 +643,11 @@ export const VolunteerDashboardScreen: React.FC = () => {
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span>Your Active Assigned Missions ({assignedMissions.length})</span>
+                <span>{t('volunteerDashboard.activeAssignedMissions')} ({assignedMissions.length})</span>
               </h2>
               <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                Live GPS Active
+                {t('volunteerDashboard.liveGpsActive')}
               </span>
             </div>
 
@@ -656,12 +658,12 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     <div>
                       <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wide flex items-center gap-1.5 w-fit">
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        Mission Accepted
+                        {t('volunteerDashboard.missionAcceptedLabel')}
                       </span>
                       <h3 className="font-extrabold text-sm text-slate-900 mt-2">{mission.address}</h3>
                       <div className="mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1.5 w-fit">
-                        <span>🩸 Patient Blood Group:</span>
-                        <span className="font-black text-rose-900">{mission.blood_group || 'Not Provided'}</span>
+                        <span>{t('volunteerDashboard.patientBloodGroup')}</span>
+                        <span className="font-black text-rose-900">{mission.blood_group || t('volunteerDashboard.notProvided')}</span>
                       </div>
                     </div>
                     <span className="text-[10px] bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
@@ -700,7 +702,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     const hosp = getStoredHospital(mission.id);
                     if (!hosp && mission.status !== 'Transporting to Hospital') return null;
 
-                    const name = hosp?.name || 'Nearest Regional Emergency Center';
+                    const name = hosp?.name || t('volunteerDashboard.nearestRegionalCenter');
                     const address = hosp?.address || mission.address;
                     const phoneNum = hosp?.phone || hosp?.internationalPhone;
 
@@ -709,7 +711,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-extrabold uppercase text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-700 flex items-center gap-1">
                             <HospitalIcon className="w-3.5 h-3.5 text-emerald-300" />
-                            Selected Hospital
+                            {t('volunteerDashboard.selectedHospital')}
                           </span>
                           {hosp?.rating && (
                             <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded-full border border-amber-500/30">
@@ -725,8 +727,8 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           📍 {address}
                         </p>
                         <p className="text-xs font-bold text-emerald-300 flex items-center gap-1 pt-1 border-t border-slate-800">
-                          <span>☎ Hospital Phone:</span>
-                          <span className="font-extrabold text-white">{phoneNum || 'Unavailable'}</span>
+                          <span>{t('volunteerDashboard.hospitalPhone')}</span>
+                          <span className="font-extrabold text-white">{phoneNum || t('volunteerDashboard.unavailable')}</span>
                         </p>
                       </div>
                     );
@@ -735,7 +737,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   {/* Mission Communication Actions Panel */}
                   <div className="p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2.5">
                     <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-                      Mission Actions
+                      {t('volunteerDashboard.missionActions')}
                     </p>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -745,7 +747,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-95"
                       >
                         <Ambulance className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>Call Ambulance (108)</span>
+                        <span>{t('volunteerDashboard.callAmbulance108')}</span>
                       </a>
 
                       {/* 2. Call Selected Hospital (Displayed ONLY after hospital is selected) */}
@@ -762,7 +764,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                             className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-95 border border-blue-600"
                           >
                             <PhoneCall className="w-4 h-4 text-white shrink-0" />
-                            <span>Call Hospital</span>
+                            <span>{t('volunteerDashboard.callHospital')}</span>
                           </a>
                         ) : (
                           <button
@@ -770,7 +772,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                             className="py-2.5 px-3 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-not-allowed"
                           >
                             <PhoneCall className="w-4 h-4 text-slate-400 shrink-0" />
-                            <span>Hospital phone number unavailable</span>
+                            <span>{t('volunteerDashboard.hospitalPhoneUnavailable')}</span>
                           </button>
                         );
                       })()}
@@ -805,7 +807,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         fullWidth
                         leftIcon={<Navigation className="w-4 h-4" />}
                       >
-                        Resume Navigation
+                        {t('volunteerDashboard.resumeNavigation')}
                       </Button>
                     ) : (
                       <Button
@@ -822,7 +824,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           )
                         }
                       >
-                        Complete Emergency
+                        {t('volunteerDashboard.completeEmergency')}
                       </Button>
                     )}
                   </div>
@@ -836,31 +838,31 @@ export const VolunteerDashboardScreen: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
-              Nearby Active Alerts ({incidents.length})
+              {t('volunteerDashboard.nearbyActiveAlerts')} ({incidents.length})
             </h2>
             <span className="text-[11px] font-bold text-red-700 flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
-              Live Broadcast Feed
+              {t('volunteerDashboard.liveBroadcastFeed')}
             </span>
           </div>
 
           {!isOnDuty ? (
             <div className="bg-white p-6 rounded-3xl border border-slate-200/80 text-center space-y-2 shadow-xs">
               <Radio className="w-8 h-8 text-slate-400 mx-auto" />
-              <p className="text-xs font-bold text-slate-800">You are currently Off-Duty</p>
-              <p className="text-[11px] text-slate-500">Toggle duty switch above to receive emergency alerts.</p>
+              <p className="text-xs font-bold text-slate-800">{t('volunteerDashboard.currentlyOffDuty')}</p>
+              <p className="text-[11px] text-slate-500">{t('volunteerDashboard.toggleDutySwitch')}</p>
             </div>
           ) : loading ? (
             <div className="space-y-4">
-              <SpinnerLoader message="Fetching incidents..." />
+              <SpinnerLoader message={t('volunteerDashboard.fetchingIncidents')} />
               <CardSkeleton />
               <CardSkeleton />
             </div>
           ) : incidents.length === 0 ? (
             <EmptyState
               icon={Inbox}
-              title="No active incidents."
-              description="There are currently no active emergency alerts in your response area. Stand by for broadcasts."
+              title={t('volunteerDashboard.noActiveIncidents')}
+              description={t('volunteerDashboard.noActiveIncidentsDesc')}
             />
           ) : (
             <div className="space-y-4">
@@ -877,14 +879,14 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <span className="text-[10px] font-extrabold bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-                          {inc.severity} PRIORITY
+                          {inc.severity} {t('volunteerDashboard.priority')}
                         </span>
                         <h3 className="font-extrabold text-sm text-slate-900 mt-1.5">
-                          Emergency SOS Incident
+                          {t('volunteerDashboard.emergencySosIncident')}
                         </h3>
                         <div className="mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1.5 w-fit">
-                          <span>🩸 Patient Blood Group:</span>
-                          <span className="font-black text-rose-900">{inc.blood_group || 'Not Provided'}</span>
+                          <span>{t('volunteerDashboard.patientBloodGroup')}</span>
+                          <span className="font-black text-rose-900">{inc.blood_group || t('volunteerDashboard.notProvided')}</span>
                         </div>
                       </div>
                       <span className="text-xs text-slate-500 font-medium flex items-center gap-1 shrink-0">
@@ -924,7 +926,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       <div className="space-y-1 pt-1">
                         <span className="text-[10px] font-bold text-slate-500 uppercase flex items-center gap-1">
                           <Camera className="w-3.5 h-3.5 text-slate-400" />
-                          Incident Scene Photo
+                          {t('volunteerDashboard.incidentScenePhoto')}
                         </span>
                         <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 max-h-40">
                           <img src={inc.photo_url} alt="Accident Evidence" loading="lazy" decoding="async" className="w-full h-36 object-cover" />
@@ -943,7 +945,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       {isAssignedToOther ? (
                         <div className="px-3 py-2 rounded-xl font-bold text-xs bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1.5 w-full">
                           <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span>Already accepted by another volunteer.</span>
+                          <span>{t('volunteerDashboard.alreadyAccepted')}</span>
                         </div>
                       ) : (
                         <div className="pt-0.5">
@@ -962,7 +964,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                               )
                             }
                           >
-                            {isAccepting ? 'Accepting...' : 'Accept Mission'}
+                            {isAccepting ? t('volunteerDashboard.accepting') : t('volunteerDashboard.acceptMission')}
                           </Button>
                         </div>
                       )}

@@ -4,6 +4,7 @@ import { ShieldAlert, ArrowLeft, Bell, User, WifiOff, Wifi } from 'lucide-react'
 import { useNotifications } from '../../context/NotificationContext';
 import { useProfile } from '../../context/ProfileContext';
 import { useNetworkSync } from '../../hooks/useNetworkSync';
+import { useTranslation } from 'react-i18next';
 
 interface NavbarProps {
   title?: string;
@@ -17,6 +18,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
   const { unreadCount } = useNotifications();
   const { avatarUrl } = useProfile();
   const { isOnline, isSyncing } = useNetworkSync();
+  const { t } = useTranslation();
   const [showRestored, setShowRestored] = useState(false);
   const [wasOffline, setWasOffline] = useState(!navigator.onLine);
 
@@ -54,12 +56,12 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
 
           <div>
             <h1 className="font-bold text-lg text-on-surface leading-tight tracking-tight">
-              {title ? title : 'RescueLink'}
+              {title ? title : t('nav.appTitle')}
             </h1>
             {isHome && (
               <p className="text-xs font-medium text-secondary flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block"></span>
-                Emergency System Active
+                {t('nav.emergencySystemActive')}
               </p>
             )}
           </div>
@@ -106,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
       {!isOnline && (
         <div className="sticky top-[68px] z-30 bg-amber-100 text-amber-900 px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b border-amber-200 shadow-sm">
           <WifiOff className="w-3.5 h-3.5" />
-          Offline — Limited features available
+          {t('common.offlineWarning')}
         </div>
       )}
 
@@ -114,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({ title, showBack = false, rightAc
       {showRestored && (
         <div className="sticky top-[68px] z-30 bg-emerald-100 text-emerald-900 px-4 py-1.5 text-xs font-bold flex items-center justify-center gap-1.5 border-b border-emerald-200 shadow-sm animate-fade-in">
           <Wifi className="w-3.5 h-3.5" />
-          Connection restored {isSyncing ? '(Syncing...)' : ''}
+          {t('common.connectionRestored')} {isSyncing ? t('common.syncing') : ''}
         </div>
       )}
     </>

@@ -2,24 +2,26 @@ import React, { useState } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { mockFirstAidGuides } from '../data/mockData';
 import { Search, HeartPulse, Droplet, Flame, Wind, AlertTriangle, BookOpen, Clock, ChevronDown, ChevronUp, Zap, Car, Waves, ShieldAlert, Activity, CheckCircle2, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const FirstAidGuideScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string>('');
 
   const categories = [
-    { id: 'all', name: 'All 10 Modules' },
-    { id: 'bleeding', name: 'Severe Bleeding' },
-    { id: 'heart_attack', name: 'Heart Attack' },
-    { id: 'stroke', name: 'Stroke' },
-    { id: 'fracture', name: 'Bone Fracture' },
-    { id: 'burns', name: 'Burn Injuries' },
-    { id: 'electric_shock', name: 'Electric Shock' },
-    { id: 'snake_bite', name: 'Snake Bite' },
-    { id: 'traffic_accident', name: 'Traffic Accident' },
-    { id: 'choking', name: 'Choking' },
-    { id: 'drowning', name: 'Drowning' },
+    { id: 'all', name: t('firstAid.categoryAll') },
+    { id: 'bleeding', name: t('firstAid.categoryBleeding') },
+    { id: 'heart_attack', name: t('firstAid.categoryHeartAttack') },
+    { id: 'stroke', name: t('firstAid.categoryStroke') },
+    { id: 'fracture', name: t('firstAid.categoryFracture') },
+    { id: 'burns', name: t('firstAid.categoryBurns') },
+    { id: 'electric_shock', name: t('firstAid.categoryElectricShock') },
+    { id: 'snake_bite', name: t('firstAid.categorySnakeBite') },
+    { id: 'traffic_accident', name: t('firstAid.categoryTrafficAccident') },
+    { id: 'choking', name: t('firstAid.categoryChoking') },
+    { id: 'drowning', name: t('firstAid.categoryDrowning') },
   ];
 
   const filteredGuides = mockFirstAidGuides.filter((guide) => {
@@ -63,16 +65,16 @@ export const FirstAidGuideScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-full">
-      <Navbar title="First Aid Handbook" showBack />
+      <Navbar title={t('firstAid.title')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
         {/* Offline-Ready Badge */}
         <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-medium">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Offline First Aid Handbook (10 Complete Modules)</span>
+            <span>{t('firstAid.offlineBadge')}</span>
           </div>
-          <span className="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">No Net Needed</span>
+          <span className="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">{t('firstAid.noNetNeeded')}</span>
         </div>
 
         {/* Search Input */}
@@ -82,7 +84,7 @@ export const FirstAidGuideScreen: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search symptoms, bleeding, stroke, fracture, drowning..."
+            placeholder={t('firstAid.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary"
           />
         </div>
@@ -109,8 +111,8 @@ export const FirstAidGuideScreen: React.FC = () => {
           {filteredGuides.length === 0 ? (
             <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/50 text-center space-y-2">
               <BookOpen className="w-8 h-8 text-outline mx-auto" />
-              <p className="text-xs font-bold text-on-surface">No first-aid modules match your search.</p>
-              <p className="text-[11px] text-on-surface-variant">Try searching for keywords like "bleeding", "CPR", "stroke", or "burns".</p>
+              <p className="text-xs font-bold text-on-surface">{t('firstAid.noModulesFound')}</p>
+              <p className="text-[11px] text-on-surface-variant">{t('firstAid.trySearching')}</p>
             </div>
           ) : (
             filteredGuides.map((guide) => {
@@ -133,7 +135,7 @@ export const FirstAidGuideScreen: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-xs text-on-surface">{guide.title}</h3>
                           {guide.urgency === 'CRITICAL' && (
-                            <span className="text-[9px] font-extrabold bg-red-100 text-red-800 px-2 py-0.5 rounded-full uppercase">Critical</span>
+                            <span className="text-[9px] font-extrabold bg-red-100 text-red-800 px-2 py-0.5 rounded-full uppercase">{t('firstAid.critical')}</span>
                           )}
                         </div>
                         <p className="text-[11px] text-on-surface-variant">{guide.subtitle}</p>
@@ -154,12 +156,12 @@ export const FirstAidGuideScreen: React.FC = () => {
                           <Clock className="w-3.5 h-3.5 text-secondary" />
                           {guide.readTime}
                         </span>
-                        <span className="font-bold text-primary">Immediate Response Protocol</span>
+                        <span className="font-bold text-primary">{t('firstAid.immediateResponseProtocol')}</span>
                       </div>
 
                       {/* 1. Immediate First-Aid Steps (4-6 points) */}
                       <div className="space-y-2">
-                        <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider">Immediate First-Aid Steps</h4>
+                        <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('firstAid.immediateFirstAidSteps')}</h4>
                         <ol className="space-y-2">
                           {guide.steps.map((step, sIdx) => (
                             <li key={sIdx} className="flex items-start gap-2.5 text-xs text-on-surface">
@@ -179,7 +181,7 @@ export const FirstAidGuideScreen: React.FC = () => {
                           <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-2xl space-y-1.5">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
                               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                              <span>DO'S</span>
+                              <span>{t('firstAid.dos')}</span>
                             </div>
                             <ul className="text-[11px] text-emerald-950 space-y-1">
                               {guide.dos.map((dItem, dIdx) => (
@@ -197,7 +199,7 @@ export const FirstAidGuideScreen: React.FC = () => {
                           <div className="bg-rose-50/70 border border-rose-200 p-3 rounded-2xl space-y-1.5">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-rose-900">
                               <XCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                              <span>DON'TS</span>
+                              <span>{t('firstAid.donts')}</span>
                             </div>
                             <ul className="text-[11px] text-rose-950 space-y-1">
                               {guide.donts.map((dontItem, dontIdx) => (
@@ -216,7 +218,7 @@ export const FirstAidGuideScreen: React.FC = () => {
                         <div className="bg-red-50 border border-red-200 p-3 rounded-2xl space-y-1">
                           <div className="flex items-center gap-1.5 text-xs font-bold text-red-900">
                             <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
-                            <span>Critical Warning</span>
+                            <span>{t('firstAid.criticalWarning')}</span>
                           </div>
                           <ul className="text-[11px] text-red-800 space-y-0.5 list-disc list-inside">
                             {guide.warnings.map((w, wIdx) => (

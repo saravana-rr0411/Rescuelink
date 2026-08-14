@@ -1,17 +1,19 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { House, Activity, PlusCircle, Ambulance, BookOpen, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const BottomNavigationComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const navItems = [
-    { path: '/', label: 'Home', icon: House },
-    { path: '/status', label: 'Status', icon: Activity },
-    { path: '/volunteer', label: 'Volunteer', icon: Ambulance },
-    { path: '/first-aid', label: 'First Aid', icon: BookOpen },
-    { path: '/profile', label: 'Profile', icon: User },
+    { path: '/', label: t('nav.home'), icon: House },
+    { path: '/status', label: t('nav.status'), icon: Activity },
+    { path: '/volunteer', label: t('nav.volunteer'), icon: Ambulance },
+    { path: '/first-aid', label: t('nav.firstAid'), icon: BookOpen },
+    { path: '/profile', label: t('nav.profile'), icon: User },
   ];
 
   const isActive = (path: string) => {
@@ -52,7 +54,7 @@ const BottomNavigationComponent: React.FC = () => {
           <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/40 group-hover:scale-105 active:scale-95 transition-transform ring-4 ring-surface">
             <PlusCircle className="w-8 h-8" />
           </div>
-          <span className="text-[11px] font-bold text-primary mt-1">Report</span>
+          <span className="text-[11px] font-bold text-primary mt-1">{t('nav.report')}</span>
         </button>
 
         {navItems.slice(2).map((item) => {

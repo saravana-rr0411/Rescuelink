@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PhoneCall } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SOSButtonProps {
   onTrigger?: () => void;
@@ -9,6 +10,7 @@ interface SOSButtonProps {
 
 export const SOSButton: React.FC<SOSButtonProps> = ({ onTrigger, size = 'large' }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isPressing, setIsPressing] = useState(false);
 
   const handleClick = () => {
@@ -42,14 +44,14 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onTrigger, size = 'large' 
           aria-label="Emergency SOS Press"
         >
           <PhoneCall className="w-9 h-9 mb-0.5 animate-bounce" />
-          <span className="text-xl font-extrabold tracking-wider">SOS</span>
-          <span className="text-[10px] font-semibold tracking-tight uppercase opacity-90">Press for Help</span>
+          <span className="text-xl font-extrabold tracking-wider">{t('home.sos')}</span>
+          <span className="text-[10px] font-semibold tracking-tight uppercase opacity-90">{t('home.pressForHelp')}</span>
         </button>
       </div>
 
       <p className="mt-4 text-xs font-semibold text-on-surface-variant flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-full">
         <span className="w-2 h-2 rounded-full bg-primary"></span>
-        Tap to alert 112 & nearby medical responders
+        {t('home.tapToAlert')}
       </p>
     </div>
   );

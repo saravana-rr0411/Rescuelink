@@ -10,8 +10,10 @@ import {
   AlertCircle,
   ArrowRight
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const GoodSamaritanScreen: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const rightsRef = useRef<HTMLDivElement>(null);
 
@@ -30,7 +32,7 @@ export const GoodSamaritanScreen: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Navbar title="Good Samaritan Protection" showBack />
+      <Navbar title={t('goodSamaritan.title')} showBack />
 
       <main className="flex-1 pb-16">
         
@@ -42,7 +44,7 @@ export const GoodSamaritanScreen: React.FC = () => {
             <div className="mb-4 text-blue-400">
               <Shield className="w-8 h-8" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight mb-3">Good Samaritan Protection</h1>
+            <h1 className="text-3xl font-bold tracking-tight mb-3">{t('goodSamaritan.title')}</h1>
             <p className="text-lg font-medium text-slate-300 mb-4">Helping an injured person should not begin with fear.</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-8">
               Understand your rights and the basic steps you can take when you witness a road emergency.
@@ -51,7 +53,7 @@ export const GoodSamaritanScreen: React.FC = () => {
               onClick={scrollToRights}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 text-sm font-semibold rounded-xl hover:bg-slate-100 transition-colors shadow-sm"
             >
-              Know Your Rights
+              {t('goodSamaritan.knowYourRights')}
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -64,7 +66,7 @@ export const GoodSamaritanScreen: React.FC = () => {
           {/* ========================================================================= */}
           <section ref={rightsRef} className="space-y-6 scroll-mt-20">
             <div className="border-b border-slate-200 pb-3">
-              <h2 className="text-2xl font-bold text-slate-900">Know Your Rights</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.knowYourRights')}</h2>
               <p className="text-sm text-slate-600 mt-2">
                 Good Samaritan protections are intended to encourage members of the public to provide reasonable assistance during emergencies.
               </p>
@@ -105,7 +107,7 @@ export const GoodSamaritanScreen: React.FC = () => {
           {/* ========================================================================= */}
           <section className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
-              <h2 className="text-2xl font-bold text-slate-900">Don't Be Afraid to Help</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.dontBeAfraid')}</h2>
               <p className="text-sm text-slate-600 mt-2">
                 People may hesitate to assist after witnessing an accident because they are uncertain about legal consequences, lack first-aid knowledge, or fear making the situation worse.
               </p>
@@ -149,7 +151,7 @@ export const GoodSamaritanScreen: React.FC = () => {
           {/* ========================================================================= */}
           <section className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
-              <h2 className="text-2xl font-bold text-slate-900">What Should I Do When I Witness an Accident?</h2>
+              <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.whatShouldIDo')}</h2>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
@@ -197,7 +199,7 @@ export const GoodSamaritanScreen: React.FC = () => {
           {/* ========================================================================= */}
           <section className="space-y-6">
             <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm">
-              <h2 className="text-xl font-bold mb-2">Witnessed a Road Accident?</h2>
+              <h2 className="text-xl font-bold mb-2">{t('goodSamaritan.witnessedAccident')}</h2>
               <p className="text-sm text-slate-300 mb-6">
                 Report the incident so that appropriate assistance can be coordinated.
               </p>
@@ -206,7 +208,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 onClick={handleReportEmergency}
                 className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 active:scale-95 border border-red-500"
               >
-                Report Emergency
+                {t('goodSamaritan.reportEmergency')}
               </button>
             </div>
 
@@ -217,7 +219,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">Legal Aid Emergency Helpline</h3>
+                  <h3 className="text-sm font-bold text-slate-900">{t('goodSamaritan.legalAidHelpline')}</h3>
                   <p className="text-xs text-slate-500">24/7 Samaritan Attorney Network</p>
                 </div>
               </div>
@@ -225,7 +227,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 href="tel:18005550199"
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition-colors border border-slate-200 active:scale-95"
               >
-                Call
+                {t('goodSamaritan.call')}
               </a>
             </div>
           </section>

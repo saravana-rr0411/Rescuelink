@@ -6,6 +6,7 @@ import { SOSButton } from '../components/ui/SOSButton';
 import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPin, Clock, ChevronRight, Loader2, Radio, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { CardSkeleton } from '../components/common/SkeletonLoader';
 import { GoogleMap } from '../components/maps/GoogleMap';
 
@@ -27,6 +28,7 @@ interface AccidentRecord {
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [accidents, setAccidents] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [emergencyContact, setEmergencyContact] = useState<{
@@ -37,10 +39,10 @@ export const HomeScreen: React.FC = () => {
   const [loadingContact, setLoadingContact] = useState(true);
 
   const categories = [
-    { id: 'medical', title: 'Medical Alert', icon: Stethoscope, color: 'bg-red-100 text-red-700 border-red-200' },
-    { id: 'accident', title: 'Car Accident', icon: Car, color: 'bg-blue-100 text-blue-700 border-blue-200' },
-    { id: 'fire', title: 'Fire Alert', icon: Flame, color: 'bg-amber-100 text-amber-700 border-amber-200' },
-    { id: 'crime', title: 'Safety Hazard', icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 border-purple-200' },
+    { id: 'medical', title: t('home.medicalAlert'), icon: Stethoscope, color: 'bg-red-100 text-red-700 border-red-200' },
+    { id: 'accident', title: t('home.carAccident'), icon: Car, color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    { id: 'fire', title: t('home.fireAlert'), icon: Flame, color: 'bg-amber-100 text-amber-700 border-amber-200' },
+    { id: 'crime', title: t('home.safetyHazard'), icon: ShieldAlert, color: 'bg-purple-100 text-purple-700 border-purple-200' },
   ];
 
   // Fetch logged-in user's emergency contact from Supabase
@@ -86,16 +88,16 @@ export const HomeScreen: React.FC = () => {
 
   // Helper to format ISO timestamp into relative time ("2 mins ago")
   const formatReportedTime = (isoString: string): string => {
-    if (!isoString) return 'Just now';
+    if (!isoString) return t('common.justNow');
     const date = new Date(isoString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMins / 60);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? 'min' : 'mins'} ago`;
-    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
+    if (diffMins < 1) return t('common.justNow');
+    if (diffMins < 60) return `${diffMins} ${diffMins === 1 ? t('common.min') : t('common.mins')} ${t('common.ago')}`;
+    if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? t('common.hour') : t('common.hours')} ${t('common.ago')}`;
 
     return date.toLocaleString('en-US', {
       month: 'short',
@@ -203,16 +205,16 @@ export const HomeScreen: React.FC = () => {
       <main className="flex-1 px-4 py-4 space-y-6">
         {/* SOS Central Trigger */}
         <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/40 shadow-level-1 text-center">
-          <h2 className="text-base font-bold text-on-surface mb-1">In an Immediate Emergency?</h2>
-          <p className="text-xs text-on-surface-variant mb-2">Tap SOS for immediate emergency response.</p>
+          <h2 className="text-base font-bold text-on-surface mb-1">{t('home.inEmergency')}</h2>
+          <p className="text-xs text-on-surface-variant mb-2">{t('home.tapSOS')}</p>
           <SOSButton onTrigger={() => navigate('/emergency')} />
         </div>
 
         {/* Quick Emergency Category Dispatch */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">Quick Category Dispatch</h2>
-            <span className="text-xs text-on-surface-variant font-medium">Select type</span>
+            <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">{t('home.quickCategory')}</h2>
+            <span className="text-xs text-on-surface-variant font-medium">{t('home.selectType')}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -229,7 +231,7 @@ export const HomeScreen: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-sm text-slate-900 group-hover:text-slate-700 transition-colors">{cat.title}</h3>
-                    <p className="text-xs text-slate-500 font-medium">1-Tap Report</p>
+                    <p className="text-xs text-slate-500 font-medium">{t('home.oneTapReport')}</p>
                   </div>
                 </button>
               );
@@ -240,12 +242,12 @@ export const HomeScreen: React.FC = () => {
         {/* Active Local Incidents (Live Supabase Data & Realtime Feed) */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">Active Nearby Alerts</h2>
+            <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">{t('home.activeNearby')}</h2>
             <button 
               onClick={() => navigate('/status')}
               className="text-sm font-semibold text-slate-900 hover:underline"
             >
-              View Status
+              {t('home.viewStatus')}
             </button>
           </div>
 
@@ -259,8 +261,8 @@ export const HomeScreen: React.FC = () => {
             /* Friendly empty state */
             <div className="bg-surface-container-lowest p-6 rounded-3xl border border-outline-variant/50 text-center space-y-2">
               <Radio className="w-8 h-8 text-outline mx-auto" />
-              <p className="text-xs font-bold text-on-surface">No Active Nearby Alerts</p>
-              <p className="text-[11px] text-on-surface-variant">Monitoring live emergency channel for new incidents.</p>
+              <p className="text-xs font-bold text-on-surface">{t('home.noActiveAlerts')}</p>
+              <p className="text-[11px] text-on-surface-variant">{t('home.monitoringLive')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -312,7 +314,7 @@ export const HomeScreen: React.FC = () => {
                         ? 'bg-amber-100 text-amber-900 border border-amber-300'
                         : 'bg-blue-100 text-blue-900'
                     }`}>
-                      {incident.status === 'Reported' || !incident.volunteer_id ? 'Waiting for Volunteer' : incident.status}
+                      {incident.status === 'Reported' || !incident.volunteer_id ? t('home.waitingVolunteer') : incident.status}
                     </span>
                   </div>
 
@@ -333,16 +335,13 @@ export const HomeScreen: React.FC = () => {
                         <Clock className="w-3.5 h-3.5 text-secondary" />
                         <span>{formatReportedTime(incident.created_at)}</span>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/status', { state: { accidentId: incident.id, mode: 'citizen' } });
-                        }}
-                        className="text-sm font-semibold text-slate-900 flex items-center gap-0.5 hover:underline"
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="bg-surface-container hover:bg-surface-container-high border border-outline-variant/50 flex-1 text-[11px]"
                       >
-                        <span>View Details</span>
-                        <ChevronRight className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
-                      </button>
+                        {t('common.viewDetails')}
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -353,7 +352,7 @@ export const HomeScreen: React.FC = () => {
 
         {/* Knowledge & Protection Shortcuts */}
         <div className="space-y-3">
-          <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">Essential Resources</h2>
+          <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">{t('home.essentialResources')}</h2>
           
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -364,8 +363,8 @@ export const HomeScreen: React.FC = () => {
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-slate-900">First Aid Guide</h3>
-                <p className="text-xs text-slate-500 font-medium">CPR & Trauma steps</p>
+                <h3 className="font-semibold text-sm text-slate-900">{t('home.firstAidGuide')}</h3>
+                <p className="text-xs text-slate-500 font-medium">{t('home.cprSteps')}</p>
               </div>
             </button>
 
@@ -377,29 +376,28 @@ export const HomeScreen: React.FC = () => {
                 <Scale className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-slate-900">Samaritan Rights</h3>
-                <p className="text-xs text-slate-500 font-medium">Legal protections</p>
+                <h3 className="font-semibold text-sm text-slate-900">{t('home.samaritanRights')}</h3>
+                <p className="text-xs text-slate-500 font-medium">{t('home.legalProtections')}</p>
               </div>
             </button>
           </div>
 
           {/* Emergency Response Training Entry Point */}
-          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-on-surface">Emergency Response Training</h3>
-              <p className="text-xs text-on-surface-variant mt-1 max-w-sm">
-                Learn CPR awareness and practical road accident response.
-              </p>
+          <button
+            onClick={() => navigate('/training')}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg shadow-blue-900/20 text-left relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
+            <div className="flex items-center justify-between gap-4 relative z-10">
+              <div>
+                <h2 className="text-base font-bold text-white leading-tight">{t('home.emergencyTraining')}</h2>
+                <p className="text-xs font-medium text-slate-100 mt-1 opacity-90">{t('home.interactiveModules')}</p>
+              </div>
+              <div className="bg-white/20 p-2 rounded-full">
+                <ChevronRight className="w-5 h-5 text-white" />
+              </div>
             </div>
-            <Button
-              onClick={() => navigate('/training')}
-              variant="primary"
-              size="sm"
-              className="shrink-0 self-start sm:self-auto"
-            >
-              Start Learning
-            </Button>
-          </div>
+          </button>
         </div>
 
         {/* Emergency Contacts Section */}
@@ -407,7 +405,7 @@ export const HomeScreen: React.FC = () => {
           {loadingContact ? (
             <div className="flex items-center gap-3 py-1">
               <Loader2 className="w-5 h-5 animate-spin text-primary shrink-0" />
-              <p className="text-xs text-on-surface-variant font-medium">Loading emergency contact...</p>
+              <p className="text-xs text-on-surface-variant font-medium">{t('home.loadingContact')}</p>
             </div>
           ) : emergencyContact ? (
             <div className="flex items-center justify-between">
@@ -416,7 +414,7 @@ export const HomeScreen: React.FC = () => {
                   <PhoneCall className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-on-surface">Emergency Contact</p>
+                  <p className="text-xs font-bold text-on-surface">{t('home.emergencyContact')}</p>
                   <p className="text-[11px] font-semibold text-on-surface">
                     {emergencyContact.name}{' '}
                     {emergencyContact.relation ? `(${emergencyContact.relation})` : ''}
@@ -428,7 +426,7 @@ export const HomeScreen: React.FC = () => {
                 href={`tel:${emergencyContact.phone}`}
                 className="inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-150 active:scale-95 select-none bg-blue-600 hover:bg-blue-700 text-white shadow-sm border border-blue-600 px-4 py-2 text-xs gap-1.5 min-h-[36px] shrink-0"
               >
-                Call
+                {t('home.call')}
               </a>
             </div>
           ) : (
@@ -438,8 +436,8 @@ export const HomeScreen: React.FC = () => {
                   <PhoneCall className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-on-surface">Emergency Contact</p>
-                  <p className="text-[11px] text-on-surface-variant">No emergency contacts added.</p>
+                  <p className="text-xs font-bold text-on-surface">{t('home.emergencyContact')}</p>
+                  <p className="text-[11px] text-on-surface-variant">{t('home.noContacts')}</p>
                 </div>
               </div>
               <Button
@@ -449,7 +447,7 @@ export const HomeScreen: React.FC = () => {
                 className="shrink-0"
                 leftIcon={<Plus className="w-4 h-4" />}
               >
-                Add Emergency Contact
+                {t('home.addEmergencyContact')}
               </Button>
             </div>
           )}

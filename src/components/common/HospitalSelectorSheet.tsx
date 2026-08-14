@@ -6,6 +6,7 @@ import { fetchGoogleRoute } from '../../services/googleRoutes';
 import { useNetworkSync } from '../../hooks/useNetworkSync';
 import { calculateHaversineDistance } from '../../utils/offlineDistance';
 import { Hospital as HospitalIcon, MapPin, Clock, X, Navigation, ShieldCheck, Star, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { SpinnerLoader, EmptyState, HospitalSkeleton } from './SkeletonLoader';
 
@@ -39,6 +40,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const { isOnline } = useNetworkSync();
+  const { t } = useTranslation();
 
   // Map of hospitalId → RouteInfo. undefined = still calculating, null entry = not yet started.
   const [routeMap, setRouteMap] = useState<Record<string, RouteInfo>>({});
@@ -209,8 +211,8 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               <HospitalIcon className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-sm font-extrabold text-slate-900">Select Destination Hospital</h2>
-              <p className="text-[11px] text-slate-500 font-medium">Nearby medical &amp; trauma centers sorted by distance</p>
+              <h2 className="text-sm font-extrabold text-slate-900">{t('hospitalSelector.selectDestinationHospital')}</h2>
+              <p className="text-[11px] text-slate-500 font-medium">{t('hospitalSelector.nearbyMedicalCenters')}</p>
             </div>
           </div>
 
@@ -227,7 +229,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         <div className="p-4 overflow-y-auto space-y-3 flex-1">
           {loading ? (
             <div className="space-y-3">
-              <SpinnerLoader message="Loading nearby hospitals..." />
+              <SpinnerLoader message={t('hospitalSelector.loadingNearbyHospitals')} />
               <HospitalSkeleton />
               <HospitalSkeleton />
               <HospitalSkeleton />
@@ -235,9 +237,9 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
           ) : hospitals.length === 0 ? (
             <EmptyState
               icon={HospitalIcon}
-              title="No nearby hospitals found."
-              description="Could not locate nearby emergency hospitals within 5 km radius of the accident location."
-              actionText="Retry"
+              title={t('hospitalSelector.noNearbyHospitalsFound')}
+              description={t('hospitalSelector.couldNotLocateHospitals')}
+              actionText={t('hospitalSelector.retry')}
               onAction={() => {
                 setLoading(true);
                 fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude).then((list) => {
@@ -274,11 +276,11 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                         </span>
                         <span className="text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
                           <ShieldCheck className="w-3 h-3" />
-                          Emergency Ready
+                          {t('hospitalSelector.emergencyReady')}
                         </span>
                         {hosp.bedsAvailable > 0 && (
                           <span className="text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
-                            {hosp.bedsAvailable} Beds Available
+                            {hosp.bedsAvailable} {t('hospitalSelector.bedsAvailable')}
                           </span>
                         )}
                       </div>
@@ -296,15 +298,15 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                       ) : !volunteerPosition ? (
                         <span className="text-[11px] font-bold text-slate-400 flex flex-col items-end gap-1">
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          <span className="leading-tight">Getting<br/>location...</span>
+                          <span className="leading-tight">{t('hospitalSelector.gettingLocation')}</span>
                         </span>
                       ) : isCalculating ? (
                         <span className="text-[11px] font-bold text-slate-400 flex items-center justify-end gap-1">
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Calculating...
+                          {t('common.calculating')}
                         </span>
                       ) : routeInfo!.failed ? (
-                        <span className="text-[11px] font-bold text-slate-400 block">Route unavailable</span>
+                        <span className="text-[11px] font-bold text-slate-400 block">{t('hospitalSelector.routeUnavailable')}</span>
                       ) : (
                         <>
                           <span className="text-sm font-extrabold text-red-800 block">
@@ -313,7 +315,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                           {routeInfo!.durationSeconds === -1 ? (
                             <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
                               <Clock className="w-3 h-3 text-slate-400 opacity-50" />
-                              Straight-line
+                              {t('hospitalSelector.straightLine')}
                             </span>
                           ) : (
                             <span className="text-[11px] font-bold text-slate-500 flex items-center justify-end gap-1">
@@ -335,7 +337,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
                     >
                       <Navigation className="w-3.5 h-3.5" />
-                      <span>Select Hospital</span>
+                      <span>{t('hospitalSelector.selectHospital')}</span>
                     </button>
                   </div>
                 </div>

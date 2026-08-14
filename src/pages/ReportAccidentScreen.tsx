@@ -7,19 +7,21 @@ import { supabase } from '../lib/supabase';
 import { isValidGpsCoordinate, formatSupabaseError } from '../utils/locationGuard';
 import { useNetworkSync } from '../hooks/useNetworkSync';
 import { GoogleMap } from '../components/maps/GoogleMap';
+import { useTranslation } from 'react-i18next';
 
 export const ReportAccidentScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { isOnline } = useNetworkSync();
   const locationState = useLocation().state as { category?: string } | undefined;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [incidentType, setIncidentType] = useState(locationState?.category || 'accident');
-  const [address, setAddress] = useState('Detecting GPS location...');
+  const [address, setAddress] = useState(t('reportAccident.detectingGps'));
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM'>('CRITICAL');
-  const [bloodGroup, setBloodGroup] = useState<string>('Unknown');
+  const [bloodGroup, setBloodGroup] = useState<string>(t('reportAccident.unknown'));
   
   // Image Upload States
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,8 +51,8 @@ export const ReportAccidentScreen: React.FC = () => {
           if (!isValidGpsCoordinate(lat, lng)) {
             setLatitude(null);
             setLongitude(null);
-            setAddress('Unable to determine location');
-            setErrorMessage('Unable to determine your current location. Please enable GPS and try again.');
+            setAddress(t('reportAccident.unableDetermineLocation'));
+            setErrorMessage(t('reportAccident.unableDetermineLocationDesc'));
             return;
           }
 
@@ -78,21 +80,21 @@ export const ReportAccidentScreen: React.FC = () => {
           console.warn('Geolocation access declined or unavailable:', err.message);
           setLatitude(null);
           setLongitude(null);
-          setAddress('GPS location unavailable');
-          setErrorMessage('Location permission denied. Please enable GPS to continue.');
+          setAddress(t('reportAccident.gpsUnavailable'));
+          setErrorMessage(t('reportAccident.locationPermissionDenied'));
         },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       setLatitude(null);
       setLongitude(null);
-      setAddress('GPS not supported');
-      setErrorMessage('Geolocation API is not supported by your browser.');
+      setAddress(t('reportAccident.gpsNotSupported'));
+      setErrorMessage(t('reportAccident.gpsApiNotSupported'));
     }
   };
 
   const handleRefetchGPS = () => {
-    setAddress('Detecting live GPS location...');
+    setAddress(t('reportAccident.detectingLiveGps'));
     fetchDeviceLocation();
   };
 
@@ -104,7 +106,7 @@ export const ReportAccidentScreen: React.FC = () => {
     // Validate mime type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
-      setErrorMessage('Please select a valid image file (JPG, PNG, or WEBP).');
+      setErrorMessage(t('reportAccident.invalidImageFile'));
       return;
     }
 
@@ -131,27 +133,27 @@ export const ReportAccidentScreen: React.FC = () => {
 
     // 1. Comprehensive Validation
     if (!isValidGpsCoordinate(latitude, longitude)) {
-      setErrorMessage('Unable to determine your current location. Please enable GPS to continue.');
+      setErrorMessage(t('reportAccident.locationPermissionDenied'));
       return;
     }
 
-    if (!address || address.trim() === '' || address === 'GPS location unavailable' || address === 'GPS not supported' || address === 'Unable to determine location') {
-      setErrorMessage('Location address is required to submit an emergency report.');
+    if (!address || address.trim() === '' || address === t('reportAccident.gpsUnavailable') || address === t('reportAccident.gpsNotSupported') || address === t('reportAccident.unableDetermineLocation')) {
+      setErrorMessage(t('reportAccident.locationRequired'));
       return;
     }
 
     if (!description || description.trim().length < 3) {
-      setErrorMessage('Please provide a brief description of the incident (at least 3 characters).');
+      setErrorMessage(t('reportAccident.descriptionRequired'));
       return;
     }
 
     if (!severity) {
-      setErrorMessage('Please select an emergency severity level.');
+      setErrorMessage(t('reportAccident.severityRequired'));
       return;
     }
 
     if (!user) {
-      setErrorMessage('You must be logged in to report an accident.');
+      setErrorMessage(t('reportAccident.mustBeLoggedIn'));
       return;
     }
 
@@ -161,7 +163,7 @@ export const ReportAccidentScreen: React.FC = () => {
     if (!isOnline) {
       if (selectedFile) {
         // Discard photo visually and logically but keep the rest
-        alert('Photos cannot be uploaded while offline. Submitting essential details only.');
+        alert(t('reportAccident.offlinePhotoAlert'));
       }
       
       const offlineReport = {
@@ -181,7 +183,7 @@ export const ReportAccidentScreen: React.FC = () => {
       pendingQueue.push(offlineReport);
       localStorage.setItem('rescuelink_pending_reports', JSON.stringify(pendingQueue));
       
-      setSuccessMessage('Emergency report saved on this device. It will be sent when connectivity is restored.');
+      setSuccessMessage(t('reportAccident.offlineSuccess'));
       setSubmitting(false);
       
       setTimeout(() => {
@@ -210,7 +212,7 @@ export const ReportAccidentScreen: React.FC = () => {
 
         if (uploadError) {
           console.error('[RescueLink Storage] Supabase Storage upload failed. Exact error:', uploadError);
-          setErrorMessage(`Image upload failed: ${uploadError.message || 'Storage error occurred'}`);
+          setErrorMessage(`${t('reportAccident.imageUploadFailed')} ${uploadError.message || 'Storage error occurred'}`);
           setSubmitting(false);
           return;
         }
@@ -245,13 +247,13 @@ export const ReportAccidentScreen: React.FC = () => {
 
       if (error) {
         console.error('[RescueLink Database] Supabase accident insert failed. Exact error:', error);
-        setErrorMessage(formatSupabaseError(error, 'Failed to save emergency report. Please try again.'));
+        setErrorMessage(formatSupabaseError(error, t('reportAccident.saveFailed')));
         setSubmitting(false);
         return;
       }
 
       console.log('Successfully inserted accident report into public.accidents:', data);
-      setSuccessMessage('Accident reported successfully.');
+      setSuccessMessage(t('reportAccident.successMessage'));
       setSubmitting(false);
 
       // 4. Navigate automatically to SOS Status screen
@@ -260,22 +262,22 @@ export const ReportAccidentScreen: React.FC = () => {
       }, 1000);
     } catch (err: any) {
       console.error('Unexpected error submitting accident report:', err);
-      setErrorMessage('An unexpected error occurred while dispatching the report.');
+      setErrorMessage(t('reportAccident.unexpectedError'));
       setSubmitting(false);
       setUploadingImage(false);
     }
   };
 
   const types = [
-    { id: 'accident', title: 'Vehicle Accident', icon: Car, color: 'border-blue-500 bg-blue-50 text-blue-800' },
-    { id: 'medical', title: 'Medical Crisis', icon: Stethoscope, color: 'border-red-500 bg-red-50 text-red-800' },
-    { id: 'fire', title: 'Fire & Outbreak', icon: Flame, color: 'border-amber-500 bg-amber-50 text-amber-800' },
-    { id: 'crime', title: 'Safety Hazard', icon: ShieldAlert, color: 'border-purple-500 bg-purple-50 text-purple-800' },
+    { id: 'accident', title: t('reportAccident.vehicleAccident'), icon: Car, color: 'border-blue-500 bg-blue-50 text-blue-800' },
+    { id: 'medical', title: t('reportAccident.medicalCrisis'), icon: Stethoscope, color: 'border-red-500 bg-red-50 text-red-800' },
+    { id: 'fire', title: t('reportAccident.fireOutbreak'), icon: Flame, color: 'border-amber-500 bg-amber-50 text-amber-800' },
+    { id: 'crime', title: t('reportAccident.safetyHazard'), icon: ShieldAlert, color: 'border-purple-500 bg-purple-50 text-purple-800' },
   ];
 
   return (
     <div className="flex flex-col min-h-full">
-      <Navbar title="Report Incident" showBack />
+      <Navbar title={t('reportAccident.reportIncident')} showBack />
 
       {/* Hidden File Picker Input */}
       <input
@@ -290,7 +292,7 @@ export const ReportAccidentScreen: React.FC = () => {
         {/* Header Alert */}
         <div className="bg-primary/10 border border-primary/30 p-3.5 rounded-2xl flex items-center gap-3 text-xs font-semibold text-primary">
           <AlertTriangle className="w-5 h-5 shrink-0" />
-          <span>Emergency services and nearby volunteer responders will be alerted automatically upon submission.</span>
+          <span>{t('reportAccident.emergencyAlertInfo')}</span>
         </div>
 
         {errorMessage && (
@@ -310,7 +312,7 @@ export const ReportAccidentScreen: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Incident Type Selector */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">1. Select Emergency Type</label>
+            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('reportAccident.selectEmergencyType')}</label>
             <div className="grid grid-cols-2 gap-2.5">
               {types.map((type) => {
                 const Icon = type.icon;
@@ -335,14 +337,14 @@ export const ReportAccidentScreen: React.FC = () => {
           {/* GPS Location Selector */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-on-surface uppercase tracking-wider">2. Emergency Location</label>
+              <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('reportAccident.emergencyLocation')}</label>
               <button 
                 type="button" 
                 onClick={handleRefetchGPS}
                 className="text-[11px] font-bold text-secondary flex items-center gap-1 hover:underline"
               >
                 <Navigation className="w-3.5 h-3.5" />
-                Refetch GPS
+                {t('reportAccident.refetchGps')}
               </button>
             </div>
             <div className="relative">
@@ -399,7 +401,7 @@ export const ReportAccidentScreen: React.FC = () => {
 
           {/* Severity Radio Group */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">3. Severity Level</label>
+            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('reportAccident.severityLevel')}</label>
             <div className="grid grid-cols-3 gap-2">
               {(['CRITICAL', 'HIGH', 'MEDIUM'] as const).map((lvl) => (
                 <button
@@ -424,12 +426,12 @@ export const ReportAccidentScreen: React.FC = () => {
 
           {/* Description */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">4. Additional Incident Details</label>
+            <label className="text-xs font-bold text-on-surface uppercase tracking-wider">{t('reportAccident.additionalDetails')}</label>
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe injuries, trapped persons, or fire scale..."
+              placeholder={t('reportAccident.describeInjuries')}
               className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
@@ -440,8 +442,8 @@ export const ReportAccidentScreen: React.FC = () => {
               <div className="flex items-center gap-2.5 text-xs text-slate-500">
                 <Camera className="w-5 h-5 text-secondary shrink-0" />
                 <div>
-                  <p className="font-semibold text-on-surface">Attach Scene Photo (Optional)</p>
-                  <p className="text-[10px] text-on-surface-variant/80">JPG, PNG, or WEBP (Max 10MB)</p>
+                  <p className="font-semibold text-on-surface">{t('reportAccident.attachScenePhoto')}</p>
+                  <p className="text-[10px] text-on-surface-variant/80">{t('reportAccident.photoFormats')}</p>
                 </div>
               </div>
               <button
@@ -451,7 +453,7 @@ export const ReportAccidentScreen: React.FC = () => {
                   selectedFile ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                 }`}
               >
-                {selectedFile ? 'Change Photo' : 'Upload Image'}
+                {selectedFile ? t('reportAccident.changePhoto') : t('reportAccident.uploadImage')}
               </button>
             </div>
 
@@ -477,7 +479,7 @@ export const ReportAccidentScreen: React.FC = () => {
           {/* Patient Blood Group Dropdown */}
           <div className="space-y-2">
             <label htmlFor="patient-blood-group-select" className="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
-              <span>🩸 Patient Blood Group</span>
+              <span>{t('reportAccident.patientBloodGroup')}</span>
             </label>
             <div className="relative">
               <select
@@ -486,7 +488,7 @@ export const ReportAccidentScreen: React.FC = () => {
                 onChange={(e) => setBloodGroup(e.target.value)}
                 className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 appearance-none cursor-pointer"
               >
-                <option value="Unknown">Select Blood Group ▼</option>
+                <option value={t('reportAccident.unknown')}>{t('reportAccident.selectBloodGroup')}</option>
                 <option value="A+">A+</option>
                 <option value="A-">A-</option>
                 <option value="B+">B+</option>
@@ -495,7 +497,7 @@ export const ReportAccidentScreen: React.FC = () => {
                 <option value="AB-">AB-</option>
                 <option value="O+">O+</option>
                 <option value="O-">O-</option>
-                <option value="Unknown">Unknown</option>
+                <option value={t('reportAccident.unknown')}>{t('reportAccident.unknown')}</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-on-surface-variant font-bold text-xs">
                 ▼
@@ -512,12 +514,12 @@ export const ReportAccidentScreen: React.FC = () => {
             {submitting ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
-                <span>{uploadingImage ? 'Uploading Scene Image...' : 'Dispatching Emergency Units...'}</span>
+                <span>{uploadingImage ? t('reportAccident.uploadingSceneImage') : t('reportAccident.dispatchingUnits')}</span>
               </div>
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>CONFIRM & DISPATCH EMERGENCY SOS</span>
+                <span>{t('reportAccident.confirmDispatch')}</span>
               </>
             )}
           </button>

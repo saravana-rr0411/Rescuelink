@@ -30,12 +30,15 @@ import {
   EyeOff,
   MapPin,
   WifiOff,
+  Globe,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
 import type { UserProfile } from '../context/ProfileContext';
 import { useNotifications } from '../context/NotificationContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from 'react-i18next';
+import { LanguageSelector } from '../components/common/LanguageSelector';
 import { createRipple } from '../utils/ripple';
 
 export const ProfileScreen: React.FC = () => {
@@ -44,6 +47,7 @@ export const ProfileScreen: React.FC = () => {
   const { user, signOut, updatePassword } = useAuth();
   const { profile: globalProfile, refreshProfile } = useProfile();
   const { unreadCount } = useNotifications();
+  const { t } = useTranslation();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +61,7 @@ export const ProfileScreen: React.FC = () => {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showPrivacySecurity, setShowPrivacySecurity] = useState(false);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
   
   // Password State
   const [passwordForm, setPasswordForm] = useState({ newPassword: '', confirmPassword: '' });
@@ -801,7 +806,7 @@ export const ProfileScreen: React.FC = () => {
         {/* ========================================================================= */}
         <div className="space-y-2">
           <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1">
-            Quick Access
+            {t('profile.quickAccess', { defaultValue: 'Quick Access' })}
           </h3>
 
           <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-level-1 overflow-hidden divide-y divide-surface-container-high">
@@ -818,8 +823,8 @@ export const ProfileScreen: React.FC = () => {
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">My History</h4>
-                  <p className="text-[10px] text-on-surface-variant">View past accident reports & response logs</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.history')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.historyDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -842,14 +847,14 @@ export const ProfileScreen: React.FC = () => {
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <h4 className="text-xs font-bold text-on-surface">Notifications</h4>
+                    <h4 className="text-xs font-bold text-on-surface">{t('profile.notifications')}</h4>
                     {unreadCount > 0 && (
                       <span className="text-[9px] font-extrabold bg-red-600 text-white px-1.5 py-0.2 rounded-full">
                         {unreadCount}
                       </span>
                     )}
                   </div>
-                  <p className="text-[10px] text-on-surface-variant truncate">Live emergency alerts & updates</p>
+                  <p className="text-[10px] text-on-surface-variant truncate">{t('profile.notificationsDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -868,8 +873,8 @@ export const ProfileScreen: React.FC = () => {
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">First Aid Guide</h4>
-                  <p className="text-[10px] text-on-surface-variant">10 offline step-by-step trauma procedures</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.firstAidGuide')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.firstAidGuideDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -888,8 +893,8 @@ export const ProfileScreen: React.FC = () => {
                   <Scale className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">Good Samaritan Guide</h4>
-                  <p className="text-[10px] text-on-surface-variant">Legal statutory protections & civil rights</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.goodSamaritanGuide')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.goodSamaritanGuideDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -902,7 +907,7 @@ export const ProfileScreen: React.FC = () => {
         {/* ========================================================================= */}
         <div className="space-y-2">
           <h3 className="text-xs font-black text-on-surface uppercase tracking-wider px-1">
-            Account & Security
+            {t('profile.accountSecurity')}
           </h3>
 
           <div className="bg-surface-container-lowest rounded-3xl border border-outline-variant/60 shadow-level-1 overflow-hidden divide-y divide-surface-container-high">
@@ -919,8 +924,28 @@ export const ProfileScreen: React.FC = () => {
                   <User className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">Edit Profile</h4>
-                  <p className="text-[10px] text-on-surface-variant">Update contact details, blood group & medical passport</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.editProfile')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.editProfileDesc')}</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </div>
+
+            {/* Language */}
+            <div
+              onClick={(e) => {
+                createRipple(e);
+                setShowLanguageModal(true);
+              }}
+              className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors group active:scale-[0.99] ripple-container"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.languageAndRegion')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.changeLanguage')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -939,8 +964,8 @@ export const ProfileScreen: React.FC = () => {
                   <Key className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">Change Password</h4>
-                  <p className="text-[10px] text-on-surface-variant">Update your account authentication credentials</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.changePassword')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.changePasswordDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -959,8 +984,8 @@ export const ProfileScreen: React.FC = () => {
                   <Lock className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-on-surface">Privacy & Security</h4>
-                  <p className="text-[10px] text-on-surface-variant">Manage data sharing & location permissions</p>
+                  <h4 className="text-xs font-bold text-on-surface">{t('profile.privacySecurity')}</h4>
+                  <p className="text-[10px] text-on-surface-variant">{t('profile.privacySecurityDesc')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-outline group-hover:translate-x-0.5 transition-transform shrink-0" />
@@ -978,7 +1003,7 @@ export const ProfileScreen: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black text-primary uppercase tracking-wider flex items-center gap-1.5">
                   <HeartPulse className="w-4 h-4" />
-                  <span>Emergency Medical Passport</span>
+                  <span>{t('profile.medicalPassport')}</span>
                 </h3>
                 <span className="text-[10px] text-on-surface-variant font-medium">Supabase Live DB</span>
               </div>
@@ -1005,7 +1030,7 @@ export const ProfileScreen: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black text-secondary uppercase tracking-wider flex items-center gap-1.5">
                   <PhoneCall className="w-4 h-4" />
-                  <span>Primary Emergency Contact</span>
+                  <span>{t('profile.emergencyContacts')}</span>
                 </h3>
                 <button
                   onClick={handleTriggerEditMode}
@@ -1033,12 +1058,12 @@ export const ProfileScreen: React.FC = () => {
                 </div>
               ) : (
                 <div className="bg-surface-container-low p-4 rounded-2xl text-center space-y-2">
-                  <p className="text-xs text-on-surface-variant font-medium">No emergency contacts added.</p>
+                  <p className="text-xs text-on-surface-variant font-medium">{t('home.noContacts', { defaultValue: 'No emergency contacts added.' })}</p>
                   <button
                     onClick={handleTriggerEditMode}
                     className="px-3.5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-blue-700 transition-colors active:scale-95"
                   >
-                    Add Emergency Contact
+                    {t('home.addEmergencyContact', { defaultValue: 'Add Emergency Contact' })}
                   </button>
                 </div>
               )}
@@ -1058,7 +1083,7 @@ export const ProfileScreen: React.FC = () => {
           className="w-full py-3.5 bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs rounded-2xl transition-colors flex items-center justify-center gap-2 border border-red-200 shadow-xs btn-press active:scale-[0.98] ripple-container"
         >
           <LogOut className="w-4 h-4 text-red-600" />
-          <span>Logout</span>
+          <span>{t('profile.signOut')}</span>
         </button>
 
         {/* ========================================================================= */}
@@ -1266,6 +1291,15 @@ export const ProfileScreen: React.FC = () => {
                 Close Information
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Language Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm animate-scale-up">
+            <LanguageSelector onClose={() => setShowLanguageModal(false)} />
           </div>
         </div>
       )}
