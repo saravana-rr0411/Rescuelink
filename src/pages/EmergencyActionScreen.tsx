@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -227,6 +227,23 @@ export const EmergencyActionScreen: React.FC = () => {
     ? [userLocation.lat, userLocation.lng]
     : null;
 
+  const sortedHospitals = useMemo(() => {
+    return [...hospitals].sort((a, b) => {
+      const routeA = routeMap[a.id];
+      const routeB = routeMap[b.id];
+
+      const distA = routeA
+        ? (routeA.failed ? Infinity : routeA.distanceMeters)
+        : a.distanceMeters;
+
+      const distB = routeB
+        ? (routeB.failed ? Infinity : routeB.distanceMeters)
+        : b.distanceMeters;
+
+      return distA - distB;
+    });
+  }, [hospitals, routeMap]);
+
   // Render SOS Navigation mode inside the mobile app container (Identical layout to LiveNavigationScreen)
   if (viewMode === 'navigation' && selectedHospital) {
     return (
@@ -443,7 +460,7 @@ export const EmergencyActionScreen: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {hospitals.map((hosp) => {
+                {sortedHospitals.map((hosp) => {
                   const routeInfo = routeMap[hosp.id];
                   const isCalculating = routeInfo === undefined;
 

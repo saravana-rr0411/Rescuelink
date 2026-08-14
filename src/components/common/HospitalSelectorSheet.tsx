@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import type { Hospital } from '../../utils/routing';
 import { fetchNearbyHospitalsOverpass, formatETA, fetchOSRMRoute } from '../../utils/routing';
 import { formatDistance } from '../../utils/distance';
@@ -136,6 +136,23 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
 
   if (!isOpen) return null;
 
+  const sortedHospitals = useMemo(() => {
+    return [...hospitals].sort((a, b) => {
+      const routeA = routeMap[a.id];
+      const routeB = routeMap[b.id];
+
+      const distA = routeA
+        ? (routeA.failed ? Infinity : routeA.distanceMeters)
+        : a.distanceMeters;
+
+      const distB = routeB
+        ? (routeB.failed ? Infinity : routeB.distanceMeters)
+        : b.distanceMeters;
+
+      return distA - distB;
+    });
+  }, [hospitals, routeMap]);
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center pointer-events-none p-0">
       {/* Bottom Sheet Container (Occupies ~75% of screen height, leaving map visible in top ~25%) */}
@@ -191,7 +208,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               }}
             />
           ) : (
-            hospitals.map((hosp) => {
+            sortedHospitals.map((hosp) => {
               const routeInfo = routeMap[hosp.id];
               const isCalculating = routeInfo === undefined;
               const isSelected = selectedId === hosp.id;
