@@ -234,7 +234,7 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
         <p className="text-xs text-slate-500 mt-1 mb-4">This accident alert may have been resolved or canceled.</p>
         <button
           onClick={() => navigate('/volunteer')}
-          className="px-5 py-2.5 bg-slate-900 text-white font-extrabold text-xs rounded-xl shadow-md"
+          className="px-5 py-2.5 bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md"
         >
           Return to Dashboard
         </button>

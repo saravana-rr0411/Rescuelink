@@ -39,7 +39,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </h2>
             </div>
             
-            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
               <p className="text-base text-slate-700 mb-6 font-medium leading-relaxed">
                 Learn how to recognise a possible cardiac emergency and understand the importance of immediate response and professional assistance.
               </p>
@@ -156,10 +156,10 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </h2>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-6">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
               
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded-xl">
                   01
                 </div>
                 <div>
@@ -169,7 +169,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded-xl">
                   02
                 </div>
                 <div>
@@ -179,7 +179,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded-xl">
                   03
                 </div>
                 <div>
@@ -189,7 +189,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded-xl">
                   04
                 </div>
                 <div>
@@ -199,7 +199,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
 
               <div className="flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded-xl">
                   05
                 </div>
                 <div>
@@ -221,7 +221,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </h2>
             </div>
             
-            <div className="bg-slate-900 text-white border border-slate-800 rounded-lg p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
                 <p className="text-sm text-slate-300 font-medium">
                   Learn essential first-aid practices for emergency situations.
@@ -229,7 +229,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/first-aid')}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded transition-colors whitespace-nowrap shrink-0"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-colors whitespace-nowrap shrink-0 active:scale-95 shadow-sm"
               >
                 Open First Aid
               </button>
@@ -242,7 +242,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
       {/* VIDEO MODAL */}
       {activeVideoId && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden animate-slide-up">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
             <div className="flex items-center justify-between p-4 border-b border-slate-800">
               <div>
                 <h3 className="font-bold text-white">Educational Video</h3>

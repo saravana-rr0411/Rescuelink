@@ -49,7 +49,7 @@ export const GoodSamaritanScreen: React.FC = () => {
             </p>
             <button 
               onClick={scrollToRights}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 text-sm font-semibold rounded hover:bg-slate-100 transition-colors"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 text-sm font-semibold rounded-xl hover:bg-slate-100 transition-colors shadow-sm"
             >
               Know Your Rights
               <ArrowRight className="w-4 h-4" />
@@ -72,15 +72,15 @@ export const GoodSamaritanScreen: React.FC = () => {
 
             <div className="space-y-4">
               {mockGoodSamaritanRights.map((right) => (
-                <div key={right.id} className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+                <div key={right.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                     <div>
-                      <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded mb-2">
+                      <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-md mb-2">
                         {right.actSection}
                       </span>
                       <h3 className="text-base font-bold text-slate-900 leading-tight">{right.title}</h3>
                     </div>
-                    <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold rounded shrink-0">
+                    <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold rounded-lg shrink-0">
                       {right.badge}
                     </span>
                   </div>
@@ -112,7 +112,7 @@ export const GoodSamaritanScreen: React.FC = () => {
             </div>
 
             <div className="grid gap-4">
-              <div className="bg-white border border-slate-200 rounded-lg p-5">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
                   "I do not know first aid."
@@ -122,7 +122,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-lg p-5">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
                   "Will helping create legal problems for me?"
@@ -132,7 +132,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-white border border-slate-200 rounded-lg p-5">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
                   "What if I make the situation worse?"
@@ -152,10 +152,10 @@ export const GoodSamaritanScreen: React.FC = () => {
               <h2 className="text-2xl font-bold text-slate-900">What Should I Do When I Witness an Accident?</h2>
             </div>
 
-            <div className="bg-white border border-slate-200 rounded-lg p-6">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded">
+                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded-xl">
                     01
                   </div>
                   <div>
@@ -165,7 +165,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded">
+                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded-xl">
                     02
                   </div>
                   <div>
@@ -175,7 +175,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </div>
 
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded">
+                  <div className="flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-700 font-bold flex items-center justify-center rounded-xl">
                     03
                   </div>
                   <div>
@@ -196,7 +196,7 @@ export const GoodSamaritanScreen: React.FC = () => {
           {/* 5. TAKE ACTION */}
           {/* ========================================================================= */}
           <section className="space-y-6">
-            <div className="bg-slate-900 text-white rounded-lg p-6 border border-slate-800">
+            <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm">
               <h2 className="text-xl font-bold mb-2">Witnessed a Road Accident?</h2>
               <p className="text-sm text-slate-300 mb-6">
                 Report the incident so that appropriate assistance can be coordinated.
@@ -204,16 +204,16 @@ export const GoodSamaritanScreen: React.FC = () => {
               
               <button
                 onClick={handleReportEmergency}
-                className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded shadow-sm transition-colors flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2 active:scale-95 border border-red-500"
               >
                 Report Emergency
               </button>
             </div>
 
             {/* LEGAL AID */}
-            <div className="bg-white border border-slate-200 rounded-lg p-4 flex items-center justify-between">
+            <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-600">
+                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center border border-slate-100 text-slate-600">
                   <Phone className="w-5 h-5" />
                 </div>
                 <div>
@@ -223,7 +223,7 @@ export const GoodSamaritanScreen: React.FC = () => {
               </div>
               <a
                 href="tel:18005550199"
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded transition-colors border border-slate-200"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition-colors border border-slate-200 active:scale-95"
               >
                 Call
               </a>

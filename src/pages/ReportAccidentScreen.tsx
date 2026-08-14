@@ -409,11 +409,11 @@ export const ReportAccidentScreen: React.FC = () => {
                   className={`py-2 rounded-xl text-xs font-bold border transition-all ${
                     severity === lvl
                       ? lvl === 'CRITICAL'
-                        ? 'bg-primary text-white border-primary'
+                        ? 'bg-red-600 text-white border-red-600'
                         : lvl === 'HIGH'
                         ? 'bg-amber-500 text-white border-amber-500'
-                        : 'bg-secondary text-white border-secondary'
-                      : 'bg-surface-container-lowest border-outline-variant/60 text-on-surface-variant'
+                        : 'bg-blue-600 text-white border-blue-600'
+                      : 'bg-white border-slate-200 text-slate-500'
                   }`}
                 >
                   {lvl}
@@ -430,14 +430,14 @@ export const ReportAccidentScreen: React.FC = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe injuries, trapped persons, or fire scale..."
-              className="w-full p-3.5 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
           </div>
 
           {/* Attach Photo / Media */}
-          <div className="bg-surface-container-lowest p-3.5 rounded-2xl border border-dashed border-outline-variant space-y-3">
+          <div className="bg-white p-3.5 rounded-2xl border border-dashed border-slate-300 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-xs text-on-surface-variant">
+              <div className="flex items-center gap-2.5 text-xs text-slate-500">
                 <Camera className="w-5 h-5 text-secondary shrink-0" />
                 <div>
                   <p className="font-semibold text-on-surface">Attach Scene Photo (Optional)</p>
@@ -448,7 +448,7 @@ export const ReportAccidentScreen: React.FC = () => {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  selectedFile ? 'bg-emerald-100 text-emerald-800' : 'bg-surface-container-high text-on-surface hover:bg-surface-container-highest'
+                  selectedFile ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                 }`}
               >
                 {selectedFile ? 'Change Photo' : 'Upload Image'}
@@ -484,7 +484,7 @@ export const ReportAccidentScreen: React.FC = () => {
                 id="patient-blood-group-select"
                 value={bloodGroup}
                 onChange={(e) => setBloodGroup(e.target.value)}
-                className="w-full p-3.5 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-semibold text-on-surface focus:outline-none focus:ring-2 focus:ring-primary appearance-none cursor-pointer"
+                className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 appearance-none cursor-pointer"
               >
                 <option value="Unknown">Select Blood Group ▼</option>
                 <option value="A+">A+</option>
@@ -507,7 +507,7 @@ export const ReportAccidentScreen: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-extrabold text-sm rounded-2xl shadow-level-2 hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-98"
+            className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-extrabold text-sm rounded-2xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-red-500"
           >
             {submitting ? (
               <div className="flex items-center gap-2">

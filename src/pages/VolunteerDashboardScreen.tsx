@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
+import { Button } from '../components/ui/Button';
 
 import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, Ambulance, PhoneCall, CheckSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -650,7 +651,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
             <div className="space-y-4">
               {assignedMissions.map((mission) => (
-                <div key={mission.id} className="bg-white border-2 border-emerald-500/40 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+                <div key={mission.id} className="bg-white border border-emerald-500/40 rounded-2xl p-5 shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded-full uppercase tracking-wide flex items-center gap-1.5 w-fit">
@@ -717,7 +718,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                           )}
                         </div>
                         <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 pt-0.5">
-                          <span>🏥</span>
+                          <HospitalIcon className="w-4 h-4 text-emerald-300 shrink-0" />
                           <span>{name}</span>
                         </h4>
                         <p className="text-xs text-slate-300 font-medium truncate">
@@ -741,10 +742,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       {/* 1. Call Ambulance (108) */}
                       <a
                         href="tel:108"
-                        className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200/80 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition-colors active:scale-95"
+                        className="py-2.5 px-3 bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-95"
                       >
                         <Ambulance className="w-4 h-4 text-red-600 shrink-0" />
-                        <span>🚑 Call Ambulance (108)</span>
+                        <span>Call Ambulance (108)</span>
                       </a>
 
                       {/* 2. Call Selected Hospital (Displayed ONLY after hospital is selected) */}
@@ -758,10 +759,10 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         return phoneNum ? (
                           <a
                             href={`tel:${phoneNum}`}
-                            className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-md transition-colors active:scale-95 border border-blue-500"
+                            className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors active:scale-95 border border-blue-600"
                           >
                             <PhoneCall className="w-4 h-4 text-white shrink-0" />
-                            <span>📞 Call Hospital</span>
+                            <span>Call Hospital</span>
                           </a>
                         ) : (
                           <button
@@ -786,7 +787,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   {/* Status Action Buttons & Resume Navigation */}
                   <div className="pt-3 border-t border-slate-100 space-y-2.5">
                     {mission.status !== 'Hospital Reached' ? (
-                      <button
+                      <Button
                         type="button"
                         onClick={() => {
                           navigate(`/navigation/${mission.id}`, {
@@ -800,25 +801,29 @@ export const VolunteerDashboardScreen: React.FC = () => {
                             },
                           });
                         }}
-                        className="w-full p-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-emerald-500"
+                        variant="primary"
+                        fullWidth
+                        leftIcon={<Navigation className="w-4 h-4" />}
                       >
-                        <Navigation className="w-4 h-4 text-white fill-white" />
-                        <span>▶ Resume Navigation</span>
-                      </button>
+                        Resume Navigation
+                      </Button>
                     ) : (
-                      <button
+                      <Button
                         type="button"
                         disabled={updatingStatusId === mission.id}
                         onClick={() => handleCompleteEmergency(mission.id)}
-                        className="w-full p-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-2 active:scale-95 border border-indigo-500 disabled:opacity-50"
+                        variant="success"
+                        fullWidth
+                        leftIcon={
+                          updatingStatusId === mission.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckSquare className="w-4 h-4" />
+                          )
+                        }
                       >
-                        {updatingStatusId === mission.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <CheckSquare className="w-4 h-4" />
-                        )}
-                        <span>Complete Emergency</span>
-                      </button>
+                        Complete Emergency
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -866,7 +871,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                 return (
                   <div
                     key={inc.id}
-                    className={`bg-white border rounded-3xl p-4 sm:p-5 shadow-xs space-y-3.5 transition-all ${isAssignedToOther ? 'border-amber-200 bg-amber-50/30 opacity-90' : 'border-slate-200/80 hover:border-slate-300'
+                    className={`bg-white border rounded-2xl p-5 shadow-sm space-y-3.5 transition-all ${isAssignedToOther ? 'border-amber-200 bg-amber-50/30 opacity-90' : 'border-slate-200 hover:border-slate-300'
                       }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -943,24 +948,22 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       ) : (
                         <div className="pt-0.5">
 
-                          <button
+                          <Button
                             type="button"
                             onClick={() => handleAcceptMission(inc.id)}
                             disabled={isAccepting}
-                            className="w-full py-2.5 px-3 rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 bg-red-800 text-white hover:bg-red-900 active:scale-95 disabled:opacity-70"
+                            variant="primary"
+                            fullWidth
+                            leftIcon={
+                              isAccepting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Navigation className="w-4 h-4" />
+                              )
+                            }
                           >
-                            {isAccepting ? (
-                              <>
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                <span>Accepting...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Navigation className="w-3.5 h-3.5" />
-                                <span>Accept Mission</span>
-                              </>
-                            )}
-                          </button>
+                            {isAccepting ? 'Accepting...' : 'Accept Mission'}
+                          </Button>
                         </div>
                       )}
                     </div>

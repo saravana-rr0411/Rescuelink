@@ -205,7 +205,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         {/* Header */}
         <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between bg-rose-50/40 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-red-800 text-white flex items-center justify-center shadow-xs">
+            <div className="w-9 h-9 rounded-2xl bg-red-600 text-white flex items-center justify-center shadow-xs">
               <HospitalIcon className="w-5 h-5" />
             </div>
             <div>
@@ -261,8 +261,8 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                   }}
                   className={`p-3.5 rounded-2xl border transition-all space-y-3 animate-card-enter cursor-pointer ${
                     isSelected
-                      ? 'bg-rose-50/50 border-red-700 ring-2 ring-red-700/20 shadow-xs'
-                      : 'bg-white border-slate-200/80 hover:border-red-300'
+                      ? 'bg-slate-50 border-slate-900 ring-2 ring-slate-900/20 shadow-xs'
+                      : 'bg-white border-slate-200 hover:border-slate-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -332,7 +332,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
                         setSelectedId(hosp.id);
                         onSelectHospital(hosp);
                       }}
-                      className="px-4 py-2 bg-red-800 hover:bg-red-900 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Select Hospital</span>

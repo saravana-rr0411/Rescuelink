@@ -1080,7 +1080,7 @@ export const ProfileScreen: React.FC = () => {
                   </div>
                   <a
                     href={`tel:${emergencyContactPhone}`}
-                    className="p-2.5 bg-secondary text-white rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                    className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs hover:bg-blue-700 transition-colors active:scale-95"
                     aria-label={`Call ${emergencyContactName}`}
                   >
                     <PhoneCall className="w-4 h-4" />
@@ -1091,7 +1091,7 @@ export const ProfileScreen: React.FC = () => {
                   <p className="text-xs text-on-surface-variant font-medium">No emergency contacts added.</p>
                   <button
                     onClick={handleTriggerEditMode}
-                    className="px-3.5 py-2 bg-secondary text-white text-xs font-bold rounded-xl shadow-xs hover:bg-secondary/90 transition-colors"
+                    className="px-3.5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl shadow-xs hover:bg-blue-700 transition-colors active:scale-95"
                   >
                     Add Emergency Contact
                   </button>

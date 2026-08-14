@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
+import { Button } from '../components/ui/Button';
 import { SOSButton } from '../components/ui/SOSButton';
 import { Stethoscope, Car, Flame, ShieldAlert, BookOpen, Scale, PhoneCall, MapPin, Clock, ChevronRight, Loader2, Radio, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -227,8 +228,8 @@ export const HomeScreen: React.FC = () => {
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-xs text-on-surface group-hover:text-primary transition-colors">{cat.title}</h3>
-                    <p className="text-[10px] text-on-surface-variant font-medium">1-Tap Report</p>
+                    <h3 className="font-bold text-sm text-slate-900 group-hover:text-slate-700 transition-colors">{cat.title}</h3>
+                    <p className="text-xs text-slate-500 font-medium">1-Tap Report</p>
                   </div>
                 </button>
               );
@@ -242,7 +243,7 @@ export const HomeScreen: React.FC = () => {
             <h2 className="text-sm font-bold text-on-surface uppercase tracking-wider">Active Nearby Alerts</h2>
             <button 
               onClick={() => navigate('/status')}
-              className="text-xs font-bold text-primary hover:underline"
+              className="text-sm font-semibold text-slate-900 hover:underline"
             >
               View Status
             </button>
@@ -300,7 +301,7 @@ export const HomeScreen: React.FC = () => {
                       <span className="text-[10px] font-bold bg-red-100 text-red-800 px-2 py-0.5 rounded-full uppercase">
                         {incident.severity}
                       </span>
-                      <h3 className="font-bold text-on-surface text-base group-hover:text-primary transition-colors mt-1">
+                      <h3 className="font-semibold text-slate-900 text-base mt-1">
                         {incident.address}
                       </h3>
                     </div>
@@ -323,7 +324,7 @@ export const HomeScreen: React.FC = () => {
 
                   <div className="flex items-center justify-between text-xs text-on-surface-variant/80 pt-2 border-t border-surface-container-high">
                     <div className="flex items-center gap-1.5 font-medium truncate max-w-[55%]">
-                      <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
+                      <MapPin className="w-4 h-4 text-slate-500 shrink-0" />
                       <span className="truncate">{incident.address}</span>
                     </div>
 
@@ -337,10 +338,10 @@ export const HomeScreen: React.FC = () => {
                           e.stopPropagation();
                           navigate('/status', { state: { accidentId: incident.id, mode: 'citizen' } });
                         }}
-                        className="text-xs font-bold text-primary flex items-center gap-0.5 hover:underline"
+                        className="text-sm font-semibold text-slate-900 flex items-center gap-0.5 hover:underline"
                       >
                         <span>View Details</span>
-                        <ChevronRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 transition-transform" />
+                        <ChevronRight className="w-4 h-4 text-blue-600 group-hover:translate-x-0.5 transition-transform" />
                       </button>
                     </div>
                   </div>
@@ -363,8 +364,8 @@ export const HomeScreen: React.FC = () => {
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-xs text-on-surface">First Aid Guide</h3>
-                <p className="text-[10px] text-on-surface-variant font-medium">CPR & Trauma steps</p>
+                <h3 className="font-semibold text-sm text-slate-900">First Aid Guide</h3>
+                <p className="text-xs text-slate-500 font-medium">CPR & Trauma steps</p>
               </div>
             </button>
 
@@ -376,8 +377,8 @@ export const HomeScreen: React.FC = () => {
                 <Scale className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-xs text-on-surface">Samaritan Rights</h3>
-                <p className="text-[10px] text-on-surface-variant font-medium">Legal protections</p>
+                <h3 className="font-semibold text-sm text-slate-900">Samaritan Rights</h3>
+                <p className="text-xs text-slate-500 font-medium">Legal protections</p>
               </div>
             </button>
           </div>
@@ -390,12 +391,14 @@ export const HomeScreen: React.FC = () => {
                 Learn CPR awareness and practical road accident response.
               </p>
             </div>
-            <button
+            <Button
               onClick={() => navigate('/training')}
-              className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors shrink-0 self-start sm:self-auto"
+              variant="primary"
+              size="sm"
+              className="shrink-0 self-start sm:self-auto"
             >
               Start Learning
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -409,7 +412,7 @@ export const HomeScreen: React.FC = () => {
           ) : emergencyContact ? (
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-800 flex items-center justify-center shrink-0">
                   <PhoneCall className="w-5 h-5" />
                 </div>
                 <div>
@@ -423,7 +426,7 @@ export const HomeScreen: React.FC = () => {
               </div>
               <a
                 href={`tel:${emergencyContact.phone}`}
-                className="bg-primary text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors shrink-0"
+                className="inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-150 active:scale-95 select-none bg-blue-600 hover:bg-blue-700 text-white shadow-sm border border-blue-600 px-4 py-2 text-xs gap-1.5 min-h-[36px] shrink-0"
               >
                 Call
               </a>
@@ -439,13 +442,15 @@ export const HomeScreen: React.FC = () => {
                   <p className="text-[11px] text-on-surface-variant">No emergency contacts added.</p>
                 </div>
               </div>
-              <button
+              <Button
                 onClick={() => navigate('/profile', { state: { edit: true } })}
-                className="bg-primary text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors flex items-center gap-1 shrink-0"
+                variant="primary"
+                size="sm"
+                className="shrink-0"
+                leftIcon={<Plus className="w-4 h-4" />}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Add Emergency Contact</span>
-              </button>
+                Add Emergency Contact
+              </Button>
             </div>
           )}
         </div>

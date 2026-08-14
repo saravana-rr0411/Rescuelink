@@ -362,23 +362,23 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Call Ambulance (108) */}
               <div
                 onClick={() => handleCall('108')}
-                className="bg-gradient-to-r from-red-700 to-rose-800 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity btn-press"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex items-center justify-between cursor-pointer group btn-press"
               >
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                    <Ambulance className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <Ambulance className="w-6 h-6 text-red-600" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                       Toll Free • National Emergency
                     </span>
-                    <h2 className="text-lg font-black mt-0.5">Call Ambulance (108)</h2>
-                    <p className="text-xs text-red-100 font-medium">
+                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">Call Ambulance</h2>
+                    <p className="text-xs text-slate-500 font-medium">
                       24/7 Medical & Casualty Response
                     </p>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white text-red-700 flex items-center justify-center font-black text-sm shrink-0 shadow-md">
+                <div className="w-12 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                   108
                 </div>
               </div>
@@ -386,21 +386,21 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Call Police (100) */}
               <div
                 onClick={() => handleCall('100')}
-                className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 rounded-2xl shadow-level-2 flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity btn-press"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex items-center justify-between cursor-pointer group btn-press"
               >
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
-                    <ShieldAlert className="w-6 h-6 text-white" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <ShieldAlert className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                       Law Enforcement Dispatch
                     </span>
-                    <h2 className="text-lg font-black mt-0.5">Call Police (100)</h2>
-                    <p className="text-xs text-blue-100 font-medium">Traffic & Crime Helpline</p>
+                    <h2 className="text-base font-black text-slate-900 leading-tight mt-0.5">Call Police</h2>
+                    <p className="text-xs text-slate-500 font-medium">Traffic & Crime Helpline</p>
                   </div>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white text-blue-800 flex items-center justify-center font-black text-sm shrink-0 shadow-md">
+                <div className="w-12 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
                   100
                 </div>
               </div>
@@ -411,7 +411,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Nearby Hospitals Button */}
               <button
                 onClick={handleOpenHospitals}
-                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group btn-press"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group btn-press"
               >
                 <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <HospitalIcon className="w-5 h-5 text-emerald-700" />
@@ -430,7 +430,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Share Live Location */}
               <button
                 onClick={handleShareLocation}
-                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Share2 className="w-5 h-5 text-amber-700" />
@@ -449,7 +449,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* First Aid Manual */}
               <button
                 onClick={() => navigate('/first-aid')}
-                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Bandage className="w-5 h-5 text-blue-700" />
@@ -468,7 +468,7 @@ export const EmergencyActionScreen: React.FC = () => {
               {/* Fire Brigade (101) */}
               <button
                 onClick={() => handleCall('101')}
-                className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all text-left flex flex-col justify-between space-y-3 group"
+                className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group"
               >
                 <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center group-hover:scale-105 transition-transform">
                   <Flame className="w-5 h-5 text-orange-700" />
@@ -531,7 +531,7 @@ export const EmergencyActionScreen: React.FC = () => {
                   return (
                     <div
                       key={hosp.id}
-                      className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/60 shadow-level-1 hover:border-primary/50 transition-all space-y-3"
+                      className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all space-y-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1 min-w-0 flex-1">
@@ -584,7 +584,7 @@ export const EmergencyActionScreen: React.FC = () => {
                           {hosp.phone && (
                             <a
                               href={`tel:${hosp.phone}`}
-                              className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
+                              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors border border-slate-200"
                             >
                               <PhoneCall className="w-3.5 h-3.5" />
                               <span>Call</span>
@@ -593,7 +593,7 @@ export const EmergencyActionScreen: React.FC = () => {
 
                           <button
                             onClick={() => handleStartNavigation(hosp)}
-                            className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-extrabold rounded-xl shadow-level-1 transition-all flex items-center gap-1.5 active:scale-95"
+                            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95 border border-blue-600"
                           >
                             <Navigation className="w-4 h-4" />
                             <span>Navigate</span>

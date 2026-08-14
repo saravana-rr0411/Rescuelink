@@ -536,7 +536,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             <button
               type="button"
               onClick={handleRecenter}
-              className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl border border-blue-400/90 flex items-center justify-center transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200 shrink-0"
+              className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-2xl border border-blue-600 flex items-center justify-center transition-all active:scale-95 animate-in fade-in zoom-in-95 duration-200 shrink-0"
               aria-label="Re-center camera on volunteer"
               title="Re-center camera on volunteer"
             >
@@ -562,7 +562,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
             }}
             className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 border shrink-0 ${
               isNavigationMode
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-400 ring-2 ring-emerald-400/30'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 ring-2 ring-blue-600/30'
                 : 'bg-white/95 hover:bg-white text-slate-700 border-slate-200 shadow-xl'
             }`}
             aria-label={`Navigation Mode: ${isNavigationMode ? 'ON' : 'OFF'}`}
@@ -639,7 +639,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               <a
                 href={`tel:${ambulancePhone || '108'}`}
                 onClick={handleCallAmbulance}
-                className="flex items-center justify-center gap-1.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] sm:text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none w-full shadow-sm"
+                className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
                 <span>Call Ambulance</span>
@@ -647,7 +647,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               <button
                 type="button"
                 onClick={handleCallHospital}
-                className="flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[11px] sm:text-xs rounded-xl border border-blue-200/80 transition-all active:scale-95 select-none w-full shadow-sm"
+                className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <Phone className="w-3.5 h-3.5 shrink-0 stroke-2" />
                 <span>Call Hospital</span>
@@ -672,7 +672,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                         .then(() => {});
                     }
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-blue-500 p-2"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-blue-600 p-2"
                 >
                   <Ambulance className="w-5 h-5 text-white stroke-[2.5]" />
                   <span className="text-center leading-tight">En Route<br />to Hospital</span>
@@ -683,7 +683,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                   onClick={() => {
                     if (onArrival) onArrival();
                   }}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-indigo-500 p-2"
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-slate-900 p-2"
                 >
                   <HospitalIcon className="w-5 h-5 text-white stroke-[2.5]" />
                   <span className="text-center leading-tight">Reached<br />Hospital</span>
@@ -725,7 +725,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               <a
                 href={`tel:${ambulancePhone || '108'}`}
                 onClick={handleCallAmbulance}
-                className="flex items-center justify-center gap-1.5 py-2 bg-red-50 hover:bg-red-100 text-red-700 font-bold text-[11px] sm:text-xs rounded-xl border border-red-200/80 transition-all active:scale-95 select-none w-full shadow-sm"
+                className="flex items-center justify-center gap-1.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] sm:text-xs rounded-xl border border-slate-200 transition-all active:scale-95 select-none w-full shadow-sm"
               >
                 <PhoneCall className="w-3.5 h-3.5 shrink-0 stroke-2" />
                 <span>Call Ambulance</span>
@@ -739,7 +739,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                 onClick={() => {
                   if (onArrival) onArrival();
                 }}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-xl transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-emerald-500 p-2"
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-slate-900 p-2"
               >
                 <CheckCircle2 className="w-5 h-5 text-white stroke-[2.5]" />
                 <span className="text-center leading-tight">Reached<br />Accident</span>
