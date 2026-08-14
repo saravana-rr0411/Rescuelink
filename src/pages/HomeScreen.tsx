@@ -387,7 +387,7 @@ export const HomeScreen: React.FC = () => {
             <div>
               <h3 className="font-bold text-sm text-on-surface">Emergency Response Training</h3>
               <p className="text-xs text-on-surface-variant mt-1 max-w-sm">
-                Learn the basic principles of first response, CPR awareness, and safe road accident assistance.
+                Learn CPR awareness and practical road accident response.
               </p>
             </div>
             <button

@@ -1,244 +1,273 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { BookOpen, HeartPulse, ShieldAlert, ChevronRight, Info } from 'lucide-react';
+import { HeartPulse, ShieldAlert, BookOpen, AlertCircle, Phone, Heart, Users, Play, X, Video } from 'lucide-react';
 
 export const EmergencyTrainingScreen: React.FC = () => {
-  const firstAidRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
   const cprRef = useRef<HTMLElement>(null);
   const responseRef = useRef<HTMLElement>(null);
-
-  const scrollTo = (ref: React.RefObject<HTMLElement | null>) => {
-    if (ref.current) {
-      const top = ref.current.getBoundingClientRect().top + window.scrollY - 80;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  };
+  const firstAidRef = useRef<HTMLElement>(null);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <Navbar title="Emergency Training" showBack />
+      <Navbar title="Emergency Response Training" showBack />
 
       <main className="flex-1 pb-16">
         {/* HERO */}
-        <section className="bg-slate-900 text-white px-6 py-10 border-b border-slate-800">
+        <section className="bg-slate-900 text-white px-6 py-12 border-b border-slate-800">
           <div className="max-w-3xl mx-auto">
-            <h1 className="text-2xl font-bold tracking-tight mb-2">Emergency Response Training</h1>
-            <p className="text-sm text-slate-400 max-w-xl leading-relaxed">
+            <h1 className="text-3xl font-bold tracking-tight mb-3">Emergency Response Training</h1>
+            <p className="text-lg text-slate-300 max-w-xl leading-relaxed font-medium">
               Learn the basic knowledge needed to respond safely during an emergency.
             </p>
           </div>
         </section>
 
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-12">
-          
-          {/* LEARNING OVERVIEW CARDS */}
-          <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button 
-              onClick={() => scrollTo(firstAidRef)}
-              className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group"
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-3">
-                <BookOpen className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-900 mb-1 group-hover:text-blue-700 transition-colors">First Aid Basics</h3>
-              <p className="text-xs text-slate-500">Core principles of first response.</p>
-            </button>
 
-            <button 
-              onClick={() => scrollTo(cprRef)}
-              className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group"
-            >
-              <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mb-3">
-                <HeartPulse className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-900 mb-1 group-hover:text-rose-700 transition-colors">CPR Awareness</h3>
-              <p className="text-xs text-slate-500">Recognising cardiac emergencies.</p>
-            </button>
-
-            <button 
-              onClick={() => scrollTo(responseRef)}
-              className="bg-white border border-slate-200 p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow text-left group"
-            >
-              <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
-                <ShieldAlert className="w-5 h-5" />
-              </div>
-              <h3 className="font-bold text-sm text-slate-900 mb-1 group-hover:text-amber-700 transition-colors">Accident Response</h3>
-              <p className="text-xs text-slate-500">Safe steps at a road accident.</p>
-            </button>
-          </section>
-
-          {/* DETAILED CONTENT */}
-          
-          {/* 1. FIRST AID BASICS */}
-          <section ref={firstAidRef} className="scroll-mt-24 space-y-4">
-            <div className="border-b border-slate-200 pb-2">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-blue-600" /> First Aid Basics
+          {/* ========================================================================= */}
+          {/* SECTION 1 — CPR AWARENESS */}
+          {/* ========================================================================= */}
+          <section ref={cprRef} className="space-y-6">
+            <div className="border-b border-slate-200 pb-3">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <HeartPulse className="w-6 h-6 text-rose-600" /> CPR Awareness
               </h2>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
-              <p className="text-sm text-slate-600 font-medium">
-                Understand the basic principles of providing safe assistance while professional help is being arranged.
+            
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm">
+              <p className="text-base text-slate-700 mb-6 font-medium leading-relaxed">
+                Learn how to recognise a possible cardiac emergency and understand the importance of immediate response and professional assistance.
               </p>
               
-              <div className="space-y-3 pt-2">
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900">Scene Safety</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Always ensure the area is safe for yourself before approaching a victim.</p>
+                    <h3 className="font-bold text-sm text-slate-900">Recognising a possible cardiac emergency</h3>
+                    <p className="text-xs text-slate-600 mt-1">Look for unresponsiveness and abnormal or absent breathing.</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </div>
+                <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
+                  <Phone className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900">Initial Assessment</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Observe the victim's condition. Are they conscious? Are they breathing normally?</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Provide Safe Assistance</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Assist only within the boundaries of your current knowledge. Reassure the victim and keep them calm.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-slate-100 flex items-center justify-center shrink-0">
-                    <ChevronRight className="w-4 h-4 text-slate-500" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">What To Avoid</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Do not move a severely injured person unless there is an immediate threat to their life (e.g., fire).</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* 2. CPR AWARENESS */}
-          <section ref={cprRef} className="scroll-mt-24 space-y-4">
-            <div className="border-b border-slate-200 pb-2">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-rose-600" /> CPR Awareness
-              </h2>
-            </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
-              <p className="text-sm text-slate-600 font-medium">
-                Learn the basics of recognising a cardiac emergency and the importance of getting immediate professional assistance.
-              </p>
-              
-              <div className="space-y-3 pt-2">
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-rose-50 flex items-center justify-center shrink-0">
-                    <span className="text-rose-600 font-bold text-xs">1</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Recognise the Emergency</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Check if the person is unresponsive and not breathing, or only gasping.</p>
+                    <h3 className="font-bold text-sm text-slate-900">Calling for emergency assistance</h3>
+                    <p className="text-xs text-slate-600 mt-1">Dial emergency services immediately. Ensure the dispatcher knows the exact location.</p>
                   </div>
                 </div>
                 
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-rose-50 flex items-center justify-center shrink-0">
-                    <span className="text-rose-600 font-bold text-xs">2</span>
-                  </div>
+                <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
+                  <Heart className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900">Call for Help</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Immediately call emergency services. Ask a bystander to find an AED if available.</p>
+                    <h3 className="font-bold text-sm text-slate-900">Basic CPR awareness</h3>
+                    <p className="text-xs text-slate-600 mt-1">CPR involves rhythmic chest compressions to maintain blood flow.</p>
                   </div>
                 </div>
-
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded bg-rose-50 flex items-center justify-center shrink-0">
-                    <span className="text-rose-600 font-bold text-xs">3</span>
-                  </div>
+                
+                <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
+                  <Users className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-sm text-slate-900">Basic CPR Knowledge</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">CPR involves chest compressions to keep blood flowing. Follow the emergency dispatcher's instructions—they can guide you through the process over the phone.</p>
+                    <h3 className="font-bold text-sm text-slate-900">Following professional guidance</h3>
+                    <p className="text-xs text-slate-600 mt-1">Stay on the phone. Emergency dispatchers can provide step-by-step guidance.</p>
                   </div>
                 </div>
               </div>
-              
-              <div className="mt-4 p-3 bg-slate-50 border border-slate-200 rounded flex items-start gap-2">
-                <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  Note: Reading this information does not provide professional medical certification. Consider enrolling in a certified CPR training course in your area for hands-on practice.
+
+              {/* VIDEO LEARNING AREA */}
+              <div className="mb-6">
+                <h3 className="font-bold text-sm text-slate-900 mb-3 flex items-center gap-2">
+                  <Video className="w-5 h-5 text-slate-500" />
+                  Educational CPR Videos
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  
+                  {/* VIDEO CARD 1 */}
+                  <button 
+                    onClick={() => setActiveVideoId('M4ACYp75mjU')}
+                    className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
+                  >
+                    <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
+                      <img 
+                        src="https://img.youtube.com/vi/M4ACYp75mjU/maxresdefault.jpg" 
+                        alt="Learn Hands-Only CPR in 60 seconds - AHA"
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/M4ACYp75mjU/hqdefault.jpg"; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-rose-600 shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-5 h-5 ml-1" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">Learn Hands-Only CPR (60s)</h4>
+                      <p className="text-xs text-slate-500">American Heart Association (AHA)</p>
+                    </div>
+                  </button>
+
+                  {/* VIDEO CARD 2 */}
+                  <button 
+                    onClick={() => setActiveVideoId('ILxjxfB4zNk')}
+                    className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
+                  >
+                    <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
+                      <img 
+                        src="https://img.youtube.com/vi/ILxjxfB4zNk/maxresdefault.jpg" 
+                        alt="Vinnie Jones' hard and fast Hands-only CPR - BHF"
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                        onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/ILxjxfB4zNk/hqdefault.jpg"; }}
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-rose-600 shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="w-5 h-5 ml-1" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">Hands-only CPR (Vinnie Jones)</h4>
+                      <p className="text-xs text-slate-500">British Heart Foundation (BHF)</p>
+                    </div>
+                  </button>
+
+                </div>
+              </div>
+
+              <div className="bg-rose-50 border-l-4 border-rose-500 p-4 text-sm text-rose-900">
+                <p className="font-bold mb-1">Important Safety Note</p>
+                <p>
+                  This information is provided for general awareness only. Viewing this content does not provide medical certification, nor does it replace professional, hands-on CPR training.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* 3. ROAD ACCIDENT RESPONSE */}
-          <section ref={responseRef} className="scroll-mt-24 space-y-4">
-            <div className="border-b border-slate-200 pb-2">
-              <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-amber-600" /> Road Accident Response
+          {/* ========================================================================= */}
+          {/* SECTION 2 — ROAD ACCIDENT RESPONSE */}
+          {/* ========================================================================= */}
+          <section ref={responseRef} className="space-y-6">
+            <div className="border-b border-slate-200 pb-3">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <ShieldAlert className="w-6 h-6 text-amber-600" /> Road Accident Response
               </h2>
             </div>
-            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4">
-              <p className="text-sm text-slate-600 font-medium">
-                Learn how a bystander can respond safely when witnessing a road accident.
-              </p>
+
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-6">
               
-              <ul className="space-y-3 pt-2">
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2"></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Assess Scene Safety</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Ensure you are safe from oncoming traffic, fire, or hazards before acting.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2"></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Contact Emergency Assistance</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Call emergency services immediately or use the RescueLink reporting tool.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2"></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Share Accurate Location</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Provide exact details, landmarks, and the number of people involved.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2"></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Avoid Unnecessary Risks</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Do not place yourself in the path of traffic to warn others unless it is completely safe and you have high-visibility gear.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-2"></div>
-                  <div>
-                    <h4 className="font-bold text-sm text-slate-900">Coordinate With Responders</h4>
-                    <p className="text-sm text-slate-600 mt-0.5">Once help arrives, step back and inform them of any observations you made.</p>
-                  </div>
-                </li>
-              </ul>
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                  01
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">ASSESS</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">Check whether the scene is reasonably safe before approaching.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                  02
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">REPORT</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">Contact emergency assistance and provide the accident location.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                  03
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">SHARE INFORMATION</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">Provide clear information about the location and situation.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                  04
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">ASSIST SAFELY</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">If it is safe to do so, provide reasonable assistance within your knowledge and ability.</p>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-slate-100 text-slate-800 font-bold flex items-center justify-center rounded">
+                  05
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">COORDINATE</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">Follow appropriate guidance and cooperate with arriving responders.</p>
+                </div>
+              </div>
+
             </div>
           </section>
 
-          {/* CLOSING */}
-          <div className="bg-slate-100 p-5 rounded border border-slate-200 text-center">
-            <p className="text-sm font-semibold text-slate-700">
-              Learning the basics can help you respond with greater confidence while professional assistance is on the way.
-            </p>
-          </div>
+          {/* ========================================================================= */}
+          {/* SECTION 3 — FIRST AID LINK */}
+          {/* ========================================================================= */}
+          <section ref={firstAidRef} className="space-y-6">
+            <div className="border-b border-slate-200 pb-3">
+              <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-blue-600" /> First Aid Basics
+              </h2>
+            </div>
+            
+            <div className="bg-slate-900 text-white border border-slate-800 rounded-lg p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div>
+                <p className="text-sm text-slate-300 font-medium">
+                  Learn essential first-aid practices for emergency situations.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/first-aid')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded transition-colors whitespace-nowrap shrink-0"
+              >
+                Open First Aid
+              </button>
+            </div>
+          </section>
 
         </div>
       </main>
+
+      {/* VIDEO MODAL */}
+      {activeVideoId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden animate-slide-up">
+            <div className="flex items-center justify-between p-4 border-b border-slate-800">
+              <div>
+                <h3 className="font-bold text-white">Educational Video</h3>
+                <p className="text-xs text-slate-400">Press play to begin</p>
+              </div>
+              <button
+                onClick={() => setActiveVideoId(null)}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="w-full aspect-video bg-black">
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?autoplay=1&rel=0&modestbranding=1`}
+                title="Educational CPR Video"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
