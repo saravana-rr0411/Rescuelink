@@ -21,6 +21,8 @@ import { fetchNearbyHospitalsOverpass, formatETA, fetchOSRMRoute } from '../util
 import { formatDistance } from '../utils/distance';
 import { fetchGoogleRoute } from '../services/googleRoutes';
 import { GoogleMapsNavigationMode } from '../components/common/GoogleMapsNavigationMode';
+import { useNetworkSync } from '../hooks/useNetworkSync';
+import { calculateHaversineDistance, calculateBearing } from '../utils/offlineDistance';
 
 interface RouteInfo {
   distanceMeters: number;
@@ -30,6 +32,7 @@ interface RouteInfo {
 
 export const EmergencyActionScreen: React.FC = () => {
   const navigate = useNavigate();
+  const { isOnline } = useNetworkSync();
 
   // Mode: 'actions' | 'hospitals' | 'navigation'
   const [viewMode, setViewMode] = useState<'actions' | 'hospitals' | 'navigation'>('actions');
@@ -53,6 +56,21 @@ export const EmergencyActionScreen: React.FC = () => {
 
     let isMounted = true;
     const { lat, lng } = userLocation;
+
+    if (!isOnline) {
+      hospitals.forEach((hosp) => {
+        const dist = calculateHaversineDistance(lat, lng, hosp.latitude, hosp.longitude);
+        setRouteMap((prev) => ({
+          ...prev,
+          [hosp.id]: {
+            distanceMeters: dist,
+            durationSeconds: -1, // indicates offline calculation
+            failed: false,
+          }
+        }));
+      });
+      return;
+    }
 
     hospitals.forEach(async (hosp) => {
       if (routeFetchedRef.current.has(hosp.id)) return;
@@ -129,96 +147,122 @@ export const EmergencyActionScreen: React.FC = () => {
     window.location.href = `tel:${number}`;
   };
 
-  const handleOpenHospitals = async () => {
-    // Reset route mapping state before opening
-    routeFetchedRef.current = new Set();
-    setRouteMap({});
-
-    if (userLocation) {
-      setViewMode('hospitals');
-      setLoadingHospitals(true);
-      try {
-        const list = await fetchNearbyHospitalsOverpass(userLocation.lat, userLocation.lng);
-        setHospitals(list);
-      } catch (err) {
-        console.error('[Emergency Action Screen] Error loading hospitals:', err);
-      } finally {
-        setLoadingHospitals(false);
+  const fetchHospitals = async (lat: number, lng: number) => {
+    if (!isOnline) {
+      const cached = localStorage.getItem('rescuelink_cached_hospitals');
+      if (cached) {
+        setHospitals(JSON.parse(cached));
+      } else {
+        setHospitals([]);
       }
       return;
     }
 
-    if (!('geolocation' in navigator)) {
-      setToastMessage('Unable to get your current location. Please enable location access to find nearby hospitals.');
-      setTimeout(() => setToastMessage(null), 3000);
+    try {
+      const list = await fetchNearbyHospitalsOverpass(lat, lng);
+      setHospitals(list);
+      localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
+    } catch (err) {
+      console.error('[Emergency Action Screen] Error loading hospitals:', err);
+    }
+  };
+
+  const handleOpenHospitals = async () => {
+    // Reset route mapping state before opening
+    routeFetchedRef.current = new Set();
+    setRouteMap({});
+    setToastMessage(null);
+
+    setViewMode('hospitals');
+
+    if (userLocation) {
+      setLoadingHospitals(true);
+      await fetchHospitals(userLocation.lat, userLocation.lng);
+      setLoadingHospitals(false);
       return;
     }
 
-    setToastMessage('Acquiring fresh GPS location...');
+    if (!('geolocation' in navigator)) {
+      setLoadingHospitals(true);
+      if (!isOnline) await fetchHospitals(0, 0);
+      setLoadingHospitals(false);
+      return;
+    }
+
+    setLoadingHospitals(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const freshCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(freshCoords);
-        setViewMode('hospitals');
-        setLoadingHospitals(true);
-        try {
-          const list = await fetchNearbyHospitalsOverpass(freshCoords.lat, freshCoords.lng);
-          setHospitals(list);
-        } catch (err) {
-          console.error('[Emergency Action Screen] Error loading hospitals:', err);
-        } finally {
-          setLoadingHospitals(false);
-        }
-        setToastMessage(null);
+        await fetchHospitals(freshCoords.lat, freshCoords.lng);
+        setLoadingHospitals(false);
       },
-      (err) => {
+      async (err) => {
         console.warn('[Emergency Action Screen] Fresh GPS request failed:', err.message);
-        setToastMessage('Unable to get your current location. Please enable location access to find nearby hospitals.');
-        setTimeout(() => setToastMessage(null), 3000);
+        if (!isOnline) {
+          await fetchHospitals(0, 0);
+        }
+        setLoadingHospitals(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
   const handleStartNavigation = (hospital: Hospital) => {
+    if (!isOnline) {
+      setToastMessage('Navigation requires an internet connection.');
+      setTimeout(() => setToastMessage(null), 3000);
+      return;
+    }
     setSelectedHospital(hospital);
     setViewMode('navigation');
   };
 
   const handleShareLocation = async () => {
+    setToastMessage(null);
+    
+    const sharePos = async (lat: number, lng: number) => {
+      if (!isOnline) {
+        localStorage.setItem('rescuelink_offline_share_location', JSON.stringify({ lat, lng, timestamp: Date.now() }));
+        return;
+      }
+
+      const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+      const shareText = `🚨 EMERGENCY SOS! I need immediate help. My current GPS Location: ${mapUrl}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'RescueLink Emergency Location',
+            text: shareText,
+            url: mapUrl,
+          });
+        } catch (e) {
+          console.warn('[Share Location] Cancelled:', e);
+        }
+      } else {
+        try {
+          await navigator.clipboard.writeText(shareText);
+        } catch (e) {
+          console.warn('[Share Location] Clipboard failed:', e);
+        }
+      }
+    };
+
+    if (userLocation) {
+      sharePos(userLocation.lat, userLocation.lng);
+      return;
+    }
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-          const shareText = `🚨 EMERGENCY SOS! I need immediate help. My current GPS Location: ${mapUrl}`;
-
-          if (navigator.share) {
-            try {
-              await navigator.share({
-                title: 'RescueLink Emergency Location',
-                text: shareText,
-                url: mapUrl,
-              });
-              setToastMessage('GPS Location shared successfully!');
-            } catch (e) {
-              console.warn('[Share Location] Cancelled:', e);
-            }
-          } else {
-            try {
-              await navigator.clipboard.writeText(shareText);
-              setToastMessage('GPS location link copied to clipboard!');
-            } catch {
-              setToastMessage(`GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
-            }
-          }
-          setTimeout(() => setToastMessage(null), 3000);
+        (pos) => {
+          sharePos(pos.coords.latitude, pos.coords.longitude);
         },
         () => {
-          setToastMessage('Location permission required.');
-          setTimeout(() => setToastMessage(null), 3000);
-        }
+          // Silently fail if location is unavailable
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
       );
     }
   };
@@ -272,6 +316,7 @@ export const EmergencyActionScreen: React.FC = () => {
         <div className="flex items-center space-x-3">
           <button
             onClick={() => {
+              setToastMessage(null);
               if (viewMode === 'hospitals') {
                 setViewMode('actions');
               } else {
@@ -300,7 +345,7 @@ export const EmergencyActionScreen: React.FC = () => {
 
       {/* Floating Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-on-surface text-surface px-4 py-2.5 rounded-full text-xs font-bold shadow-level-3 animate-in fade-in zoom-in duration-200">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-[320px] bg-on-surface text-surface px-4 py-3 rounded-xl text-sm font-bold shadow-level-3 animate-in fade-in zoom-in duration-200 text-center leading-snug break-words">
           {toastMessage}
         </div>
       )}
@@ -447,7 +492,21 @@ export const EmergencyActionScreen: React.FC = () => {
         {/* ========================================================================= */}
         {viewMode === 'hospitals' && (
           <div className="space-y-3">
-
+            {!isOnline && hospitals.length > 0 && (
+              <div className="bg-amber-100 text-amber-900 px-4 py-2 text-xs font-bold rounded-lg border border-amber-200 animate-fade-in">
+                Offline — Showing previously loaded hospitals
+              </div>
+            )}
+            {!isOnline && hospitals.length === 0 && (
+              <div className="bg-amber-100 text-amber-900 px-4 py-3 text-xs font-bold rounded-lg border border-amber-200 text-center animate-fade-in">
+                No hospital information is available offline. Connect to the internet to search for nearby hospitals.
+              </div>
+            )}
+            {!userLocation && !loadingHospitals && hospitals.length > 0 && (
+              <div className="bg-slate-100 text-slate-700 px-4 py-2 text-xs font-medium rounded-lg border border-slate-200 text-center animate-fade-in">
+                Location unavailable. Distance and navigation features are disabled.
+              </div>
+            )}
 
             {loadingHospitals ? (
               <div className="py-16 text-center space-y-3">
@@ -467,6 +526,7 @@ export const EmergencyActionScreen: React.FC = () => {
                 {sortedHospitals.map((hosp) => {
                   const routeInfo = routeMap[hosp.id];
                   const isCalculating = routeInfo === undefined;
+                  const isOfflineCalculation = routeInfo && routeInfo.durationSeconds === -1;
 
                   return (
                     <div
@@ -494,12 +554,18 @@ export const EmergencyActionScreen: React.FC = () => {
                           ) : (
                             <>
                               <span className="text-xs font-extrabold text-primary bg-primary-fixed px-2.5 py-1 rounded-full border border-primary/20 block text-center">
-                                {formatDistance(routeInfo!.distanceMeters)}
+                                {isOfflineCalculation ? `Approx. ${formatDistance(routeInfo!.distanceMeters)}` : formatDistance(routeInfo!.distanceMeters)}
                               </span>
-                              <span className="text-[11px] font-bold text-on-surface-variant flex items-center justify-end gap-1 mt-1">
-                                <Clock className="w-3 h-3 text-on-surface-variant/70" />
-                                {formatETA(routeInfo!.durationSeconds)}
-                              </span>
+                              {!isOfflineCalculation ? (
+                                <span className="text-[11px] font-bold text-on-surface-variant flex items-center justify-end gap-1 mt-1">
+                                  <Clock className="w-3 h-3 text-on-surface-variant/70" />
+                                  {formatETA(routeInfo!.durationSeconds)}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-bold text-amber-600 flex items-center justify-end gap-1 mt-1">
+                                  Dir: {calculateBearing(userLocation!.lat, userLocation!.lng, hosp.latitude, hosp.longitude)}
+                                </span>
+                              )}
                             </>
                           )}
                         </div>

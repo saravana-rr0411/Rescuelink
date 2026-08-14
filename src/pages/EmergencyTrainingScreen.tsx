@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { HeartPulse, ShieldAlert, BookOpen, AlertCircle, Phone, Heart, Users, Play, X, Video } from 'lucide-react';
+import { useNetworkSync } from '../hooks/useNetworkSync';
 
 export const EmergencyTrainingScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
   const responseRef = useRef<HTMLElement>(null);
   const firstAidRef = useRef<HTMLElement>(null);
   const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
+  const { isOnline } = useNetworkSync();
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
@@ -86,7 +88,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   
                   {/* VIDEO CARD 1 */}
                   <button 
-                    onClick={() => setActiveVideoId('M4ACYp75mjU')}
+                    onClick={() => isOnline ? setActiveVideoId('M4ACYp75mjU') : alert('An internet connection is required to play educational videos.')}
                     className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
                   >
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
@@ -110,7 +112,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
 
                   {/* VIDEO CARD 2 */}
                   <button 
-                    onClick={() => setActiveVideoId('ILxjxfB4zNk')}
+                    onClick={() => isOnline ? setActiveVideoId('ILxjxfB4zNk') : alert('An internet connection is required to play educational videos.')}
                     className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
                   >
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">

@@ -5,11 +5,13 @@ import { Car, Stethoscope, Flame, ShieldAlert, MapPin, Camera, AlertTriangle, Se
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { isValidGpsCoordinate, formatSupabaseError } from '../utils/locationGuard';
+import { useNetworkSync } from '../hooks/useNetworkSync';
 import { GoogleMap } from '../components/maps/GoogleMap';
 
 export const ReportAccidentScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isOnline } = useNetworkSync();
   const locationState = useLocation().state as { category?: string } | undefined;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -155,6 +157,38 @@ export const ReportAccidentScreen: React.FC = () => {
 
     setSubmitting(true);
     let uploadedPhotoUrl: string | null = null;
+
+    if (!isOnline) {
+      if (selectedFile) {
+        // Discard photo visually and logically but keep the rest
+        alert('Photos cannot be uploaded while offline. Submitting essential details only.');
+      }
+      
+      const offlineReport = {
+        id: crypto.randomUUID(),
+        reporter_id: user.id,
+        latitude: latitude,
+        longitude: longitude,
+        address: address.trim(),
+        severity: severity,
+        description: description.trim(),
+        blood_group: bloodGroup,
+        timestamp: new Date().toISOString()
+      };
+      
+      const existing = localStorage.getItem('rescuelink_pending_reports');
+      const pendingQueue = existing ? JSON.parse(existing) : [];
+      pendingQueue.push(offlineReport);
+      localStorage.setItem('rescuelink_pending_reports', JSON.stringify(pendingQueue));
+      
+      setSuccessMessage('Emergency report saved on this device. It will be sent when connectivity is restored.');
+      setSubmitting(false);
+      
+      setTimeout(() => {
+        navigate('/home');
+      }, 3500);
+      return;
+    }
 
     try {
       // 2. Upload Image to Supabase Storage if selected
