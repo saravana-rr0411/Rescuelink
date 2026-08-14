@@ -91,19 +91,20 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
 
   // 3. Fetch Google Route Preview (Volunteer -> Accident)
   useEffect(() => {
-    if (!incident || incident.latitude === null || incident.longitude === null) return;
+    if (!incident || incident.latitude === null || incident.longitude === null || !volunteerPos) return;
+
+    let isMounted = true;
 
     const loadRoutePreview = async () => {
       setLoadingRoute(true);
 
-      const origin = volunteerPos || {
-        lat: incident.latitude - 0.008,
-        lng: incident.longitude - 0.006,
-      };
-
+      const origin = { lat: volunteerPos.lat, lng: volunteerPos.lng };
       const destination = { lat: incident.latitude, lng: incident.longitude };
 
       const routeRes = await fetchGoogleRoute(origin, destination);
+      
+      if (!isMounted) return;
+
       if (!routeRes.error && routeRes.polyline) {
         setPolylineString(routeRes.polyline);
         setDistanceMeters(routeRes.distanceMeters);
@@ -114,6 +115,10 @@ export const VolunteerMapPreviewScreen: React.FC = () => {
     };
 
     loadRoutePreview();
+
+    return () => {
+      isMounted = false;
+    };
   }, [incident, volunteerPos]);
 
   // 3. Prevent rendering preview screen for already accepted missions

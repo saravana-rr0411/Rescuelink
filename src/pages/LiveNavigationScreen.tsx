@@ -26,7 +26,7 @@ export const LiveNavigationScreen: React.FC = () => {
   const { accidentId: routeAccidentId } = useParams<{ accidentId?: string }>();
   const activeAccidentId = routeAccidentId || locationState?.accidentId || 'default-accident';
 
-  const mode: 'citizen' | 'volunteer' = locationState?.mode || 'citizen';
+  const mode: 'citizen' | 'volunteer' = locationState?.mode || 'volunteer';
 
   const [accident, setAccident] = useState<AccidentData | null>(() => {
     if (locationState?.latitude && locationState?.longitude) {
@@ -62,6 +62,15 @@ export const LiveNavigationScreen: React.FC = () => {
     }
     return null;
   });
+
+  const [liveVolunteerPos, setLiveVolunteerPos] = useState<[number, number] | null>(null);
+
+  useEffect(() => {
+    if (accident?.volunteer_latitude && accident?.volunteer_longitude && !liveVolunteerPos) {
+      setLiveVolunteerPos([accident.volunteer_latitude, accident.volunteer_longitude]);
+    }
+  }, [accident?.volunteer_latitude, accident?.volunteer_longitude, liveVolunteerPos]);
+
 
   // Fetch real accident record if available
   useEffect(() => {
@@ -169,25 +178,36 @@ export const LiveNavigationScreen: React.FC = () => {
       // Volunteer reached hospital
       if (activeAccidentId && activeAccidentId !== 'default-accident') {
         console.log('[RescueLink Nav] Volunteer reached hospital destination. Updating status to Hospital Reached...');
-        await supabase
-          .from('accidents')
-          .update({ status: 'Hospital Reached', hospital_reached_at: new Date().toISOString() })
-          .eq('id', activeAccidentId);
+        try {
+          await supabase
+            .from('accidents')
+            .update({ status: 'Hospital Reached', hospital_reached_at: new Date().toISOString() })
+            .eq('id', activeAccidentId);
+        } catch (e) {
+          console.warn('[RescueLink Nav] Failed to update Supabase status:', e);
+        }
       }
       navigate('/volunteer');
     } else {
       // Volunteer reached accident location
-      if (activeAccidentId && activeAccidentId !== 'default-accident') {
-        console.log('[RescueLink Nav] Volunteer confirmed arrival at accident scene. Updating status to Volunteer Reached...');
-        await supabase
-          .from('accidents')
-          .update({ status: 'Volunteer Reached', arrived_at: new Date().toISOString() })
-          .eq('id', activeAccidentId);
-
-        setAccident((prev) => (prev ? { ...prev, status: 'Volunteer Reached' } : null));
-      }
       if (mode === 'volunteer') {
         setShowHospitalSheet(true);
+      }
+
+      if (activeAccidentId && activeAccidentId !== 'default-accident') {
+        console.log('[RescueLink Nav] Volunteer confirmed arrival at accident scene. Updating status to Volunteer Reached...');
+        
+        // Optimistic UI update
+        setAccident((prev) => (prev ? { ...prev, status: 'Volunteer Reached' } : null));
+
+        try {
+          await supabase
+            .from('accidents')
+            .update({ status: 'Volunteer Reached', arrived_at: new Date().toISOString() })
+            .eq('id', activeAccidentId);
+        } catch (e) {
+          console.warn('[RescueLink Nav] Failed to update Supabase status:', e);
+        }
       }
     }
   };
@@ -293,8 +313,6 @@ export const LiveNavigationScreen: React.FC = () => {
   if (accident.volunteer_latitude && accident.volunteer_longitude) {
     initialUserCoords = [accident.volunteer_latitude, accident.volunteer_longitude];
   }
-
-  const [liveVolunteerPos, setLiveVolunteerPos] = useState<[number, number] | null>(initialUserCoords);
 
   const navStatus = isHospitalTarget
     ? 'Transporting to Hospital'
