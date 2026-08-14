@@ -26,6 +26,7 @@ const VolunteerHistoryScreen = lazy(() => import('./pages/VolunteerHistoryScreen
 const HistoryDetailsScreen = lazy(() => import('./pages/HistoryDetailsScreen').then((m) => ({ default: m.HistoryDetailsScreen })));
 const VolunteerMapPreviewScreen = lazy(() => import('./pages/VolunteerMapPreviewScreen').then((m) => ({ default: m.VolunteerMapPreviewScreen })));
 const GoogleMapTest = lazy(() => import('./components/common/GoogleMapTest').then((m) => ({ default: m.GoogleMapTest })));
+const EmergencyTrainingScreen = lazy(() => import('./pages/EmergencyTrainingScreen').then((m) => ({ default: m.EmergencyTrainingScreen })));
 
 const AppContent: React.FC = () => {
   const location = useLocation();
@@ -56,6 +57,7 @@ const AppContent: React.FC = () => {
           <Route path="/history/:id" element={<ProtectedRoute><HistoryDetailsScreen /></ProtectedRoute>} />
           <Route path="/first-aid" element={<ProtectedRoute><FirstAidGuideScreen /></ProtectedRoute>} />
           <Route path="/good-samaritan" element={<ProtectedRoute><GoodSamaritanScreen /></ProtectedRoute>} />
+          <Route path="/training" element={<ProtectedRoute><EmergencyTrainingScreen /></ProtectedRoute>} />
           <Route path="/volunteer" element={<ProtectedRoute><VolunteerDashboardScreen /></ProtectedRoute>} />
           <Route path="/volunteer/preview/:accidentId" element={<ProtectedRoute><VolunteerMapPreviewScreen /></ProtectedRoute>} />
           <Route path="/volunteer/history" element={<ProtectedRoute><VolunteerHistoryScreen /></ProtectedRoute>} />

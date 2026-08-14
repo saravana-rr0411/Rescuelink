@@ -381,6 +381,22 @@ export const HomeScreen: React.FC = () => {
               </div>
             </button>
           </div>
+
+          {/* Emergency Response Training Entry Point */}
+          <div className="bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="font-bold text-sm text-on-surface">Emergency Response Training</h3>
+              <p className="text-xs text-on-surface-variant mt-1 max-w-sm">
+                Learn the basic principles of first response, CPR awareness, and safe road accident assistance.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/training')}
+              className="bg-primary text-white text-xs font-bold px-4 py-2 rounded-xl shadow-xs hover:bg-primary-hover transition-colors shrink-0 self-start sm:self-auto"
+            >
+              Start Learning
+            </button>
+          </div>
         </div>
 
         {/* Emergency Contacts Section */}
