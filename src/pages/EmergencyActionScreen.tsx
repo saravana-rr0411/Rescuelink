@@ -515,7 +515,7 @@ export const EmergencyActionScreen: React.FC = () => {
                         </div>
 
                         <div className="flex items-center space-x-2">
-                          {hosp.phone ? (
+                          {hosp.phone && (
                             <a
                               href={`tel:${hosp.phone}`}
                               className="px-3 py-1.5 bg-surface-container-high hover:bg-surface-container-highest text-on-surface rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
@@ -523,14 +523,6 @@ export const EmergencyActionScreen: React.FC = () => {
                               <PhoneCall className="w-3.5 h-3.5" />
                               <span>Call</span>
                             </a>
-                          ) : (
-                            <button
-                              disabled
-                              className="px-3 py-1.5 bg-surface-container-high/50 text-on-surface-variant/50 rounded-xl text-xs font-bold flex items-center gap-1 cursor-not-allowed"
-                            >
-                              <PhoneCall className="w-3.5 h-3.5" />
-                              <span>No Phone</span>
-                            </button>
                           )}
 
                           <button
