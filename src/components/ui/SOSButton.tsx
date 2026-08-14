@@ -49,7 +49,7 @@ export const SOSButton: React.FC<SOSButtonProps> = ({ onTrigger, size = 'large' 
 
       <p className="mt-4 text-xs font-semibold text-on-surface-variant flex items-center gap-1.5 bg-surface-container-high px-3 py-1.5 rounded-full">
         <span className="w-2 h-2 rounded-full bg-primary"></span>
-        Tap to alert 911 & nearby medical responders
+        Tap to alert 112 & nearby medical responders
       </p>
     </div>
   );

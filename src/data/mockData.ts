@@ -170,7 +170,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
       'Do not allow victim to walk or exert themselves.'
     ],
     warnings: [
-      'Chest pain spreading to jaw or arm requires immediate 911 dispatch.',
+      'Chest pain spreading to jaw or arm requires immediate 112 dispatch.',
       'Be ready to initiate CPR if cardiac arrest occurs.'
     ]
   },
