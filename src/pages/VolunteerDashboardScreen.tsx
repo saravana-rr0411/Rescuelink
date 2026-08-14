@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { mockUserProfile } from '../data/mockData';
+
 import { MapPin, Radio, CheckCircle, Navigation, Clock, Loader2, Camera, AlertCircle, Hospital as HospitalIcon, CheckSquare, Ambulance, PhoneCall, Maximize2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useProfile } from '../context/ProfileContext';
@@ -10,6 +10,7 @@ import { GoogleMap } from '../components/maps/GoogleMap';
 import { HospitalSelectorSheet } from '../components/common/HospitalSelectorSheet';
 import type { Hospital as HospitalType } from '../utils/routing';
 import { saveStoredHospital, getStoredHospital, cleanDescriptionText, getStatusRank } from '../utils/routing';
+import { calculateHaversineDistance } from '../utils/distance';
 import { SpinnerLoader, EmptyState, CardSkeleton } from '../components/common/SkeletonLoader';
 import { Inbox } from 'lucide-react';
 
@@ -43,9 +44,40 @@ export const VolunteerDashboardScreen: React.FC = () => {
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Data States
-  const [incidents, setIncidents] = useState<AccidentRecord[]>([]);
+  const [rawIncidents, setRawIncidents] = useState<AccidentRecord[]>([]);
   const [assignedMissions, setAssignedMissions] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Volunteer Live GPS State for 10km Filtering
+  const [volunteerLocation, setVolunteerLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setVolunteerLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      (err) => {
+        console.warn('[RescueLink GPS Dashboard] Volunteer location tracking error:', err.message);
+      },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+    );
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
+
+  const incidents = useMemo(() => {
+    if (!volunteerLocation) return [];
+    return rawIncidents.filter((inc) => {
+      if (inc.latitude == null || inc.longitude == null) return false;
+      const dist = calculateHaversineDistance(
+        volunteerLocation.lat,
+        volunteerLocation.lng,
+        inc.latitude,
+        inc.longitude
+      );
+      return dist <= 10000;
+    });
+  }, [rawIncidents, volunteerLocation]);
 
   // Action States
   const [respondingId, setRespondingId] = useState<string | null>(null);
@@ -114,7 +146,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
           const unassigned = activeOnly.filter((item) => !item.volunteer_id || item.volunteer_id !== user?.id);
           console.log('[RescueLink Volunteer] Incidents (unassigned feed):', unassigned.length);
-          setIncidents(unassigned);
+          setRawIncidents(unassigned);
 
           if (user) {
             const myMissions = activeOnly.filter((item) => item.volunteer_id === user.id);
@@ -151,7 +183,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
           if (payload.eventType === 'DELETE') {
             const deletedId = (payload.old as any)?.id;
             if (deletedId) {
-              setIncidents((prev) => prev.filter((item) => item.id !== deletedId));
+              setRawIncidents((prev) => prev.filter((item) => item.id !== deletedId));
               setAssignedMissions((prev) => prev.filter((m) => m.id !== deletedId));
             }
             return;
@@ -165,7 +197,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
             if (!isFinishedStatus(newRecord.status)) {
               // Show in feed if unassigned or assigned to someone else (not this volunteer)
               if (!newRecord.volunteer_id || newRecord.volunteer_id !== user?.id) {
-                setIncidents((prev) => {
+                setRawIncidents((prev) => {
                   if (prev.some((item) => item.id === newRecord.id)) {
                     console.log('[RescueLink Realtime] INSERT ignored – already in incidents list:', newRecord.id);
                     return prev;
@@ -180,13 +212,13 @@ export const VolunteerDashboardScreen: React.FC = () => {
           } else if (payload.eventType === 'UPDATE') {
             if (isFinishedStatus(newRecord.status)) {
               // Immediately remove completed/resolved incident across all connected dashboards
-              setIncidents((prev) => prev.filter((item) => item.id !== newRecord.id));
+              setRawIncidents((prev) => prev.filter((item) => item.id !== newRecord.id));
               setAssignedMissions((prev) => prev.filter((m) => m.id !== newRecord.id));
               return;
             }
 
             // Realtime update for nearby alerts feed
-            setIncidents((prev) => {
+            setRawIncidents((prev) => {
               if (newRecord.volunteer_id) {
                 return prev.filter((item) => item.id !== newRecord.id);
               }
@@ -320,7 +352,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       if (latest && latest.volunteer_id && latest.volunteer_id !== user.id) {
         setRespondingId(null);
         setErrorMessage('Already accepted by another volunteer.');
-        setIncidents((prev) =>
+        setRawIncidents((prev) =>
           prev.map((item) => (item.id === accidentId ? { ...item, volunteer_id: latest.volunteer_id, status: latest.status } : item))
         );
         return;
@@ -360,7 +392,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
 
         const { data: fresh } = await supabase.from('accidents').select('*').eq('id', accidentId).single();
         if (fresh) {
-          setIncidents((prev) => prev.map((item) => (item.id === accidentId ? fresh : item)));
+          setRawIncidents((prev) => prev.map((item) => (item.id === accidentId ? fresh : item)));
         }
         return;
       }
@@ -368,7 +400,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
       console.log('[RescueLink Volunteer] Successfully assigned volunteer & saved status:', data);
       setSuccessMessage('You have accepted this emergency request.');
 
-      setIncidents((prev) => prev.filter((item) => item.id !== accidentId));
+      setRawIncidents((prev) => prev.filter((item) => item.id !== accidentId));
       setAssignedMissions((prev) => [data, ...prev]);
 
       setTimeout(() => {
@@ -613,7 +645,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                 {profile?.full_name || (isOnDuty ? 'Ready to Accept Alerts' : 'Standby Mode')}
               </h2>
               <p className={`text-[11px] font-medium truncate ${isOnDuty ? 'text-rose-100' : 'text-slate-500'}`}>
-                Response Radius: <span className="font-bold">{mockUserProfile.responseRadiusKm} km</span>
+                Response Radius: <span className="font-bold">10 km</span>
               </p>
             </div>
           </div>
