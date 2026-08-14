@@ -117,15 +117,19 @@ const GoogleMapCameraController: React.FC<{
     return () => clearTimeout(timer);
   }, [recenterTrigger]);
 
+  // 1. Navigation Mode Toggle Effect
   useEffect(() => {
     if (!map) return;
-
     if (!isNavigationMode) {
       map.setHeading(0);
       map.setTilt(0);
-      return;
     }
+  }, [map, isNavigationMode]);
 
+  // 2. Continuous Navigation Tracking Effect
+  useEffect(() => {
+    if (!map) return;
+    if (!isNavigationMode) return;
     if (!isFollowing || !center) return;
 
     isProgrammaticMoveRef.current = true;
