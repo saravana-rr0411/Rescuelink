@@ -29,7 +29,7 @@ interface AccidentRecord {
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [accidents, setAccidents] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [emergencyContact, setEmergencyContact] = useState<{
@@ -38,6 +38,7 @@ export const HomeScreen: React.FC = () => {
     relation: string;
   } | null>(null);
   const [loadingContact, setLoadingContact] = useState(true);
+  const [localizedAddresses, setLocalizedAddresses] = useState<Record<string, string>>({});
 
   const categories = [
     { id: 'medical', title: t('home.medicalAlert'), icon: Stethoscope, color: 'bg-red-100 text-red-700 border-red-200' },
@@ -137,6 +138,97 @@ export const HomeScreen: React.FC = () => {
 
     fetchActiveAccidents();
   }, []);
+
+  // Fetch localized addresses when accidents or language changes
+  useEffect(() => {
+    let isMounted = true;
+    
+    async function fetchLocalizedAddresses() {
+      if (!accidents || accidents.length === 0) return;
+      
+      const newAddresses: Record<string, string> = {};
+      
+      for (const incident of accidents) {
+        if (!incident.latitude || !incident.longitude) {
+          continue;
+        }
+        try {
+          const lang = i18n.language ? i18n.language.split('-')[0] : 'en';
+          const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${incident.latitude}&lon=${incident.longitude}&accept-language=${lang}`;
+          
+          const response = await fetch(url, {
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'RescueLink-WebApp/1.0'
+            }
+          });
+          
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          if (data && data.address) {
+            const isPureEnglish = (str: string) => /^[A-Za-z\s]+$/.test(str);
+            const addressObj = data.address;
+            const hasLocalPlace = ['village', 'town', 'city', 'state_district']
+              .some(k => addressObj[k] && !isPureEnglish(addressObj[k]));
+            
+            const orderedKeys = [
+              'house_number', 'road', 'neighbourhood', 'suburb', 'residential',
+              'village', 'town', 'city', 'county', 'municipality', 'city_district',
+              'state_district', 'state', 'postcode', 'country'
+            ];
+            
+            let parts: string[] = [];
+            
+            for (const key of orderedKeys) {
+              const val = addressObj[key];
+              if (val) {
+                // Skip redundant English administrative boundaries if we already have a localized place name
+                if ((lang === 'ta' || lang === 'hi') && (key === 'county' || key === 'municipality')) {
+                   if (isPureEnglish(val) && hasLocalPlace) {
+                     continue; 
+                   }
+                }
+                parts.push(val);
+              }
+            }
+            
+            for (const [k, v] of Object.entries(addressObj)) {
+              if (!orderedKeys.includes(k) && k !== 'country_code' && !k.startsWith('ISO3166')) {
+                parts.push(String(v));
+              }
+            }
+            
+            // Deduplicate exact string matches
+            parts = parts.filter((val, idx, arr) => arr.indexOf(val) === idx);
+            
+            if (parts.length > 0) {
+              newAddresses[incident.id] = parts.join(', ');
+            } else if (data.display_name) {
+              newAddresses[incident.id] = data.display_name;
+            }
+          } else if (data && data.display_name) {
+            newAddresses[incident.id] = data.display_name;
+          }
+          
+          // Nominatim usage policy: delay to prevent rate limits
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (err) {
+          console.error('[RescueLink Home] Nominatim Geocoding error:', err);
+        }
+      }
+      
+      if (isMounted) {
+        setLocalizedAddresses((prev) => ({ ...prev, ...newAddresses }));
+      }
+    }
+
+    fetchLocalizedAddresses();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [accidents, i18n.language]);
 
   // 2. Supabase Realtime Subscription for live updates, new reports & resolution removal
   useEffect(() => {
@@ -286,7 +378,7 @@ export const HomeScreen: React.FC = () => {
                         id: a.id,
                         lat: a.latitude!,
                         lng: a.longitude!,
-                        title: `${a.severity}: ${a.address}`,
+                        title: `${a.severity}: ${localizedAddresses[a.id] || a.address}`,
                         type: 'accident' as const,
                       }))}
                     className="w-full h-full"
@@ -305,7 +397,7 @@ export const HomeScreen: React.FC = () => {
                         {incident.severity}
                       </span>
                       <h3 className="font-semibold text-slate-900 text-base mt-1">
-                        {incident.address}
+                        {localizedAddresses[incident.id] || incident.address}
                       </h3>
                     </div>
                     <span
@@ -328,7 +420,7 @@ export const HomeScreen: React.FC = () => {
                   <div className="flex items-center justify-between text-xs text-on-surface-variant/80 pt-2 border-t border-surface-container-high">
                     <div className="flex items-center gap-1.5 font-medium truncate max-w-[55%]">
                       <MapPin className="w-4 h-4 text-slate-500 shrink-0" />
-                      <span className="truncate">{incident.address}</span>
+                      <span className="truncate">{localizedAddresses[incident.id] || incident.address}</span>
                     </div>
 
                     <div className="flex items-center gap-3 shrink-0">

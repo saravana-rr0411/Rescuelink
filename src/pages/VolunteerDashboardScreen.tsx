@@ -43,13 +43,89 @@ export const VolunteerDashboardScreen: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { profile, avatarUrl } = useProfile();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isOnDuty, setIsOnDuty] = useState(true);
 
   // Data States
   const [rawIncidents, setRawIncidents] = useState<AccidentRecord[]>([]);
   const [assignedMissions, setAssignedMissions] = useState<AccidentRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [localizedAddresses, setLocalizedAddresses] = useState<Record<string, string>>({});
+  const [localizedHospitalAddresses, setLocalizedHospitalAddresses] = useState<Record<string, string>>({});
+
+  // Helper for Nominatim reverse geocoding
+  const geocodeLocation = async (lat: number, lng: number, lang: string): Promise<string | null> => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=${lang}`;
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/json', 'User-Agent': 'RescueLink-WebApp/1.0' }
+      });
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (data && data.address) {
+        const isPureEnglish = (str: string) => /^[A-Za-z\s]+$/.test(str);
+        const addressObj = data.address;
+        const hasLocalPlace = ['village', 'town', 'city', 'state_district'].some(k => addressObj[k] && !isPureEnglish(addressObj[k]));
+        const orderedKeys = ['house_number', 'road', 'neighbourhood', 'suburb', 'residential', 'village', 'town', 'city', 'county', 'municipality', 'city_district', 'state_district', 'state', 'postcode', 'country'];
+        let parts: string[] = [];
+        for (const key of orderedKeys) {
+          const val = addressObj[key];
+          if (val) {
+            if ((lang === 'ta' || lang === 'hi') && (key === 'county' || key === 'municipality')) {
+              if (isPureEnglish(val) && hasLocalPlace) continue; 
+            }
+            parts.push(val);
+          }
+        }
+        for (const [k, v] of Object.entries(addressObj)) {
+          if (!orderedKeys.includes(k) && k !== 'country_code' && !k.startsWith('ISO3166')) {
+            parts.push(String(v));
+          }
+        }
+        parts = parts.filter((val, idx, arr) => arr.indexOf(val) === idx);
+        if (parts.length > 0) return parts.join(', ');
+        if (data.display_name) return data.display_name;
+      } else if (data && data.display_name) {
+        return data.display_name;
+      }
+    } catch (err) {
+      console.error('[RescueLink Volunteer] Nominatim Geocoding error:', err);
+    }
+    return null;
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchAddresses() {
+      const allIncidents = [...assignedMissions, ...rawIncidents];
+      if (allIncidents.length === 0) return;
+      
+      const newAccidentAddrs: Record<string, string> = {};
+      const newHospitalAddrs: Record<string, string> = {};
+      const lang = i18n.language ? i18n.language.split('-')[0] : 'en';
+
+      for (const incident of allIncidents) {
+        if (incident.latitude && incident.longitude && !newAccidentAddrs[incident.id]) {
+          const loc = await geocodeLocation(incident.latitude, incident.longitude, lang);
+          if (loc) newAccidentAddrs[incident.id] = loc;
+          await new Promise(r => setTimeout(r, 300));
+        }
+        const hosp = getStoredHospital(incident.id);
+        if (hosp && hosp.latitude && hosp.longitude && !newHospitalAddrs[incident.id]) {
+          const hLoc = await geocodeLocation(hosp.latitude, hosp.longitude, lang);
+          if (hLoc) newHospitalAddrs[incident.id] = hLoc;
+          await new Promise(r => setTimeout(r, 300));
+        }
+      }
+      
+      if (isMounted) {
+        setLocalizedAddresses(prev => ({ ...prev, ...newAccidentAddrs }));
+        setLocalizedHospitalAddresses(prev => ({ ...prev, ...newHospitalAddrs }));
+      }
+    }
+    fetchAddresses();
+    return () => { isMounted = false; };
+  }, [assignedMissions, rawIncidents, i18n.language]);
 
   // Volunteer Live GPS State for 10km Filtering
   const [volunteerLocation, setVolunteerLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -660,7 +736,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                         {t('volunteerDashboard.missionAcceptedLabel')}
                       </span>
-                      <h3 className="font-extrabold text-sm text-slate-900 mt-2">{mission.address}</h3>
+                      <h3 className="font-extrabold text-sm text-slate-900 mt-2">{localizedAddresses[mission.id] || mission.address}</h3>
                       <div className="mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-xl flex items-center gap-1.5 w-fit">
                         <span>{t('volunteerDashboard.patientBloodGroup')}</span>
                         <span className="font-black text-rose-900">{mission.blood_group || t('volunteerDashboard.notProvided')}</span>
@@ -682,7 +758,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                             id: mission.id,
                             lat: mission.latitude,
                             lng: mission.longitude,
-                            title: `${mission.severity} ACCIDENT: ${mission.address}`,
+                            title: `${mission.severity} ACCIDENT: ${localizedAddresses[mission.id] || mission.address}`,
                             type: 'accident' as const,
                           },
                         ]}
@@ -703,7 +779,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                     if (!hosp && mission.status !== 'Transporting to Hospital') return null;
 
                     const name = hosp?.name || t('volunteerDashboard.nearestRegionalCenter');
-                    const address = hosp?.address || mission.address;
+                    const address = localizedHospitalAddresses[mission.id] || hosp?.address || localizedAddresses[mission.id] || mission.address;
                     const phoneNum = hosp?.phone || hosp?.internationalPhone;
 
                     return (
@@ -797,7 +873,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                               accidentId: mission.id,
                               latitude: mission.latitude,
                               longitude: mission.longitude,
-                              address: mission.address,
+                              address: localizedAddresses[mission.id] || mission.address,
                               severity: mission.severity,
                               mode: 'volunteer',
                             },
@@ -906,7 +982,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                               id: inc.id,
                               lat: inc.latitude,
                               lng: inc.longitude,
-                              title: `${inc.severity} ACCIDENT: ${inc.address}`,
+                              title: `${inc.severity} ACCIDENT: ${localizedAddresses[inc.id] || inc.address}`,
                               type: 'accident' as const,
                             },
                           ]}
@@ -938,7 +1014,7 @@ export const VolunteerDashboardScreen: React.FC = () => {
                       {/* Full Accident Address (up to 2 lines, never truncated) */}
                       <div className="flex items-start gap-1.5 text-xs text-slate-700 font-semibold leading-relaxed">
                         <MapPin className="w-4 h-4 text-red-700 shrink-0 mt-0.5" />
-                        <span className="line-clamp-2">{inc.address}</span>
+                        <span className="line-clamp-2">{localizedAddresses[inc.id] || inc.address}</span>
                       </div>
 
                       {/* Action Buttons placed below location */}
