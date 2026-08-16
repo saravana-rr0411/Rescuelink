@@ -260,7 +260,7 @@ export const CitizenHistoryScreen: React.FC = () => {
                     onClick={() => navigate(`/history/${item.id}`)}
                     className="w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-primary font-black text-xs rounded-2xl border border-outline-variant/60 shadow-xs transition-colors flex items-center justify-center gap-1 btn-press"
                   >
-                    <span>{t('profile.history.viewDetails')}</span>
+                    <span>{t('common.viewDetails')}</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
