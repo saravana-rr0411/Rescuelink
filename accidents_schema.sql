@@ -13,7 +13,8 @@ ALTER TABLE public.accidents
   ADD COLUMN IF NOT EXISTS hospital_phone TEXT,
   ADD COLUMN IF NOT EXISTS hospital_latitude DOUBLE PRECISION,
   ADD COLUMN IF NOT EXISTS hospital_longitude DOUBLE PRECISION,
-  ADD COLUMN IF NOT EXISTS blood_group TEXT;
+  ADD COLUMN IF NOT EXISTS blood_group TEXT,
+  ADD COLUMN IF NOT EXISTS category TEXT;
 
 -- 2. Create the `accidents` table if not exists
 CREATE TABLE IF NOT EXISTS public.accidents (
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.accidents (
   description TEXT,
   blood_group TEXT,
   status TEXT NOT NULL DEFAULT 'Reported',
+  category TEXT,
   volunteer_latitude DOUBLE PRECISION,
   volunteer_longitude DOUBLE PRECISION,
   hospital_name TEXT,

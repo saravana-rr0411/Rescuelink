@@ -27,6 +27,7 @@ interface AccidentRecord {
   severity: string;
   description: string | null;
   blood_group?: string | null;
+  category?: string | null;
   status: string;
   volunteer_latitude?: number | null;
   volunteer_longitude?: number | null;
@@ -749,9 +750,19 @@ export const VolunteerDashboardScreen: React.FC = () => {
                         <span className="font-black text-rose-900">{mission.blood_group || t('volunteerDashboard.notProvided')}</span>
                       </div>
                     </div>
-                    <span className="text-[10px] bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
-                      {mission.severity}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {mission.category && (
+                        <span className="text-[10px] bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
+                          {mission.category === 'accident' ? t('reportAccident.vehicleAccident') :
+                           mission.category === 'medical' ? t('reportAccident.medicalCrisis') :
+                           mission.category === 'fire' ? t('reportAccident.fireOutbreak') :
+                           mission.category === 'crime' ? t('reportAccident.safetyHazard') : mission.category}
+                        </span>
+                      )}
+                      <span className="text-[10px] bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full font-bold uppercase shrink-0">
+                        {mission.severity}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Google Map with Marker & Navigation */}
@@ -961,9 +972,19 @@ export const VolunteerDashboardScreen: React.FC = () => {
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="text-[10px] font-extrabold bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
-                          {inc.severity} {t('volunteerDashboard.priority')}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {inc.category && (
+                            <span className="text-[10px] bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                              {inc.category === 'accident' ? t('reportAccident.vehicleAccident') :
+                               inc.category === 'medical' ? t('reportAccident.medicalCrisis') :
+                               inc.category === 'fire' ? t('reportAccident.fireOutbreak') :
+                               inc.category === 'crime' ? t('reportAccident.safetyHazard') : inc.category}
+                            </span>
+                          )}
+                          <span className="text-[10px] font-extrabold bg-rose-50 text-red-700 border border-rose-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">
+                            {inc.severity} {t('volunteerDashboard.priority')}
+                          </span>
+                        </div>
                         <h3 className="font-extrabold text-sm text-slate-900 mt-1.5">
                           {t('volunteerDashboard.emergencySosIncident')}
                         </h3>

@@ -17,6 +17,8 @@ export interface AccidentRecord {
   severity: string;
   description?: string;
   photo_url?: string;
+  blood_group?: string | null;
+  category?: string | null;
   created_at: string;
   status: string;
   volunteer_id?: string | null;

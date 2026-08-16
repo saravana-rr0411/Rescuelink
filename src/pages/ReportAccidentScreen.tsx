@@ -239,6 +239,7 @@ export const ReportAccidentScreen: React.FC = () => {
             description: description.trim(),
             blood_group: bloodGroup,
             status: 'SOS Sent',
+            category: incidentType,
             photo_url: uploadedPhotoUrl,
           }
         ])

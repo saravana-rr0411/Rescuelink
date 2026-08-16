@@ -34,6 +34,7 @@ interface AccidentRecord {
   address: string;
   photo_url: string | null;
   severity: string;
+  category?: string | null;
   description: string | null;
   status: string;
   volunteer_latitude?: number | null;
@@ -789,7 +790,7 @@ export const EmergencyStatusScreen: React.FC = () => {
                         {volunteerProfile?.full_name || 'Emergency Responder'}
                       </h4>
                       <p className="text-[11px] text-on-surface-variant">
-                        {t('emergencyStatus.statusLabel')} <span className="font-bold text-secondary">{getLocalizedStatus(accident.status, t)}</span>
+                        {t('emergencyStatus.status')}: <span className="font-bold text-secondary">{getLocalizedStatus(accident.status, t)}</span>
                         {calculatedDistanceDisplay && (
                           <span className="ml-1 font-bold text-tertiary">({calculatedDistanceDisplay} {t('emergencyStatus.away')})</span>
                         )}

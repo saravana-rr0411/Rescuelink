@@ -21,6 +21,8 @@ interface AccidentRecord {
   photo_url: string | null;
   severity: string;
   description: string | null;
+  blood_group?: string | null;
+  category?: string | null;
   status: string;
   created_at: string;
   updated_at: string;
