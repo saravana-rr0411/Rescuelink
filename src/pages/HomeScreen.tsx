@@ -167,24 +167,33 @@ export const HomeScreen: React.FC = () => {
           
           const data = await response.json();
           if (data && data.address) {
-            const isPureEnglish = (str: string) => /^[A-Za-z\s]+$/.test(str);
+            const isPureEnglish = (str: string) => /^[\x00-\x7F]+$/.test(str);
             const addressObj = data.address;
-            const hasLocalPlace = ['village', 'town', 'city', 'state_district']
+            const hasLocalPlace = ['village', 'town', 'city', 'county', 'district', 'state_district']
               .some(k => addressObj[k] && !isPureEnglish(addressObj[k]));
             
             const orderedKeys = [
-              'house_number', 'road', 'neighbourhood', 'suburb', 'residential',
-              'village', 'town', 'city', 'county', 'municipality', 'city_district',
-              'state_district', 'state', 'postcode', 'country'
+              'amenity', 'building', 'shop', 'office', 'leisure', 'historic', 'tourism', 'emergency',
+              'house_number', 'road', 'street', 'neighbourhood', 'quarter', 'suburb', 'residential',
+              'village', 'hamlet', 'town', 'city_district', 'borough', 'city', 'municipality', 'local_admin',
+              'county', 'district', 'state_district', 'region', 'state', 'postcode', 'country'
             ];
             
             let parts: string[] = [];
+            let unlistedParts: string[] = [];
+
+            for (const [k, v] of Object.entries(addressObj)) {
+              if (!orderedKeys.includes(k) && k !== 'country_code' && !k.startsWith('ISO3166')) {
+                unlistedParts.push(String(v));
+              }
+            }
             
             for (const key of orderedKeys) {
               const val = addressObj[key];
               if (val) {
                 // Skip redundant English administrative boundaries if we already have a localized place name
-                if ((lang === 'ta' || lang === 'hi') && (key === 'county' || key === 'municipality')) {
+                const adminKeysToSkip = ['county', 'municipality', 'city_district', 'district', 'state_district', 'region', 'borough', 'local_admin'];
+                if ((lang === 'ta' || lang === 'hi') && adminKeysToSkip.includes(key)) {
                    if (isPureEnglish(val) && hasLocalPlace) {
                      continue; 
                    }
@@ -193,14 +202,7 @@ export const HomeScreen: React.FC = () => {
               }
             }
             
-            for (const [k, v] of Object.entries(addressObj)) {
-              if (!orderedKeys.includes(k) && k !== 'country_code' && !k.startsWith('ISO3166')) {
-                parts.push(String(v));
-              }
-            }
-            
-            // Deduplicate exact string matches
-            parts = parts.filter((val, idx, arr) => arr.indexOf(val) === idx);
+            parts = [...unlistedParts, ...parts].filter((val, idx, arr) => arr.indexOf(val) === idx);
             
             if (parts.length > 0) {
               newAddresses[incident.id] = parts.join(', ');
