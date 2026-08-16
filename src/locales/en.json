@@ -386,7 +386,10 @@
     "immediateFirstAidSteps": "Immediate First-Aid Steps",
     "dos": "DO'S",
     "donts": "DON'TS",
-    "criticalWarning": "Critical Warning"
+    "criticalWarning": "Critical Warning",
+    "watchVideo": "Watch Video",
+    "videoGuide": "Video Guide",
+    "videoUnavailable": "Video unavailable"
   },
   "goodSamaritan": {
     "title": "Good Samaritan Protection",

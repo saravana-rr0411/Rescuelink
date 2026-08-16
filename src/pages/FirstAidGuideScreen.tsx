@@ -238,6 +238,32 @@ export const FirstAidGuideScreen: React.FC = () => {
                           </ul>
                         </div>
                       )}
+
+                      {/* 4. Video Player Section */}
+                      {guide.videoId && (
+                        <div className="mt-4 bg-surface-container border border-outline-variant/60 p-3 rounded-3xl space-y-3 shadow-sm">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-extrabold text-on-surface uppercase tracking-wider flex items-center gap-1.5">
+                              <span className="w-6 h-6 rounded-full bg-red-100 text-red-700 flex items-center justify-center">▶</span>
+                              <span>{t('firstAid.videoGuide')}</span>
+                            </h4>
+                          </div>
+                          <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black shadow-inner">
+                            <iframe
+                              className="absolute top-0 left-0 w-full h-full"
+                              src={`https://www.youtube.com/embed/${guide.videoId}?rel=0&modestbranding=1`}
+                              title={`${guide.title} First Aid Video`}
+                              frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              loading="lazy"
+                            ></iframe>
+                          </div>
+                          <p className="text-[11px] text-center font-bold text-on-surface-variant">
+                            {t('firstAid.watchVideo')}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

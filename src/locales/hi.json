@@ -386,7 +386,10 @@
     "immediateFirstAidSteps": "तत्काल प्राथमिक चिकित्सा कदम",
     "dos": "क्या करें",
     "donts": "क्या न करें",
-    "criticalWarning": "महत्वपूर्ण चेतावनी",
+    "criticalWarning": "गंभीर चेतावनी",
+    "watchVideo": "वीडियो देखें",
+    "videoGuide": "वीडियो गाइड",
+    "videoUnavailable": "वीडियो उपलब्ध नहीं है",
     "guides": {
       "fa-1": {
         "title": "गंभीर रक्तस्राव",

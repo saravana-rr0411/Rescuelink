@@ -39,6 +39,7 @@ export interface FirstAidItem {
   donts: string[];
   warnings: string[];
   icon: string;
+  videoId?: string;
 }
 
 export interface GoodSamaritanRight {
@@ -121,6 +122,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'CRITICAL',
     icon: 'Droplet',
+    videoId: 'NxO5LvgqZe0',
     steps: [
       'Call emergency services / RescueLink SOS immediately.',
       'Apply direct, firm pressure over the wound using clean cloth or sterile gauze.',
@@ -151,6 +153,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '2 min guide',
     urgency: 'CRITICAL',
     icon: 'HeartPulse',
+    videoId: 'gDwt7dD3awc',
     steps: [
       'Call emergency services / RescueLink SOS immediately.',
       'Have person sit down, rest, and remain calm.',
@@ -182,6 +185,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '2 min guide',
     urgency: 'CRITICAL',
     icon: 'Brain',
+    videoId: 'PhH9a0kIwmk',
     steps: [
       'Call emergency services / RescueLink SOS immediately.',
       'Perform FAST check: Face drooping, Arm weakness, Speech difficulty, Time to call.',
@@ -212,6 +216,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'HIGH',
     icon: 'Bone',
+    videoId: '2v8vlXgGXwE',
     steps: [
       'Stop any severe bleeding by applying gentle pressure around wound.',
       'Immobilize injured area using splint or padded rigid support above and below joint.',
@@ -242,6 +247,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '2 min guide',
     urgency: 'HIGH',
     icon: 'Flame',
+    videoId: 'TLr2qsEhpC8',
     steps: [
       'Remove victim from heat source and ensure personal safety.',
       'Cool burn immediately under clean running tap water for 10-20 minutes.',
@@ -272,6 +278,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'CRITICAL',
     icon: 'Zap',
+    videoId: 'Qld84UtmFpE',
     steps: [
       'Do not touch victim until power source is disconnected!',
       'Turn off main circuit breaker or push wire away using dry wooden or plastic pole.',
@@ -303,6 +310,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'CRITICAL',
     icon: 'ShieldAlert',
+    videoId: '5k8nDlfaA9E',
     steps: [
       'Move victim away from snake striking distance safely.',
       'Keep victim completely calm and still to slow venom spreading.',
@@ -333,6 +341,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'CRITICAL',
     icon: 'Car',
+    videoId: 'w3NP3iI7_fk',
     steps: [
       'Ensure scene safety: turn on hazard lights, set warning triangles, watch traffic.',
       'Call emergency services / RescueLink SOS with exact location details.',
@@ -364,6 +373,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '2 min guide',
     urgency: 'CRITICAL',
     icon: 'Wind',
+    videoId: 'HGBBu4zr8sM',
     steps: [
       'Ask "Are you choking?" If victim cannot speak or cough, act immediately.',
       'Stand behind victim and wrap arms around their waist.',
@@ -395,6 +405,7 @@ export const mockFirstAidGuides: FirstAidItem[] = [
     readTime: '3 min guide',
     urgency: 'CRITICAL',
     icon: 'Waves',
+    videoId: 'v1YrU55ACbE',
     steps: [
       'Rescue safely: throw lifebuoy or rope; do not endanger yourself in water.',
       'Call emergency services / RescueLink SOS immediately once victim is on land.',
