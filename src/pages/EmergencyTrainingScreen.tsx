@@ -31,7 +31,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl font-bold tracking-tight mb-3">{t('training.title')}</h1>
             <p className="text-lg text-slate-300 max-w-xl leading-relaxed font-medium">
-              Learn the basic knowledge needed to respond safely during an emergency.
+              {t('training.heroDescription')}
             </p>
           </div>
         </section>
@@ -50,39 +50,39 @@ export const EmergencyTrainingScreen: React.FC = () => {
             
             <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
               <p className="text-base text-slate-700 mb-6 font-medium leading-relaxed">
-                Learn how to recognise a possible cardiac emergency and understand the importance of immediate response and professional assistance.
+                {t('training.cprDesc')}
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Recognising a possible cardiac emergency</h3>
-                    <p className="text-xs text-slate-600 mt-1">Look for unresponsiveness and abnormal or absent breathing.</p>
+                    <h3 className="font-bold text-sm text-slate-900">{t('training.cprCard1Title')}</h3>
+                    <p className="text-xs text-slate-600 mt-1">{t('training.cprCard1Desc')}</p>
                   </div>
                 </div>
                 
                 <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
                   <Phone className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Calling for emergency assistance</h3>
-                    <p className="text-xs text-slate-600 mt-1">Dial emergency services immediately. Ensure the dispatcher knows the exact location.</p>
+                    <h3 className="font-bold text-sm text-slate-900">{t('training.cprCard2Title')}</h3>
+                    <p className="text-xs text-slate-600 mt-1">{t('training.cprCard2Desc')}</p>
                   </div>
                 </div>
                 
                 <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
                   <Heart className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Basic CPR awareness</h3>
-                    <p className="text-xs text-slate-600 mt-1">CPR involves rhythmic chest compressions to maintain blood flow.</p>
+                    <h3 className="font-bold text-sm text-slate-900">{t('training.cprCard3Title')}</h3>
+                    <p className="text-xs text-slate-600 mt-1">{t('training.cprCard3Desc')}</p>
                   </div>
                 </div>
                 
                 <div className="bg-slate-50 p-4 rounded border border-slate-100 flex items-start gap-3">
                   <Users className="w-5 h-5 text-slate-500 shrink-0 mt-0.5" />
                   <div>
-                    <h3 className="font-bold text-sm text-slate-900">Following professional guidance</h3>
-                    <p className="text-xs text-slate-600 mt-1">Stay on the phone. Emergency dispatchers can provide step-by-step guidance.</p>
+                    <h3 className="font-bold text-sm text-slate-900">{t('training.cprCard4Title')}</h3>
+                    <p className="text-xs text-slate-600 mt-1">{t('training.cprCard4Desc')}</p>
                   </div>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
                       <img 
                         src="https://img.youtube.com/vi/M4ACYp75mjU/maxresdefault.jpg" 
-                        alt="Learn Hands-Only CPR in 60 seconds - AHA"
+                        alt={t('training.video1Title')}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/M4ACYp75mjU/hqdefault.jpg"; }}
                       />
@@ -114,8 +114,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                       </div>
                     </div>
                     <div className="p-3">
-                      <h4 className="font-bold text-sm text-slate-900 mb-1">Learn Hands-Only CPR (60s)</h4>
-                      <p className="text-xs text-slate-500">American Heart Association (AHA)</p>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">{t('training.video1Title')}</h4>
+                      <p className="text-xs text-slate-500">{t('training.video1Desc')}</p>
                     </div>
                   </button>
 
@@ -127,7 +127,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
                       <img 
                         src="https://img.youtube.com/vi/ILxjxfB4zNk/maxresdefault.jpg" 
-                        alt="Vinnie Jones' hard and fast Hands-only CPR - BHF"
+                        alt={t('training.video2Title')}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                         onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/ILxjxfB4zNk/hqdefault.jpg"; }}
                       />
@@ -138,8 +138,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                       </div>
                     </div>
                     <div className="p-3">
-                      <h4 className="font-bold text-sm text-slate-900 mb-1">Hands-only CPR (Vinnie Jones)</h4>
-                      <p className="text-xs text-slate-500">British Heart Foundation (BHF)</p>
+                      <h4 className="font-bold text-sm text-slate-900 mb-1">{t('training.video2Title')}</h4>
+                      <p className="text-xs text-slate-500">{t('training.video2Desc')}</p>
                     </div>
                   </button>
 
@@ -149,7 +149,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
               <div className="bg-rose-50 border-l-4 border-rose-500 p-4 text-sm text-rose-900">
                 <p className="font-bold mb-1">{t('training.importantSafetyNote')}</p>
                 <p>
-                  This information is provided for general awareness only. Viewing this content does not provide medical certification, nor does it replace professional, hands-on CPR training.
+                  {t('training.safetyNoteDesc')}
                 </p>
               </div>
             </div>
@@ -172,8 +172,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   01
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">ASSESS</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">Check whether the scene is reasonably safe before approaching.</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">{t('training.roadStep1Title')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t('training.roadStep1Desc')}</p>
                 </div>
               </div>
 
@@ -182,8 +182,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   02
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">REPORT</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">Contact emergency assistance and provide the accident location.</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">{t('training.roadStep2Title')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t('training.roadStep2Desc')}</p>
                 </div>
               </div>
 
@@ -192,8 +192,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   03
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">SHARE INFORMATION</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">Provide clear information about the location and situation.</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">{t('training.roadStep3Title')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t('training.roadStep3Desc')}</p>
                 </div>
               </div>
 
@@ -202,8 +202,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   04
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">ASSIST SAFELY</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">If it is safe to do so, provide reasonable assistance within your knowledge and ability.</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">{t('training.roadStep4Title')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t('training.roadStep4Desc')}</p>
                 </div>
               </div>
 
@@ -212,8 +212,8 @@ export const EmergencyTrainingScreen: React.FC = () => {
                   05
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">COORDINATE</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">Follow appropriate guidance and cooperate with arriving responders.</p>
+                  <h3 className="text-base font-bold text-slate-900 mb-1 tracking-wide">{t('training.roadStep5Title')}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{t('training.roadStep5Desc')}</p>
                 </div>
               </div>
 
@@ -233,7 +233,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
             <div className="bg-slate-900 text-white border border-slate-800 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div>
                 <p className="text-sm text-slate-300 font-medium">
-                  Learn essential first-aid practices for emergency situations.
+                  {t('training.firstAidDesc')}
                 </p>
               </div>
               <button
@@ -269,7 +269,7 @@ export const EmergencyTrainingScreen: React.FC = () => {
                 width="100%"
                 height="100%"
                 src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?autoplay=1&rel=0&modestbranding=1`}
-                title="Educational CPR Video"
+                title={t('training.educationalVideo')}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen

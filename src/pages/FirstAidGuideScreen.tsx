@@ -24,7 +24,18 @@ export const FirstAidGuideScreen: React.FC = () => {
     { id: 'drowning', name: t('firstAid.categoryDrowning') },
   ];
 
-  const filteredGuides = mockFirstAidGuides.filter((guide) => {
+  const translatedGuides = mockFirstAidGuides.map(guide => ({
+    ...guide,
+    title: t(`firstAid.guides.${guide.id}.title`, guide.title),
+    subtitle: t(`firstAid.guides.${guide.id}.subtitle`, guide.subtitle),
+    readTime: t(`firstAid.guides.${guide.id}.readTime`, guide.readTime),
+    steps: guide.steps.map((step, idx) => t(`firstAid.guides.${guide.id}.steps.${idx}`, step)),
+    dos: guide.dos?.map((dItem, idx) => t(`firstAid.guides.${guide.id}.dos.${idx}`, dItem)),
+    donts: guide.donts?.map((dontItem, idx) => t(`firstAid.guides.${guide.id}.donts.${idx}`, dontItem)),
+    warnings: guide.warnings?.map((w, idx) => t(`firstAid.guides.${guide.id}.warnings.${idx}`, w))
+  }));
+
+  const filteredGuides = translatedGuides.filter((guide) => {
     const matchesCat = selectedCategory === 'all' || guide.category === selectedCategory;
     const query = searchQuery.toLowerCase();
     const matchesSearch =

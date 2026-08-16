@@ -1,4 +1,4 @@
-import React, {  useEffect, useState, useRef  } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -349,7 +349,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   const handleRecenter = () => {
     if (!userPos || !renderedPos) {
-      setToastMessage('Current location unavailable.');
+      setToastMessage(t('emergency.currentLocationUnavailable', { defaultValue: 'Current location unavailable.' }));
       setTimeout(() => setToastMessage(null), 3000);
       return;
     }
@@ -370,7 +370,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
     if (resolvedHospitalPhone && resolvedHospitalPhone.trim().length > 0) {
       window.location.href = `tel:${resolvedHospitalPhone.trim()}`;
     } else {
-      setToastMessage('Hospital phone number unavailable.');
+      setToastMessage(t('emergency.hospitalPhoneUnavailable', { defaultValue: 'Hospital phone number unavailable.' }));
       setTimeout(() => setToastMessage(null), 3000);
     }
   };
@@ -562,11 +562,10 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
               setToastMessage(nextMode ? t('nav.modeOn') : t('nav.modeOff'));
               setTimeout(() => setToastMessage(null), 2000);
             }}
-            className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 border shrink-0 ${
-              isNavigationMode
+            className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all active:scale-95 border shrink-0 ${isNavigationMode
                 ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-600 ring-2 ring-blue-600/30'
                 : 'bg-white/95 hover:bg-white text-slate-700 border-slate-200 shadow-xl'
-            }`}
+              }`}
             aria-label={`Navigation Mode: ${isNavigationMode ? 'ON' : 'OFF'}`}
             title={`Navigation Mode: ${isNavigationMode ? 'ON' : 'OFF'}`}
           >
@@ -671,7 +670,7 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
                           transported_at: new Date().toISOString(),
                         })
                         .eq('id', accidentId)
-                        .then(() => {});
+                        .then(() => { });
                     }
                   }}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-[11px] sm:text-xs rounded-xl shadow-md transition-all active:scale-95 flex flex-col items-center justify-center gap-1 border border-blue-600 p-2"

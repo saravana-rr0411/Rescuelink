@@ -30,6 +30,15 @@ export const GoodSamaritanScreen: React.FC = () => {
     navigate('/report');
   };
 
+  const translatedRights = mockGoodSamaritanRights.map(right => ({
+    ...right,
+    title: t(`goodSamaritan.rights.${right.id}.title`, right.title),
+    actSection: t(`goodSamaritan.rights.${right.id}.actSection`, right.actSection),
+    summary: t(`goodSamaritan.rights.${right.id}.summary`, right.summary),
+    details: right.details.map((detail, idx) => t(`goodSamaritan.rights.${right.id}.details.${idx}`, detail)),
+    badge: t(`goodSamaritan.rights.${right.id}.badge`, right.badge)
+  }));
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
       <Navbar title={t('goodSamaritan.title')} showBack />
@@ -45,9 +54,9 @@ export const GoodSamaritanScreen: React.FC = () => {
               <Shield className="w-8 h-8" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight mb-3">{t('goodSamaritan.title')}</h1>
-            <p className="text-lg font-medium text-slate-300 mb-4">Helping an injured person should not begin with fear.</p>
+            <p className="text-lg font-medium text-slate-300 mb-4">{t('goodSamaritan.heroSubtitle')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-8">
-              Understand your rights and the basic steps you can take when you witness a road emergency.
+              {t('goodSamaritan.heroDescription')}
             </p>
             <button 
               onClick={scrollToRights}
@@ -68,12 +77,12 @@ export const GoodSamaritanScreen: React.FC = () => {
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.knowYourRights')}</h2>
               <p className="text-sm text-slate-600 mt-2">
-                Good Samaritan protections are intended to encourage members of the public to provide reasonable assistance during emergencies.
+                {t('goodSamaritan.knowRightsDesc')}
               </p>
             </div>
 
             <div className="space-y-4">
-              {mockGoodSamaritanRights.map((right) => (
+              {translatedRights.map((right) => (
                 <div key={right.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
                     <div>
@@ -109,7 +118,7 @@ export const GoodSamaritanScreen: React.FC = () => {
             <div className="border-b border-slate-200 pb-3">
               <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.dontBeAfraid')}</h2>
               <p className="text-sm text-slate-600 mt-2">
-                People may hesitate to assist after witnessing an accident because they are uncertain about legal consequences, lack first-aid knowledge, or fear making the situation worse.
+                {t('goodSamaritan.dontBeAfraidDesc')}
               </p>
             </div>
 
@@ -117,30 +126,30 @@ export const GoodSamaritanScreen: React.FC = () => {
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
-                  "I do not know first aid."
+                  {t('goodSamaritan.fear1Title')}
                 </h3>
                 <p className="text-sm text-slate-600 pl-6 border-l-2 border-blue-100 ml-2">
-                  You can still report the emergency, share the location, and seek appropriate assistance. You do not need to be a medical professional to take the first responsible step.
+                  {t('goodSamaritan.fear1Desc')}
                 </p>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
-                  "Will helping create legal problems for me?"
+                  {t('goodSamaritan.fear2Title')}
                 </h3>
                 <p className="text-sm text-slate-600 pl-6 border-l-2 border-blue-100 ml-2">
-                  Good Samaritan protections exist to encourage people to assist during emergencies. Review the applicable protections provided in the section above.
+                  {t('goodSamaritan.fear2Desc')}
                 </p>
               </div>
 
               <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-slate-500" />
-                  "What if I make the situation worse?"
+                  {t('goodSamaritan.fear3Title')}
                 </h3>
                 <p className="text-sm text-slate-600 pl-6 border-l-2 border-blue-100 ml-2">
-                  Prioritise your own safety and provide only assistance that is appropriate to your knowledge and circumstances.
+                  {t('goodSamaritan.fear3Desc')}
                 </p>
               </div>
             </div>
@@ -161,8 +170,8 @@ export const GoodSamaritanScreen: React.FC = () => {
                     01
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 mb-1">CHECK</h3>
-                    <p className="text-sm text-slate-600">Ensure that the scene is reasonably safe before approaching.</p>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">{t('goodSamaritan.step1Title')}</h3>
+                    <p className="text-sm text-slate-600">{t('goodSamaritan.step1Desc')}</p>
                   </div>
                 </div>
 
@@ -171,8 +180,8 @@ export const GoodSamaritanScreen: React.FC = () => {
                     02
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 mb-1">CALL</h3>
-                    <p className="text-sm text-slate-600">Report the emergency and provide the location and relevant information.</p>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">{t('goodSamaritan.step2Title')}</h3>
+                    <p className="text-sm text-slate-600">{t('goodSamaritan.step2Desc')}</p>
                   </div>
                 </div>
 
@@ -181,15 +190,15 @@ export const GoodSamaritanScreen: React.FC = () => {
                     03
                   </div>
                   <div>
-                    <h3 className="text-base font-bold text-slate-900 mb-1">HELP</h3>
-                    <p className="text-sm text-slate-600">If it is safe to do so, provide reasonable assistance within your knowledge and comfort level.</p>
+                    <h3 className="text-base font-bold text-slate-900 mb-1">{t('goodSamaritan.step3Title')}</h3>
+                    <p className="text-sm text-slate-600">{t('goodSamaritan.step3Desc')}</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-100 flex items-start gap-2 text-xs text-slate-500">
                 <Info className="w-4 h-4 shrink-0 mt-0.5" />
-                <p>Do not put yourself at risk while attempting to assist another person.</p>
+                <p>{t('goodSamaritan.whatDoWarning')}</p>
               </div>
             </div>
           </section>
@@ -201,7 +210,7 @@ export const GoodSamaritanScreen: React.FC = () => {
             <div className="bg-slate-900 text-white rounded-2xl p-6 border border-slate-800 shadow-sm">
               <h2 className="text-xl font-bold mb-2">{t('goodSamaritan.witnessedAccident')}</h2>
               <p className="text-sm text-slate-300 mb-6">
-                Report the incident so that appropriate assistance can be coordinated.
+                {t('goodSamaritan.reportDesc')}
               </p>
               
               <button
@@ -220,7 +229,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">{t('goodSamaritan.legalAidHelpline')}</h3>
-                  <p className="text-xs text-slate-500">24/7 Samaritan Attorney Network</p>
+                  <p className="text-xs text-slate-500">{t('goodSamaritan.legalAidDesc')}</p>
                 </div>
               </div>
               <a

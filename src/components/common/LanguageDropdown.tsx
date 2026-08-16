@@ -83,11 +83,10 @@ export const LanguageDropdown: React.FC<LanguageDropdownProps> = ({ className = 
                 role="option"
                 aria-selected={explicitLanguage === lng.code}
                 onClick={() => handleLanguageChange(lng.code)}
-                className={`w-full flex items-center justify-start gap-3 px-4 py-3 text-sm transition-colors ${
-                  explicitLanguage === lng.code
+                className={`w-full flex items-center justify-start gap-3 px-4 py-3 text-sm transition-colors ${explicitLanguage === lng.code
                     ? 'bg-primary/10 text-primary font-bold'
                     : 'text-on-surface hover:bg-surface-container-low font-medium'
-                }`}
+                  }`}
               >
                 <span className="text-base">{lng.flag}</span>
                 <span>{lng.label}</span>

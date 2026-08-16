@@ -22,21 +22,20 @@ export const HospitalPreAlertCard: React.FC<HospitalPreAlertCardProps> = ({
   variant = 'floating',
 }) => {
   const { t } = useTranslation();
-  const displayBloodGroup = bloodGroup && bloodGroup.trim().length > 0 ? bloodGroup : 'Blood group unavailable';
+  const displayBloodGroup = bloodGroup && bloodGroup.trim().length > 0 ? bloodGroup : t('profile.bloodGroupUnavailable', { defaultValue: 'Blood group unavailable' });
   const displaySeverity = severity && severity.trim().length > 0 ? severity.toUpperCase() : 'CRITICAL';
-  const displayEta = eta && eta.trim().length > 0 ? eta : 'Calculating ETA...';
-  const displayAddress = patientAddress && patientAddress.trim().length > 0 ? patientAddress : 'Location unavailable';
-  const displayHospital = hospitalName && hospitalName.trim().length > 0 ? hospitalName : 'Hospital details unavailable';
+  const displayEta = eta && eta.trim().length > 0 ? eta : t('emergency.calculatingEta', { defaultValue: 'Calculating ETA...' });
+  const displayAddress = patientAddress && patientAddress.trim().length > 0 ? patientAddress : t('emergency.locationUnavailable', { defaultValue: 'Location unavailable' });
+  const displayHospital = hospitalName && hospitalName.trim().length > 0 ? hospitalName : t('emergency.hospitalDetailsUnavailable', { defaultValue: 'Hospital details unavailable' });
 
   const isFloating = variant === 'floating';
 
   return (
     <div
-      className={`rounded-3xl border shadow-2xl transition-all overflow-hidden ${
-        isFloating
+      className={`rounded-3xl border shadow-2xl transition-all overflow-hidden ${isFloating
           ? 'bg-slate-900/95 backdrop-blur-xl text-white border-rose-500/40 ring-1 ring-rose-500/20'
           : 'bg-gradient-to-br from-slate-900 via-slate-950 to-indigo-950 text-white border-rose-500/50'
-      } ${className}`}
+        } ${className}`}
     >
       {/* Top Banner Header */}
       <div className="bg-gradient-to-r from-rose-900/90 via-red-800/90 to-rose-950/90 px-4 py-2.5 flex items-center justify-between border-b border-rose-500/30">

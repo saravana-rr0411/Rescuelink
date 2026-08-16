@@ -1,0 +1,1008 @@
+### 1. Missing Tamil translation keys
+
+### 2. Tamil values identical to English
+- Key: `common.map.openStreetMap` (Value: "OpenStreetMap")
+- Key: `nav.appTitle` (Value: "RescueLink")
+- Key: `home.sos` (Value: "SOS")
+- Key: `auth.emailPlaceholder` (Value: "name@example.com")
+- Key: `profile.english` (Value: "English")
+- Key: `profile.tamil` (Value: "தமிழ் (Tamil)")
+- Key: `profile.hindi` (Value: "हिन्दी (Hindi)")
+
+### 3. Hardcoded English JSX/component content
+- Screen/Component: `src/App.tsx`
+  - Text: "Loading RescueLink..."
+  - Source type: Variable (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "🚑 Call Ambulance"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "Live GPS"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "🏥 Nearby Hospitals"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "🩹 First Aid Guide"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "📍 Share Location"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "📸 Report Accident"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "🚓 Call Police"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: ") : hospitals.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "ER Ready"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "Calc..."
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: ") : routeInfo!.failed ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/EmergencyActionCenterSheet.tsx`
+  - Text: "RescueLink Emergency Location"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapTest.tsx`
+  - Text: "Google Maps API Key Missing"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapTest.tsx`
+  - Text: "Please define"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapTest.tsx`
+  - Text: "VITE_GOOGLE_MAPS_API_KEY"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapTest.tsx`
+  - Text: "Google Maps Platform - Phase 1 Verification Test"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapTest.tsx`
+  - Text: "Google Maps Test Location"
+  - Source type: title prop
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "(true);
+  const [heading, setHeading] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "(null);
+  const hasReceivedGpsUpdateRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "(false);
+  const hasUserMovedRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "(true);
+
+  const prevPosRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "(0);
+  const autoRestoreTimerRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "Leave Navigation?"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "Are you sure you want to leave navigation?"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "Leave"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/GoogleMapsNavigationMode.tsx`
+  - Text: "Your Live Location"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "🏥 HOSPITAL PRE-ALERT"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "Blood Group"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "Severity"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "Selected Hospital"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "Navigation Route ETA"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalPreAlertCard.tsx`
+  - Text: "Patient / Incident Location"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalSelectorSheet.tsx`
+  - Text: ") : hospitals.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalSelectorSheet.tsx`
+  - Text: ") : !volunteerPosition ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalSelectorSheet.tsx`
+  - Text: ") : isCalculating ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/HospitalSelectorSheet.tsx`
+  - Text: ") : routeInfo!.failed ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/LanguageDropdown.tsx`
+  - Text: "Select Language"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/LanguageDropdown.tsx`
+  - Text: "English"
+  - Source type: Object property (label)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/OfflineBanner.tsx`
+  - Text: "Please check your network and try again."
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/SkeletonLoader.tsx`
+  - Text: "Loading..."
+  - Source type: Variable (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/SplashScreen.tsx`
+  - Text: "RescueLink"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/SplashScreen.tsx`
+  - Text: "Young Indians Yi Logo"
+  - Source type: alt prop
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "While Help Is On The Way"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Call Emergency Services"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Control Severe Bleeding"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Keep the Victim Safe"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Check Responsiveness"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Keep the Area Safe"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/common/WhileHelpIsOnTheWayGuide.tsx`
+  - Text: "Stay Until Help Arrives"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/layout/Navbar.tsx`
+  - Text: "Young Indians Yi Logo"
+  - Source type: alt prop
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/maps/GoogleMap.tsx`
+  - Text: "Google Maps API Key Missing"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/components/ui/Button.tsx`
+  - Text: ") : (
+        leftIcon &&"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/AuthContext.tsx`
+  - Text: "Promise"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/AuthContext.tsx`
+  - Text: "(undefined);
+
+export const AuthProvider: React.FC"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/AuthContext.tsx`
+  - Text: "(null);
+  const [session, setSession] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/NotificationContext.tsx`
+  - Text: "Promise"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/NotificationContext.tsx`
+  - Text: ";
+  addNotification: (notification: Omit"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/NotificationContext.tsx`
+  - Text: "!n.is_read).length;
+
+  return ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/ProfileContext.tsx`
+  - Text: "Promise"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/context/ProfileContext.tsx`
+  - Text: ";
+  setProfileState: React.Dispatch"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/hooks/useHeadingRotation.ts`
+  - Text: "(0);
+  const prevCoordsRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/hooks/useHeadingRotation.ts`
+  - Text: "(null);
+  const lastStableHeadingRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/CitizenHistoryScreen.tsx`
+  - Text: "([]);
+  const [loading, setLoading] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/CitizenHistoryScreen.tsx`
+  - Text: ") : historyItems.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/CitizenHistoryScreen.tsx`
+  - Text: "Volunteer"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/CitizenHistoryScreen.tsx`
+  - Text: "Hospital"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/CitizenHistoryScreen.tsx`
+  - Text: "Loading incident history..."
+  - Source type: Variable (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyActionScreen.tsx`
+  - Text: ") : hospitals.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyActionScreen.tsx`
+  - Text: ") : routeInfo!.failed ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyActionScreen.tsx`
+  - Text: "RescueLink Emergency Location"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: "(null);
+  const citizenPrevPosRef = React.useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: ") : isArrivedOnScene && !isTransporting ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: ") : isTransporting ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: ") : isHospitalReached ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: ") : isEnRoute && calculatedDistanceDisplay ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/EmergencyStatusScreen.tsx`
+  - Text: "Assigned Responder"
+  - Source type: Object property (name)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'heart_attack':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'stroke':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'fracture':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'burns':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'electric_shock':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'snake_bite':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'traffic_accident':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'choking':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      case 'drowning':
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/FirstAidGuideScreen.tsx`
+  - Text: ";
+      default:
+        return"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "();
+
+  const [accident, setAccident] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "(null);
+  const [loading, setLoading] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: ") : !accident ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "Incident Map Radar"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "Accident Description"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "No volunteer was assigned to this incident."
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HistoryDetailsScreen.tsx`
+  - Text: "Loading accident details..."
+  - Source type: Variable (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HomeScreen.tsx`
+  - Text: "a.latitude !== null && a.longitude !== null) && ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/HomeScreen.tsx`
+  - Text: ") : emergencyContact ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/LoginScreen.tsx`
+  - Text: "RescueLink"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/LoginScreen.tsx`
+  - Text: "Young Indians Yi Logo"
+  - Source type: alt prop
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: ");
+      case 'volunteer':
+        return ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: ");
+      case 'hospital':
+        return ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: ");
+      case 'resolved':
+        return ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: "Live emergency updates & alerts"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: "0 && unreadCount > 0 && ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: "Enable Browser Notifications"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/NotificationsScreen.tsx`
+  - Text: ") : notifications.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "(null);
+  const profileCardRef = useRef"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "(null);
+
+  const [profile, setProfile] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "(null);
+  const [message, setMessage] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: ") : profile?.avatar_url ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Verified"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Editing Mode"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: ") : profile?.avatar_url ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Primary Emergency Contact"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Cancel"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: ") : isVolunteer ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Supabase Live DB"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "RescueLink v1.0.0"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Made with ❤️ for Emergency Response"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Are you sure you want to logout?"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Logout"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/ProfileScreen.tsx`
+  - Text: "Full Name cannot be empty."
+  - Source type: Object property (text)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerDashboardScreen.tsx`
+  - Text: ") : loading ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerDashboardScreen.tsx`
+  - Text: ") : incidents.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerHistoryScreen.tsx`
+  - Text: "([]);
+  const [loading, setLoading] = useState"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerHistoryScreen.tsx`
+  - Text: ") : historyItems.length === 0 ? ("
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerHistoryScreen.tsx`
+  - Text: "Citizen Reporter"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerHistoryScreen.tsx`
+  - Text: "Destination Hospital"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerHistoryScreen.tsx`
+  - Text: "Loading rescue history..."
+  - Source type: Variable (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerMapPreviewScreen.tsx`
+  - Text: "Open Map Preview"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/pages/VolunteerMapPreviewScreen.tsx`
+  - Text: "Your Current Responder Location"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/locationGuard.ts`
+  - Text: "90 || lng"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "A volunteer has accepted your emergency request."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Volunteer Started"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "The volunteer is now on the way to your location."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Volunteer Started"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "The volunteer is now on the way to your location."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Volunteer Started"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "The volunteer is now on the way to your location."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Patient Picked"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Patient Picked"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Hospital Reached"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "The volunteer has reached the hospital."
+  - Source type: Object property (message)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Case Completed"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Case Completed"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/notificationTypes.ts`
+  - Text: "Case Completed"
+  - Source type: Object property (title)
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+- Screen/Component: `src/utils/ripple.ts`
+  - Text: "| React.TouchEvent"
+  - Source type: JSX Text
+  - Reason: Not wrapped in useTranslation
+  - Fix: Add to en.json/ta.json and use `t()`
+
+
+### 4. Large English content blocks
+- Screen/Component: `src/pages/EmergencyTrainingScreen.tsx`
+  - Content: Multiple long instructions (e.g., "Recognising a possible cardiac emergency", "Learn Hands-Only CPR")
+  - Reason: Entire sections hardcoded in JSX
+  - Fix: Move to translation file as object or map
+
+- Screen/Component: `src/pages/GoodSamaritanScreen.tsx`
+  - Content: Legal texts (e.g., "Helping an injured person should not begin with fear.")
+  - Reason: Hardcoded in JSX
+  - Fix: Move to translation file
+
+- Screen/Component: `src/data/mockData.ts`
+  - Content: Accident titles and descriptions
+  - Reason: Static data array
+  - Fix: Use translation keys instead of hardcoded strings
+
+
+### 5. Dynamic/backend status values
+- Statuses: `Volunteer En Route`, `Emergency Completed`, `Hospital Reached`, etc.
+  - Source: Supabase / `statusUtils.ts`
+  - Reason: Backend strings rendered directly
+  - Fix: Use a mapper like `getLocalizedStatus(status, t)`
+
+
+### 6. Address/geocoding content
+- Addresses: Google Maps reverse geocoding outputs, hospital addresses
+  - Source: Google Places API / Database
+  - Reason: External API only returns English, or database stores English.
+  - Fix: Hard to translate perfectly, but labels surrounding it (e.g. "Address: ") should be translated.
+
+
+### 7. Any other user-visible English content
+- Notifications: "A volunteer has accepted your emergency request."
+  - Source: `notificationTypes.ts`
+  - Reason: Hardcoded config
+  - Fix: Use `t()` at render time or translate before sending.
+

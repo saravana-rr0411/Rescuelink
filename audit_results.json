@@ -1,0 +1,1922 @@
+{
+  "missingKeys": [
+    {
+      "key": "common.map.openStreetMap",
+      "type": "Identical to English",
+      "value": "OpenStreetMap"
+    },
+    {
+      "key": "nav.appTitle",
+      "type": "Identical to English",
+      "value": "RescueLink"
+    },
+    {
+      "key": "home.sos",
+      "type": "Identical to English",
+      "value": "SOS"
+    },
+    {
+      "key": "auth.emailPlaceholder",
+      "type": "Identical to English",
+      "value": "name@example.com"
+    },
+    {
+      "key": "profile.english",
+      "type": "Identical to English",
+      "value": "English"
+    },
+    {
+      "key": "profile.tamil",
+      "type": "Identical to English",
+      "value": "தமிழ் (Tamil)"
+    },
+    {
+      "key": "profile.hindi",
+      "type": "Identical to English",
+      "value": "हिन्दी (Hindi)"
+    }
+  ],
+  "findings": [
+    {
+      "file": "src/App.tsx",
+      "text": "setSplashFinished(true)} />}",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/App.tsx",
+      "text": "Loading RescueLink...",
+      "type": "Variable (message)"
+    },
+    {
+      "file": "src/components/auth/ProtectedRoute.tsx",
+      "text": ";\n  }\n\n  return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "`,\n  iconSize: [40, 40],\n  iconAnchor: [20, 20],\n  popupAnchor: [0, -20],\n});\n\n// Helper component to auto-fit Leaflet bounds dynamically\nconst MapController: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "void;\n}\n\nexport const EmergencyActionCenterSheet: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "('actions');\n  const [userLocation, setUserLocation] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "(null);\n  const [shareSuccess, setShareSuccess] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "(null);\n\n  // Hospital state\n  const [hospitals, setHospitals] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "([]);\n  const [loadingHospitals, setLoadingHospitals] = useState(false);\n  const [selectedHospital, setSelectedHospital] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "(null);\n\n  // Route state (matching Volunteer Hospital Selector)\n  const [routeMap, setRouteMap] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "([]);\n  const [routeDistanceMeters, setRouteDistanceMeters] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "(0);\n  const [routeDurationSeconds, setRouteDurationSeconds] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "handleCall('108')}\n                  className=\"h-24 rounded-2xl p-3 bg-gradient-to-br from-red-600 to-rose-700 text-white shadow-level-1 hover:shadow-level-2 transition-all flex flex-col justify-between text-left group active:scale-[0.98]\"\n                >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "🚑 Call Ambulance",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "Live GPS",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "🏥 Nearby Hospitals",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "🩹 First Aid Guide",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "📍 Share Location",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "📸 Report Accident",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "handleCall('100')}\n                  className=\"h-24 rounded-2xl p-3 bg-surface-container-lowest border border-indigo-300 text-indigo-950 shadow-xs hover:bg-indigo-50/60 transition-all flex flex-col justify-between text-left group active:scale-[0.98]\"\n                >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "🚓 Call Police",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "handleCall('101')}\n                className=\"w-full h-20 rounded-2xl p-3.5 bg-surface-container-lowest border border-orange-300 text-orange-950 shadow-xs hover:bg-orange-50/60 transition-all flex items-center justify-between text-left group active:scale-[0.98]\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": ") : hospitals.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "ER Ready",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "Calc...",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": ") : routeInfo!.failed ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "handleStartNavigation(hosp)}\n                            className=\"px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 active:scale-95\"\n                          >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/EmergencyActionCenterSheet.tsx",
+      "text": "RescueLink Emergency Location",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "Google Maps API Key Missing",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "Please define",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "VITE_GOOGLE_MAPS_API_KEY",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "in your environment variables to enable Google Maps.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": ");\n  }\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "Google Maps Platform - Phase 1 Verification Test",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "Standalone verification map (Does not touch existing Leaflet functionality)",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapTest.tsx",
+      "text": "Google Maps Test Location",
+      "type": "title prop"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(userPos);\n\n  // 2. Camera Navigation Mode (Auto Follow + Auto Rotate) & Camera State\n  const [isNavigationMode, setIsNavigationMode] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(false);\n  const [isFollowing, setIsFollowing] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(true);\n  const [heading, setHeading] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(0);\n  const [showLeaveConfirmDialog, setShowLeaveConfirmDialog] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(false);\n  const [zoomSignal, setZoomSignal] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(null);\n  const hasReceivedGpsUpdateRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(false);\n  const hasUserMovedRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(false);\n\n  // 3. Route & Navigation Metrics\n  const [polylineString, setPolylineString] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "('');\n  const [distanceMeters, setDistanceMeters] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(0);\n  const [durationSeconds, setDurationSeconds] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(0);\n  const [currentRoad, setCurrentRoad] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "('');\n  const [loadingRoute, setLoadingRoute] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(true);\n\n  const prevPosRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "cancelAnimationFrame(animFrame);\n  }, [userPos]);\n\n  // Reset route state completely whenever destinationCoords changes\n  const prevDestinationRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(null);\n  const [recenterTrigger, setRecenterTrigger] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "(0);\n  const autoRestoreTimerRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Connecting to device GPS positioning. Please ensure location services are enabled.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": ");\n  }\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Leave Navigation?",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Are you sure you want to leave navigation?",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "setShowLeaveConfirmDialog(false)}\n                className=\"w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-200 transition-all active:scale-95\"\n              >\n                Cancel",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Leave",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Re-center) */}",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/GoogleMapsNavigationMode.tsx",
+      "text": "Your Live Location",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "🏥 HOSPITAL PRE-ALERT",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "Blood Group",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "Severity",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "Selected Hospital",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "Navigation Route ETA",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalPreAlertCard.tsx",
+      "text": "Patient / Incident Location",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState(true);\n  const [selectedId, setSelectedId] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": "(null);\n  const [locationError, setLocationError] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": ") : hospitals.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": ") : !volunteerPosition ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": ") : isCalculating ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/HospitalSelectorSheet.tsx",
+      "text": ") : routeInfo!.failed ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/LanguageDropdown.tsx",
+      "text": "Select Language",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/LanguageDropdown.tsx",
+      "text": "English",
+      "type": "Object property (label)"
+    },
+    {
+      "file": "src/components/common/LanguageSelector.tsx",
+      "text": "void;\n  className?: string;\n}\n\nexport const LanguageSelector: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/MapWidget.tsx",
+      "text": "`,\n  iconSize: [32, 32],\n  iconAnchor: [16, 16],\n  popupAnchor: [0, -16],\n});\n\n// Map Controller component to handle auto-centering and bounds fitting dynamically\nconst MapController: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/MapWidget.tsx",
+      "text": ");\n  }\n\n  const accidentPos: [number, number] = [Number(latitude), Number(longitude)];\n  const volunteerPos: [number, number] | null = hasVolunteerCoordinates\n    ? [Number(volunteerLatitude), Number(volunteerLongitude)]\n    : null;\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/OfflineBanner.tsx",
+      "text": "(navigator.onLine);\n  const [retrying, setRetrying] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/OfflineBanner.tsx",
+      "text": "Please check your network and try again.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/SkeletonLoader.tsx",
+      "text": "void;\n}\n\nexport const EmptyState: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/SkeletonLoader.tsx",
+      "text": "Loading...",
+      "type": "Variable (message)"
+    },
+    {
+      "file": "src/components/common/SplashScreen.tsx",
+      "text": "void;\n}\n\nexport const SplashScreen: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/SplashScreen.tsx",
+      "text": "clearTimeout(fadeOutTimer);\n    }\n  }, [minTimePassed, maxTimePassed, loading, onComplete]);\n\n  if (!isVisible) return null;\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/SplashScreen.tsx",
+      "text": "RescueLink",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/SplashScreen.tsx",
+      "text": "Young Indians Yi Logo",
+      "type": "alt prop"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "While Help Is On The Way",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Follow these simple steps while a responder is arriving.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "These steps provide immediate bystander guidance. Always prioritize calling trained emergency services (108/112) and avoid performing risky medical procedures.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Call Emergency Services",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Control Severe Bleeding",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Keep the Victim Safe",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Check Responsiveness",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Keep the Area Safe",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/common/WhileHelpIsOnTheWayGuide.tsx",
+      "text": "Stay Until Help Arrives",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/components/layout/BottomNavigation.tsx",
+      "text": "navigate('/report')}\n          className=\"flex flex-col items-center justify-center -mt-6 group focus:outline-none\"\n        >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/layout/Navbar.tsx",
+      "text": "99 ? '99+' : unreadCount}",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/layout/Navbar.tsx",
+      "text": "Young Indians Yi Logo",
+      "type": "alt prop"
+    },
+    {
+      "file": "src/components/maps/GoogleMap.tsx",
+      "text": "clearTimeout(timer);\n  }, [map, center.lat, center.lng, heading, isNavigationMode, isFollowing]);\n\n  return null;\n};\n\nconst MARKER_ICONS: Record",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/maps/GoogleMap.tsx",
+      "text": "`)}`,\n};\n\nconst GoogleMapPolyline: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/maps/GoogleMap.tsx",
+      "text": "Google Maps API Key Missing",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/maps/GoogleMap.tsx",
+      "text": "Please define VITE_GOOGLE_MAPS_API_KEY in environment variables.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/ui/Button.tsx",
+      "text": ") : (\n        leftIcon &&",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/ui/EmergencyCard.tsx",
+      "text": "navigate('/status')}\n      className=\"bg-surface-container-lowest border border-outline-variant/50 rounded-2xl p-4 shadow-level-1 hover:shadow-level-2 transition-all cursor-pointer group\"\n    >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/components/ui/SOSButton.tsx",
+      "text": "void;\n  size?: 'normal' | 'large';\n}\n\nexport const SOSButton: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/AuthContext.tsx",
+      "text": "Promise",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/AuthContext.tsx",
+      "text": ";\n}\n\nconst AuthContext = createContext",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/AuthContext.tsx",
+      "text": "(undefined);\n\nexport const AuthProvider: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/AuthContext.tsx",
+      "text": "(null);\n  const [session, setSession] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": "Promise",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": ";\n  addNotification: (notification: Omit",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": ";\n}\n\nconst NotificationContext = createContext",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": "(undefined);\n\nconst LOCAL_STORAGE_KEY = 'rescuelink_notifications_fallback';\nconst PROCESSED_KEYS_KEY = 'rescuelink_processed_notif_keys';\n\nexport const NotificationProvider: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState(true);\n  const [permissionStatus, setPermissionStatus] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": "('default');\n\n  // Deduplication set to prevent duplicate notifications for the same status update\n  const processedKeysRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/NotificationContext.tsx",
+      "text": "!n.is_read).length;\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/ProfileContext.tsx",
+      "text": "Promise",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/ProfileContext.tsx",
+      "text": ";\n  setProfileState: React.Dispatch",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/ProfileContext.tsx",
+      "text": ">;\n}\n\nconst ProfileContext = createContext",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/ProfileContext.tsx",
+      "text": "(undefined);\n\nexport const ProfileProvider: React.FC",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/context/ProfileContext.tsx",
+      "text": "(null);\n  const [loadingProfile, setLoadingProfile] = useState(true);\n\n  const fetchProfile = useCallback(async (): Promise",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Alex Johnson",
+      "type": "Object property (name)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Sarah Johnson",
+      "type": "Object property (name)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Dr. Robert Chen",
+      "type": "Object property (name)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Vehicle Collision near 5th Ave & Pine St",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Two vehicles involved. Paramedic unit and local community volunteers dispatched.",
+      "type": "Object property (description)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Cardiac Distress Reported",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "AED kit retrieved by nearby volunteer. Ambulance on site.",
+      "type": "Object property (description)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Kitchen Fire - Residential Unit",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Smoke reported on 3rd floor. Fire brigade en route.",
+      "type": "Object property (description)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Severe Bleeding",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Pressure application and tourniquet protocol",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Heart Attack",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Immediate cardiovascular emergency response",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Stroke",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "FAST assessment and rapid brain protection",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Bone Fracture",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Immobilization and limb stabilization",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Burn Injuries",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Cooling techniques and thermal injury management",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Electric Shock",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Power disconnection and electrical trauma management",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Snake Bite",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Venomous bite response and limb immobilization",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Road Traffic Accident",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Scene safety, trauma triage, and spine protection",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Choking",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Airway obstruction clearing (Heimlich Maneuver)",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Drowning",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Water rescue and resuscitation protocol",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Protection from Civil Liability",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Right to Anonymity & Refusal of Harassment",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/data/mockData.ts",
+      "text": "Hospital Emergency Admission Mandate",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/hooks/useHeadingRotation.ts",
+      "text": "(0);\n  const prevCoordsRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/hooks/useHeadingRotation.ts",
+      "text": "(null);\n  const lastStableHeadingRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/hooks/useNetworkSync.ts",
+      "text": "(navigator.onLine);\n  const [isSyncing, setIsSyncing] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "(true);\n  const [errorMessage, setErrorMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "item.volunteer_id).filter(Boolean))\n        ) as string[];\n\n        let volunteerProfilesMap: Record",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": ") : historyItems.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "navigate('/report')}\n          />\n        ) : (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "Volunteer",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "Hospital",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/CitizenHistoryScreen.tsx",
+      "text": "Loading incident history...",
+      "type": "Variable (message)"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "('actions');\n\n  // User GPS coordinates state\n  const [userLocation, setUserLocation] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "(null);\n  const [toastMessage, setToastMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "(null);\n\n  // Hospital state\n  const [hospitals, setHospitals] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "([]);\n  const [loadingHospitals, setLoadingHospitals] = useState(false);\n  const [selectedHospital, setSelectedHospital] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "(null);\n\n  // Route state (matching Volunteer Hospital Selector)\n  const [routeMap, setRouteMap] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "setViewMode('hospitals')}\n        />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": ");\n  }\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "handleCall('108')}\n                className=\"bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex items-center justify-between cursor-pointer group btn-press\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "handleCall('100')}\n                className=\"bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all flex items-center justify-between cursor-pointer group btn-press\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "navigate('/first-aid')}\n                className=\"bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "handleCall('101')}\n                className=\"bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-slate-300 transition-all text-left flex flex-col justify-between space-y-3 group\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": ") : hospitals.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": ") : routeInfo!.failed ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "handleStartNavigation(hosp)}\n                            className=\"px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-all flex items-center gap-1.5 active:scale-95 border border-blue-600\"\n                          >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyActionScreen.tsx",
+      "text": "RescueLink Emergency Location",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": "(null);\n  const [liveDurationSeconds, setLiveDurationSeconds] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": "(null);\n  const citizenPrevPosRef = React.useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": "Hide numerical distance to accident\n      calculatedDistanceDisplay = null;\n    }\n  }\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : !accident || !isActiveStatus(accident.status) ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : isArrivedOnScene && !isTransporting ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : isTransporting ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : isHospitalReached ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : isEnRoute && calculatedDistanceDisplay ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": ") : null}",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyStatusScreen.tsx",
+      "text": "Assigned Responder",
+      "type": "Object property (name)"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "(null);\n  const responseRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "(null);\n  const firstAidRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "(null);\n  const [activeVideoId, setActiveVideoId] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Learn the basic knowledge needed to respond safely during an emergency.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Learn how to recognise a possible cardiac emergency and understand the importance of immediate response and professional assistance.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Recognising a possible cardiac emergency",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Look for unresponsiveness and abnormal or absent breathing.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Calling for emergency assistance",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Dial emergency services immediately. Ensure the dispatcher knows the exact location.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Basic CPR awareness",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "CPR involves rhythmic chest compressions to maintain blood flow.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Following professional guidance",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Stay on the phone. Emergency dispatchers can provide step-by-step guidance.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "isOnline ? setActiveVideoId('M4ACYp75mjU') : alert(t('training.internetRequired'))}\n                    className=\"bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col\"\n                  >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Learn Hands-Only CPR (60s)",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "American Heart Association (AHA)",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "isOnline ? setActiveVideoId('ILxjxfB4zNk') : alert(t('training.internetRequired'))}\n                    className=\"bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col\"\n                  >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Hands-only CPR (Vinnie Jones)",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "British Heart Foundation (BHF)",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "This information is provided for general awareness only. Viewing this content does not provide medical certification, nor does it replace professional, hands-on CPR training.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "ASSESS",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Check whether the scene is reasonably safe before approaching.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "REPORT",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Contact emergency assistance and provide the accident location.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "SHARE INFORMATION",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Provide clear information about the location and situation.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "ASSIST SAFELY",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "If it is safe to do so, provide reasonable assistance within your knowledge and ability.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "COORDINATE",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Follow appropriate guidance and cooperate with arriving responders.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Learn essential first-aid practices for emergency situations.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "setActiveVideoId(null)}\n                className=\"w-8 h-8 flex items-center justify-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Learn Hands-Only CPR in 60 seconds - AHA",
+      "type": "alt prop"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Vinnie Jones",
+      "type": "alt prop"
+    },
+    {
+      "file": "src/pages/EmergencyTrainingScreen.tsx",
+      "text": "Educational CPR Video",
+      "type": "title prop"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": "('all');\n  const [expandedId, setExpandedId] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'heart_attack':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'stroke':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'fracture':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'burns':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'electric_shock':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'snake_bite':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'traffic_accident':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'choking':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      case 'drowning':\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n      default:\n        return",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": ";\n    }\n  };\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/FirstAidGuideScreen.tsx",
+      "text": "setExpandedId(isExpanded ? '' : guide.id)}\n                    className=\"p-4 flex items-center justify-between cursor-pointer hover:bg-surface-container-low transition-colors\"\n                  >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "();\n\n  const [accident, setAccident] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "(null);\n  const [volunteerProfile, setVolunteerProfile] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "(null);\n  const [loading, setLoading] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "(true);\n  const [errorMessage, setErrorMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": ") : !accident ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "navigate(-1)}\n          />\n        ) : (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "Incident Map Radar",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "Accident Description",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "No volunteer was assigned to this incident.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "No hospital destination was assigned for this record.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HistoryDetailsScreen.tsx",
+      "text": "Loading accident details...",
+      "type": "Variable (message)"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState(true);\n  const [emergencyContact, setEmergencyContact] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "navigate('/emergency')} />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": ") : accidents.length === 0 ? (\n            /* Friendly empty state */",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "a.latitude !== null && a.longitude !== null) && (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "navigate('/first-aid')}\n              className=\"bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/40 hover:shadow-level-2 transition-all text-left flex flex-col justify-between h-28\"\n            >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "navigate('/good-samaritan')}\n              className=\"bg-surface-container-lowest p-4 rounded-2xl border border-outline-variant/40 hover:shadow-level-2 transition-all text-left flex flex-col justify-between h-28\"\n            >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": "navigate('/training')}\n            className=\"w-full bg-gradient-to-r from-blue-600 to-indigo-700 p-5 rounded-2xl shadow-lg shadow-blue-900/20 text-left relative overflow-hidden\"\n          >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/HomeScreen.tsx",
+      "text": ") : emergencyContact ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/LiveNavigationScreen.tsx",
+      "text": "();\n  const activeAccidentId = routeAccidentId || locationState?.accidentId || 'default-accident';\n\n  const mode: 'citizen' | 'volunteer' = locationState?.mode || 'volunteer';\n\n  const [accident, setAccident] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/LiveNavigationScreen.tsx",
+      "text": "(false);\n  const [activeHospital, setActiveHospital] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/LoginScreen.tsx",
+      "text": "RescueLink",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/LoginScreen.tsx",
+      "text": "Young Indians Yi Logo",
+      "type": "alt prop"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "1 ? 's' : ''} ago`;\n      if (diffHours",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": ");\n      case 'volunteer':\n        return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": ");\n      case 'hospital':\n        return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": ");\n      case 'resolved':\n        return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": ");\n      case 'system':\n      default:\n        return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "Live emergency updates & alerts",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "0 && unreadCount > 0 && (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "Get instant browser pop-up notifications when an ambulance, responder, or hospital status updates.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "Enable Browser Notifications",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": ") : notifications.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/NotificationsScreen.tsx",
+      "text": "You are all caught up! Emergency alerts and responder updates will appear here in real time.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "(null);\n  const profileCardRef = useRef",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "(null);\n\n  const [profile, setProfile] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "(null);\n  const [message, setMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "0;\n  const userRoleText = isVolunteer ? t('profile.volunteerResponder') : t('profile.citizenResponder');\n\n  const hasEmergencyContact = Boolean(\n    profile?.emergency_contact_name?.trim() && profile?.emergency_contact_phone?.trim()\n  );\n  const emergencyContactName = profile?.emergency_contact_name?.trim() || '';\n  const emergencyContactPhone = profile?.emergency_contact_phone?.trim() || '';\n  const emergencyContactRelation = profile?.emergency_contact_relation?.trim() || '';\n\n  const displayAllergies = profile?.allergies && profile.allergies.trim() !== '' ? profile.allergies : 'None Reported';\n  const displayMedicalConditions = profile?.medical_conditions && profile.medical_conditions.trim() !== '' ? profile.medical_conditions : 'None Reported';\n\n  return (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": ") : profile?.avatar_url ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Verified",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": ") : (\n            /* EDITABLE INLINE EXPANDED FORM */",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Editing Mode",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": ") : profile?.avatar_url ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "avatarInputRef.current?.click()}\n                    className=\"text-[11px] font-extrabold text-primary hover:underline flex items-center gap-1\"\n                  >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setBloodGroup(e.target.value)}\n                    className=\"w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                  >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setAllergies(e.target.value)}\n                    className=\"w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                  />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setMedicalConditions(e.target.value)}\n                    className=\"w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                  />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Primary Emergency Contact",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setContactName(e.target.value)}\n                  className=\"w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium mb-1.5 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setContactPhone(e.target.value)}\n                    className=\"w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                  />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setContactRelation(e.target.value)}\n                    className=\"w-full px-3 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface font-medium focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all\"\n                  />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Cancel",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": ") : isVolunteer ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Supabase Live DB",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "RescueLink v1.0.0",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Made with ❤️ for Emergency Response",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Are you sure you want to logout?",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setShowLogoutConfirm(false)}\n                className=\"py-2.5 px-4 bg-surface-container-high hover:bg-surface-container text-on-surface text-xs font-extrabold rounded-xl transition-colors\"\n              >\n                Cancel",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Logout",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setShowChangePassword(false)}\n                className=\"p-1 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setShowPrivacySecurity(false)}\n                className=\"p-1 rounded-full hover:bg-surface-container-high text-on-surface-variant transition-colors\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "This application handles sensitive emergency data. Below is exactly how your data is used and protected.",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setShowPrivacySecurity(false)}\n                className=\"w-full py-2.5 bg-surface-container-high hover:bg-surface-container text-on-surface font-extrabold text-xs rounded-xl transition-colors shadow-sm\"\n              >\n                Close Information",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "setShowLanguageModal(false)} />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Please select a valid image file (JPG, PNG, or WEBP).",
+      "type": "Object property (text)"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "An error occurred while uploading profile picture.",
+      "type": "Object property (text)"
+    },
+    {
+      "file": "src/pages/ProfileScreen.tsx",
+      "text": "Full Name cannot be empty.",
+      "type": "Object property (text)"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "(null);\n\n  const [incidentType, setIncidentType] = useState(locationState?.category || 'accident');\n  const [address, setAddress] = useState(t('reportAccident.detectingGps'));\n  const [description, setDescription] = useState('');\n  const [severity, setSeverity] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "('CRITICAL');\n  const [bloodGroup, setBloodGroup] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "(t('reportAccident.unknown'));\n  \n  // Image Upload States\n  const [selectedFile, setSelectedFile] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "(null);\n  const [previewUrl, setPreviewUrl] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "(null);\n  const [uploadingImage, setUploadingImage] = useState(false);\n\n  // Form States\n  const [submitting, setSubmitting] = useState(false);\n  const [errorMessage, setErrorMessage] = useState('');\n  const [successMessage, setSuccessMessage] = useState('');\n  const [latitude, setLatitude] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "(null);\n  const [longitude, setLongitude] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "setAddress(e.target.value)}\n                required\n                className=\"w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-primary\"\n              />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/ReportAccidentScreen.tsx",
+      "text": "setBloodGroup(e.target.value)}\n                className=\"w-full p-3.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 appearance-none cursor-pointer\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "navigate('/login')}\n          className=\"p-2 rounded-full bg-surface-container-high hover:bg-surface-container text-on-surface\"\n        >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setName(e.target.value)}\n              required\n              className=\"w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary\"\n            />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setPhone(e.target.value)}\n                required\n                className=\"w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-medium text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary\"\n              />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setBloodType(e.target.value)}\n                className=\"w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs font-bold text-primary focus:outline-none focus:ring-2 focus:ring-secondary\"\n              >",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setContactName(e.target.value)}\n              className=\"w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface\"\n            />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setContactPhone(e.target.value)}\n                className=\"w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface\"\n              />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/SignUpScreen.tsx",
+      "text": "setContactRelation(e.target.value)}\n                className=\"w-full px-3.5 py-2 bg-surface-container-low border border-outline-variant/60 rounded-xl text-xs text-on-surface\"\n              />",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "([]);\n  const [assignedMissions, setAssignedMissions] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState(true);\n\n  // Volunteer Live GPS State for 10km Filtering\n  const [volunteerLocation, setVolunteerLocation] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "(null);\n  const [updatingStatusId, setUpdatingStatusId] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "(null);\n\n  const [successMessage, setSuccessMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "(null);\n  const [errorMessage, setErrorMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "(null);\n  const [hospitalSheetMission, setHospitalSheetMission] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": "(null);\n\n  // Helper to request and obtain current volunteer GPS coordinates\n  const getVolunteerPosition = (): Promise",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": ") : loading ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerDashboardScreen.tsx",
+      "text": ") : incidents.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "([]);\n  const [loading, setLoading] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "(true);\n  const [errorMessage, setErrorMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "item.reporter_id).filter(Boolean))\n        ) as string[];\n\n        let reporterProfilesMap: Record",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": ") : historyItems.length === 0 ? (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "navigate('/volunteer')}\n          />\n        ) : (",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "Citizen Reporter",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "Destination Hospital",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerHistoryScreen.tsx",
+      "text": "Loading rescue history...",
+      "type": "Variable (message)"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(\n    (location.state as any)?.incident || null\n  );\n  const [loadingIncident, setLoadingIncident] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(!incident);\n\n  // GPS Coordinates\n  const [volunteerPos, setVolunteerPos] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(null);\n\n  // Route & Metrics\n  const [polylineString, setPolylineString] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "('');\n  const [distanceMeters, setDistanceMeters] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(0);\n  const [durationSeconds, setDurationSeconds] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(0);\n  const [loadingRoute, setLoadingRoute] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(true);\n\n  // Accept Action States\n  const [isAccepting, setIsAccepting] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "(false);\n  const [errorMessage, setErrorMessage] = useState",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "navigate('/volunteer')}\n          className=\"px-5 py-2.5 bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-md\"\n        >\n          Return to Dashboard",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "Open Map Preview",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "setErrorMessage(null)} className=\"px-2.5 py-1 bg-white/20 rounded-lg text-white font-extrabold\">\n            Dismiss",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "navigate('/volunteer')}\n            className=\"px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-2xl border border-slate-200/80 transition-all active:scale-95 shrink-0\"\n          >\n            Back",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/pages/VolunteerMapPreviewScreen.tsx",
+      "text": "Your Current Responder Location",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/locationGuard.ts",
+      "text": "90 || lng",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "A volunteer has accepted your emergency request.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Volunteer Started",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The volunteer is now on the way to your location.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Volunteer Started",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The volunteer is now on the way to your location.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Volunteer Started",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The volunteer is now on the way to your location.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Patient Picked",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The patient has been picked up and is being transported.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Patient Picked",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The patient has been picked up and is being transported.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Hospital Reached",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "The volunteer has reached the hospital.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Case Completed",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Your emergency case has been successfully completed.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Case Completed",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Your emergency case has been successfully completed.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Case Completed",
+      "type": "Object property (title)"
+    },
+    {
+      "file": "src/utils/notificationTypes.ts",
+      "text": "Your emergency case has been successfully completed.",
+      "type": "Object property (message)"
+    },
+    {
+      "file": "src/utils/ripple.ts",
+      "text": "| React.TouchEvent",
+      "type": "JSX Text"
+    },
+    {
+      "file": "src/utils/ripple.ts",
+      "text": ").clientX;\n    clientY = (event as React.MouseEvent",
+      "type": "JSX Text"
+    }
+  ],
+  "stats": {
+    "totalVisibleItems": 1116,
+    "alreadyTranslated": 734,
+    "stillEnglish": 375,
+    "missingTranslations": 7
+  }
+}
