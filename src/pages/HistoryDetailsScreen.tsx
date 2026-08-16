@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
 import { supabase } from '../lib/supabase';
 import { getStoredHospital, cleanDescriptionText } from '../utils/routing';
-import { MapWidget } from '../components/common/MapWidget';
+import { GoogleMap } from '../components/maps/GoogleMap';
 import { formatSupabaseError } from '../utils/locationGuard';
 import { SpinnerLoader, EmptyState, StatusCardSkeleton } from '../components/common/SkeletonLoader';
 import {
@@ -214,15 +214,19 @@ export const HistoryDetailsScreen: React.FC = () => {
                     Incident Map Radar
                   </span>
                 </div>
-                <MapWidget
-                  accidentId={accident.id}
-                  latitude={accident.latitude}
-                  longitude={accident.longitude}
-                  address={accident.address}
-                  severity={accident.severity}
-                  height="h-48"
-                  showNavigateBtn={false}
-                  mode="citizen"
+                <GoogleMap
+                  center={{ lat: accident.latitude, lng: accident.longitude }}
+                  zoom={15}
+                  markers={[
+                    {
+                      id: accident.id,
+                      lat: accident.latitude,
+                      lng: accident.longitude,
+                      title: accident.address || 'Accident Location',
+                      type: 'accident' as const,
+                    },
+                  ]}
+                  className="w-full h-48 rounded-2xl"
                 />
               </div>
             )}
