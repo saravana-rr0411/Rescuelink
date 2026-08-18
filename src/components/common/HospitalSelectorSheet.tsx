@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import type { Hospital } from '../../utils/routing';
-import { fetchNearbyHospitalsOverpass, formatETA, fetchOSRMRoute } from '../../utils/routing';
+import { formatETA, fetchOSRMRoute } from '../../utils/routing';
+import { fetchNearbyHospitals } from '../../services/googlePlaces';
 import { formatDistance } from '../../utils/distance';
 import { fetchGoogleRoute } from '../../services/googleRoutes';
 import { useNetworkSync } from '../../hooks/useNetworkSync';
@@ -77,7 +78,21 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
       }
 
       try {
-        const list = await fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude);
+        const rawList = await fetchNearbyHospitals({ lat: accidentLatitude, lng: accidentLongitude });
+        if (rawList.length === 0) {
+          throw new Error('API_FAILURE');
+        }
+        const list = rawList.map(h => ({
+          id: h.id,
+          name: h.name,
+          address: h.address,
+          latitude: h.lat,
+          longitude: h.lng,
+          distanceMeters: h.distanceMeters || Math.round(calculateHaversineDistance(accidentLatitude, accidentLongitude, h.lat, h.lng)),
+          phone: h.phone || '',
+          emergencyDept: true,
+          bedsAvailable: 0
+        }));
         if (!isMounted) return;
         setHospitals(list);
         if (list.length > 0) {

@@ -65,27 +65,6 @@ export async function fetchNearbyHospitals(
     console.warn('[RescueLink Google Places API] Primary searchNearby warning:', err);
   }
 
-  // Fallback Overpass OSM hospital search
-  try {
-    const query = `[out:json];node["amenity"="hospital"](around:${radiusMeters},${location.lat},${location.lng});out 8;`;
-    const res = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.elements && Array.isArray(data.elements)) {
-        return data.elements.map((el: any) => ({
-          id: `overpass-${el.id}`,
-          name: el.tags?.name || 'Emergency Hospital Center',
-          address: el.tags?.['addr:street'] || 'Regional Emergency Care',
-          lat: el.lat,
-          lng: el.lon,
-          phone: el.tags?.phone || '',
-        }));
-      }
-    }
-  } catch (err) {
-    console.warn('[RescueLink Places API] Fallback query warning:', err);
-  }
-
   return [];
 }
 

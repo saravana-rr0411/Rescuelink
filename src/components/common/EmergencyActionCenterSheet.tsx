@@ -23,7 +23,9 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import type { Hospital as HospitalType } from '../../utils/routing';
-import { fetchNearbyHospitalsOverpass, fetchOSRMRoute, formatETA } from '../../utils/routing';
+import { fetchOSRMRoute, formatETA } from '../../utils/routing';
+import { fetchNearbyHospitals } from '../../services/googlePlaces';
+import { calculateHaversineDistance } from '../../utils/offlineDistance';
 import { formatDistance } from '../../utils/distance';
 import { fetchGoogleRoute } from '../../services/googleRoutes';
 
@@ -258,7 +260,18 @@ export const EmergencyActionCenterSheet: React.FC<EmergencyActionCenterSheetProp
   const fetchHospitals = async (lat: number, lng: number) => {
     setLoadingHospitals(true);
     try {
-      const list = await fetchNearbyHospitalsOverpass(lat, lng);
+      const rawList = await fetchNearbyHospitals({ lat, lng });
+      const list = rawList.map(h => ({
+        id: h.id,
+        name: h.name,
+        address: h.address,
+        latitude: h.lat,
+        longitude: h.lng,
+        distanceMeters: h.distanceMeters || Math.round(calculateHaversineDistance(lat, lng, h.lat, h.lng)),
+        phone: h.phone || '',
+        emergencyDept: true,
+        bedsAvailable: 0
+      }));
       setHospitals(list);
     } catch (err) {
       console.error('[Emergency Action Center] Error fetching hospitals:', err);

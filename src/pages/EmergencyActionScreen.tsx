@@ -17,7 +17,8 @@ import {
   Clock,
 } from 'lucide-react';
 import type { Hospital } from '../utils/routing';
-import { fetchNearbyHospitalsOverpass, formatETA, fetchOSRMRoute } from '../utils/routing';
+import { formatETA, fetchOSRMRoute } from '../utils/routing';
+import { fetchNearbyHospitals } from '../services/googlePlaces';
 import { formatDistance } from '../utils/distance';
 import { fetchGoogleRoute } from '../services/googleRoutes';
 import { GoogleMapsNavigationMode } from '../components/common/GoogleMapsNavigationMode';
@@ -161,7 +162,18 @@ export const EmergencyActionScreen: React.FC = () => {
     }
 
     try {
-      const list = await fetchNearbyHospitalsOverpass(lat, lng);
+      const rawList = await fetchNearbyHospitals({ lat, lng });
+      const list = rawList.map(h => ({
+        id: h.id,
+        name: h.name,
+        address: h.address,
+        latitude: h.lat,
+        longitude: h.lng,
+        distanceMeters: h.distanceMeters || Math.round(calculateHaversineDistance(lat, lng, h.lat, h.lng)),
+        phone: h.phone || '',
+        emergencyDept: true,
+        bedsAvailable: 0
+      }));
       setHospitals(list);
       localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
     } catch (err) {
