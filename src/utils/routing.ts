@@ -136,7 +136,7 @@ export async function fetchNearbyHospitalsOverpass(
       if (typeof AbortController !== 'undefined') {
         const controller = new AbortController();
         signal = controller.signal;
-        timeoutId = setTimeout(() => controller.abort(), 5000);
+        timeoutId = setTimeout(() => controller.abort(), 10000);
       }
 
       const res = await fetch(overpassUrl, {
@@ -213,7 +213,7 @@ export async function fetchNearbyHospitalsOverpass(
       if (typeof AbortController !== 'undefined') {
         const controller = new AbortController();
         signal = controller.signal;
-        timeoutId = setTimeout(() => controller.abort(), 4000);
+        timeoutId = setTimeout(() => controller.abort(), 8000);
       }
       
       const startTime = Date.now();
