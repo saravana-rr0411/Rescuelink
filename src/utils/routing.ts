@@ -36,7 +36,11 @@ export async function fetchOSRMRoute(
     // OSRM format: lng,lat;lng,lat
     const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${origLng},${origLat};${destLng},${destLat}?overview=full&geometries=geojson`;
 
-    const response = await fetch(osrmUrl, { signal: AbortSignal.timeout(4000) });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch(osrmUrl, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    
     if (response.ok) {
       const data = await response.json();
       if (data.routes && data.routes.length > 0) {
@@ -108,10 +112,14 @@ export async function fetchNearbyHospitalsOverpass(
   try {
     const query = `[out:json][timeout:6];nwr["amenity"="hospital"](around:5000,${latitude},${longitude});out center 25;`;
     const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(overpassUrl, {
       headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
-      signal: AbortSignal.timeout(5000),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (res.ok) {
       hasSuccessfulApiCall = true;
@@ -159,10 +167,14 @@ export async function fetchNearbyHospitalsOverpass(
     try {
       const viewbox = `${longitude - 0.045},${latitude + 0.045},${longitude + 0.045},${latitude - 0.045}`;
       const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&lat=${latitude}&lon=${longitude}&bounded=1&viewbox=${viewbox}&limit=15`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
       const nomRes = await fetch(nomUrl, {
         headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
-        signal: AbortSignal.timeout(4000),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (nomRes.ok) {
         hasSuccessfulApiCall = true;

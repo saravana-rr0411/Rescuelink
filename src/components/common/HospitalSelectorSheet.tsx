@@ -83,7 +83,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         if (list.length > 0) {
           localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
         }
-      } catch (err) {
+      } catch (err: any) {
         if (!isMounted) return;
         setApiError(true);
         setHospitals([]);
