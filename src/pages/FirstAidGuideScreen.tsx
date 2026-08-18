@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from '../components/layout/Navbar';
 import { mockFirstAidGuides } from '../data/mockData';
 import { Search, HeartPulse, Droplet, Flame, Wind, AlertTriangle, BookOpen, Clock, ChevronDown, ChevronUp, Zap, Car, Waves, ShieldAlert, Activity, CheckCircle2, XCircle } from 'lucide-react';
@@ -8,6 +8,15 @@ export const FirstAidGuideScreen: React.FC = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string>('');
+
+  useEffect(() => {
+    // Reset scroll position to 0 when the page mounts
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTo(0, 0);
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   const translatedGuides = mockFirstAidGuides.map(guide => ({
     ...guide,
@@ -59,7 +68,7 @@ export const FirstAidGuideScreen: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       <Navbar title={t('firstAid.title')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">

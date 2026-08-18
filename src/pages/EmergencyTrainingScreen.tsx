@@ -121,15 +121,15 @@ export const EmergencyTrainingScreen: React.FC = () => {
 
                   {/* VIDEO CARD 2 */}
                   <button 
-                    onClick={() => isOnline ? setActiveVideoId('zuJkRpJ7Fxg') : alert(t('training.internetRequired'))}
+                    onClick={() => isOnline ? setActiveVideoId('pwyOCAt5FNc') : alert(t('training.internetRequired'))}
                     className="bg-slate-50 border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow text-left group flex flex-col"
                   >
                     <div className="w-full aspect-video bg-slate-800 relative flex items-center justify-center">
                       <img 
-                        src="https://img.youtube.com/vi/zuJkRpJ7Fxg/maxresdefault.jpg" 
+                        src="https://img.youtube.com/vi/pwyOCAt5FNc/maxresdefault.jpg" 
                         alt={t('training.video2Title')}
                         className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                        onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/zuJkRpJ7Fxg/hqdefault.jpg"; }}
+                        onError={(e) => { e.currentTarget.src = "https://img.youtube.com/vi/pwyOCAt5FNc/hqdefault.jpg"; }}
                       />
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center text-rose-600 shadow-lg group-hover:scale-110 transition-transform">
