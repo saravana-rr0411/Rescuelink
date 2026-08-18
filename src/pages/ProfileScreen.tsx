@@ -1139,7 +1139,7 @@ export const ProfileScreen: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold shadow-xs">
                   <Key className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-black text-on-surface">{t('profile.settings.changePassword')}</h3>
+                <h3 className="text-sm font-black text-on-surface">{t('profile.changePassword')}</h3>
               </div>
               <button
                 onClick={() => setShowChangePassword(false)}
@@ -1211,7 +1211,7 @@ export const ProfileScreen: React.FC = () => {
                 <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center font-bold shadow-xs">
                   <Lock className="w-5 h-5" />
                 </div>
-                <h3 className="text-sm font-black text-on-surface">{t('profile.settings.privacySecurity')}</h3>
+                <h3 className="text-sm font-black text-on-surface">{t('profile.privacySecurity')}</h3>
               </div>
               <button
                 onClick={() => setShowPrivacySecurity(false)}

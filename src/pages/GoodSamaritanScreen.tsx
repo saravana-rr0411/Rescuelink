@@ -1,46 +1,34 @@
-import React, { useRef } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../components/layout/Navbar';
-import { mockGoodSamaritanRights } from '../data/mockData';
+
 import {
   Shield,
   Phone,
-  CheckCircle2,
   Info,
-  AlertCircle,
-  ArrowRight
+  AlertCircle
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export const GoodSamaritanScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const rightsRef = useRef<HTMLDivElement>(null);
-
-  const scrollToRights = () => {
-    if (rightsRef.current) {
-      // Account for sticky Navbar height
-      const offset = 80;
-      const top = rightsRef.current.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  };
 
   const handleReportEmergency = () => {
     navigate('/report');
   };
 
-  const translatedRights = mockGoodSamaritanRights.map(right => ({
-    ...right,
-    title: t(`goodSamaritan.rights.${right.id}.title`, right.title),
-    actSection: t(`goodSamaritan.rights.${right.id}.actSection`, right.actSection),
-    summary: t(`goodSamaritan.rights.${right.id}.summary`, right.summary),
-    details: right.details.map((detail, idx) => t(`goodSamaritan.rights.${right.id}.details.${idx}`, detail)),
-    badge: t(`goodSamaritan.rights.${right.id}.badge`, right.badge)
-  }));
+  useEffect(() => {
+    // Ensure the page starts at the top
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      container.scrollTo(0, 0);
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="flex flex-col h-full bg-slate-50 text-slate-900 font-sans">
       <Navbar title={t('goodSamaritan.title')} showBack />
 
       <main className="flex-1 pb-16">
@@ -58,61 +46,10 @@ export const GoodSamaritanScreen: React.FC = () => {
             <p className="text-sm text-slate-400 leading-relaxed max-w-2xl mb-8">
               {t('goodSamaritan.heroDescription')}
             </p>
-            <button 
-              onClick={scrollToRights}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 text-sm font-semibold rounded-xl hover:bg-slate-100 transition-colors shadow-sm"
-            >
-              {t('goodSamaritan.knowYourRights')}
-              <ArrowRight className="w-4 h-4" />
-            </button>
           </div>
         </section>
 
         <div className="max-w-3xl mx-auto px-4 space-y-12 py-10">
-
-          {/* ========================================================================= */}
-          {/* 2. KNOW YOUR RIGHTS */}
-          {/* ========================================================================= */}
-          <section ref={rightsRef} className="space-y-6 scroll-mt-20">
-            <div className="border-b border-slate-200 pb-3">
-              <h2 className="text-2xl font-bold text-slate-900">{t('goodSamaritan.knowYourRights')}</h2>
-              <p className="text-sm text-slate-600 mt-2">
-                {t('goodSamaritan.knowRightsDesc')}
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {translatedRights.map((right) => (
-                <div key={right.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-3">
-                    <div>
-                      <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded-md mb-2">
-                        {right.actSection}
-                      </span>
-                      <h3 className="text-base font-bold text-slate-900 leading-tight">{right.title}</h3>
-                    </div>
-                    <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 text-xs font-semibold rounded-lg shrink-0">
-                      {right.badge}
-                    </span>
-                  </div>
-                  
-                  <p className="text-sm text-slate-700 font-medium mb-4">{right.summary}</p>
-                  
-                  <ul className="space-y-2 border-t border-slate-100 pt-4">
-                    {right.details.map((detail, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                        <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                        <span className="leading-relaxed">{detail}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* ========================================================================= */}
-          {/* 3. DON'T BE AFRAID TO HELP */}
           {/* ========================================================================= */}
           <section className="space-y-6">
             <div className="border-b border-slate-200 pb-3">
@@ -233,7 +170,7 @@ export const GoodSamaritanScreen: React.FC = () => {
                 </div>
               </div>
               <a
-                href="tel:18005550199"
+                href="tel:15100"
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-sm font-semibold rounded-xl transition-colors border border-slate-200 active:scale-95"
               >
                 {t('goodSamaritan.call')}

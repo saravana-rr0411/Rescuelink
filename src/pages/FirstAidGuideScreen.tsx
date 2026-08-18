@@ -7,22 +7,7 @@ import { useTranslation } from 'react-i18next';
 export const FirstAidGuideScreen: React.FC = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedId, setExpandedId] = useState<string>('');
-
-  const categories = [
-    { id: 'all', name: t('firstAid.categoryAll') },
-    { id: 'bleeding', name: t('firstAid.categoryBleeding') },
-    { id: 'heart_attack', name: t('firstAid.categoryHeartAttack') },
-    { id: 'stroke', name: t('firstAid.categoryStroke') },
-    { id: 'fracture', name: t('firstAid.categoryFracture') },
-    { id: 'burns', name: t('firstAid.categoryBurns') },
-    { id: 'electric_shock', name: t('firstAid.categoryElectricShock') },
-    { id: 'snake_bite', name: t('firstAid.categorySnakeBite') },
-    { id: 'traffic_accident', name: t('firstAid.categoryTrafficAccident') },
-    { id: 'choking', name: t('firstAid.categoryChoking') },
-    { id: 'drowning', name: t('firstAid.categoryDrowning') },
-  ];
 
   const translatedGuides = mockFirstAidGuides.map(guide => ({
     ...guide,
@@ -36,7 +21,6 @@ export const FirstAidGuideScreen: React.FC = () => {
   }));
 
   const filteredGuides = translatedGuides.filter((guide) => {
-    const matchesCat = selectedCategory === 'all' || guide.category === selectedCategory;
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       guide.title.toLowerCase().includes(query) ||
@@ -44,7 +28,7 @@ export const FirstAidGuideScreen: React.FC = () => {
       guide.steps.some((s) => s.toLowerCase().includes(query)) ||
       (guide.dos && guide.dos.some((d) => d.toLowerCase().includes(query))) ||
       (guide.donts && guide.donts.some((d) => d.toLowerCase().includes(query)));
-    return matchesCat && matchesSearch;
+    return matchesSearch;
   });
 
   const getCategoryIcon = (category: string) => {
@@ -79,15 +63,6 @@ export const FirstAidGuideScreen: React.FC = () => {
       <Navbar title={t('firstAid.title')} showBack />
 
       <main className="flex-1 px-4 py-4 space-y-4">
-        {/* Offline-Ready Badge */}
-        <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-medium">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>{t('firstAid.offlineBadge')}</span>
-          </div>
-          <span className="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full">{t('firstAid.noNetNeeded')}</span>
-        </div>
-
         {/* Search Input */}
         <div className="relative">
           <Search className="w-4 h-4 text-outline absolute left-3.5 top-3.5" />
@@ -100,22 +75,7 @@ export const FirstAidGuideScreen: React.FC = () => {
           />
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedCategory === cat.id
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'bg-surface-container-lowest text-on-surface-variant border border-outline-variant/50'
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
-        </div>
+
 
         {/* Guides List (10 Modules) */}
         <div className="space-y-3 pt-1">
@@ -145,9 +105,6 @@ export const FirstAidGuideScreen: React.FC = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-xs text-on-surface">{guide.title}</h3>
-                          {guide.urgency === 'CRITICAL' && (
-                            <span className="text-[9px] font-extrabold bg-red-100 text-red-800 px-2 py-0.5 rounded-full uppercase">{t('firstAid.critical')}</span>
-                          )}
                         </div>
                         <p className="text-[11px] text-on-surface-variant">{guide.subtitle}</p>
                       </div>
