@@ -108,73 +108,123 @@ export async function fetchNearbyHospitalsOverpass(
   const seenIds = new Set<string>();
   let hasSuccessfulApiCall = false;
 
+  console.log('[DEBUG_HOSPITAL_SHEET] fetchNearbyHospitalsOverpass() started');
+  console.log(`[DEBUG_HOSPITAL_SHEET] Accident coords: lat=${latitude}, lng=${longitude}`);
+  console.log(`[DEBUG_HOSPITAL] typeof AbortController: ${typeof AbortController}`);
+  console.log(`[DEBUG_HOSPITAL] typeof fetch: ${typeof fetch}`);
+
+  const query = `[out:json][timeout:6];nwr["amenity"="hospital"](around:5000,${latitude},${longitude});out center 25;`;
+  
+  const OVERPASS_ENDPOINTS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter'
+  ];
+
   // 1. Query OpenStreetMap Overpass API for real hospitals within 5 km (5000 m) radius
-  try {
-    const query = `[out:json][timeout:6];nwr["amenity"="hospital"](around:5000,${latitude},${longitude});out center 25;`;
-    const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    if (hasSuccessfulApiCall) break;
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(overpassUrl, {
-      headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
+    try {
+      const overpassUrl = `${endpoint}?data=${encodeURIComponent(query)}`;
+      console.log(`[DEBUG_HOSPITAL] Starting Overpass fetch to ${endpoint} at ${new Date().toISOString()}`);
+      
+      const startTime = Date.now();
+      
+      let signal: AbortSignal | undefined = undefined;
+      let timeoutId: any;
+      if (typeof AbortController !== 'undefined') {
+        const controller = new AbortController();
+        signal = controller.signal;
+        timeoutId = setTimeout(() => controller.abort(), 5000);
+      }
 
-    if (res.ok) {
-      hasSuccessfulApiCall = true;
-      const data = await res.json();
-      if (data.elements && Array.isArray(data.elements)) {
-        for (const el of data.elements) {
-          const lat = el.lat || el.center?.lat;
-          const lon = el.lon || el.center?.lon;
-          if (!lat || !lon) continue;
+      const res = await fetch(overpassUrl, {
+        headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
+        signal,
+      });
+      
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      const responseTime = Date.now() - startTime;
+      console.log(`[DEBUG_HOSPITAL] Overpass HTTP status: ${res.status}, Response time: ${responseTime}ms`);
 
-          const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
-          if (dist > 5000) continue; // Strictly within 5 km
+      if (res.ok) {
+        hasSuccessfulApiCall = true;
+        const data = await res.json();
+        if (data.elements && Array.isArray(data.elements)) {
+          for (const el of data.elements) {
+            const lat = el.lat || el.center?.lat;
+            const lon = el.lon || el.center?.lon;
+            if (!lat || !lon) continue;
 
-          const name = el.tags?.name || el.tags?.['name:en'] || el.tags?.['official_name'] || el.tags?.['brand'];
-          if (!name || name.trim() === '') continue; // Skip unnamed nodes
+            const dist = Math.round(calculateHaversineDistance(latitude, longitude, lat, lon));
+            if (dist > 5000) continue; // Strictly within 5 km
 
-          const id = `overpass-${el.type || 'node'}-${el.id}`;
-          if (seenIds.has(id)) continue;
-          seenIds.add(id);
+            const name = el.tags?.name || el.tags?.['name:en'] || el.tags?.['official_name'] || el.tags?.['brand'];
+            if (!name || name.trim() === '') continue; // Skip unnamed nodes
 
-          const street = el.tags?.['addr:street'] || el.tags?.['addr:suburb'] || el.tags?.['addr:district'] || '';
-          const city = el.tags?.['addr:city'] || el.tags?.['addr:town'] || '';
-          const fullAddr = el.tags?.['addr:full'] || (street && city ? `${street}, ${city}` : street || city || `GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`);
+            const id = `overpass-${el.type || 'node'}-${el.id}`;
+            if (seenIds.has(id)) continue;
+            seenIds.add(id);
 
-          results.push({
-            id,
-            name: name.trim(),
-            address: fullAddr.trim(),
-            phone: el.tags?.phone || el.tags?.['contact:phone'] || '',
-            latitude: lat,
-            longitude: lon,
-            distanceMeters: dist,
-            emergencyDept: el.tags?.['emergency'] !== 'no',
-            bedsAvailable: 0,
-          });
+            const street = el.tags?.['addr:street'] || el.tags?.['addr:suburb'] || el.tags?.['addr:district'] || '';
+            const city = el.tags?.['addr:city'] || el.tags?.['addr:town'] || '';
+            const fullAddr = el.tags?.['addr:full'] || (street && city ? `${street}, ${city}` : street || city || `GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`);
+
+            results.push({
+              id,
+              name: name.trim(),
+              address: fullAddr.trim(),
+              phone: el.tags?.phone || el.tags?.['contact:phone'] || '',
+              latitude: lat,
+              longitude: lon,
+              distanceMeters: dist,
+              emergencyDept: el.tags?.['emergency'] !== 'no',
+              bedsAvailable: 0,
+            });
+          }
         }
+      } else {
+        console.warn(`[DEBUG_HOSPITAL] Overpass API HTTP Error ${res.status} from ${endpoint}`);
+      }
+    } catch (err: any) {
+      console.warn(`[DEBUG_HOSPITAL] Overpass query failed for ${endpoint}:`, err);
+      console.log(`[DEBUG_HOSPITAL] Error name: ${err?.name}, message: ${err?.message}`);
+      if (err?.name === 'AbortError') {
+        console.log('[DEBUG_HOSPITAL] Error type: timeout (AbortError)');
+      } else if (err instanceof TypeError) {
+        console.log('[DEBUG_HOSPITAL] Error type: TypeError (likely network/CORS or browser compatibility)');
+      } else {
+        console.log('[DEBUG_HOSPITAL] Error type: other');
       }
     }
-  } catch (err) {
-    console.warn('[RescueLink Overpass API] Query timed out or failed:', err);
   }
 
   // 2. Secondary Real Map Source: Nominatim Search API if Overpass returned 0 real hospitals
   if (results.length === 0) {
+    console.log('[DEBUG_HOSPITAL_SHEET] Nominatim fallback attempted');
     try {
       const viewbox = `${longitude - 0.045},${latitude + 0.045},${longitude + 0.045},${latitude - 0.045}`;
       const nomUrl = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&lat=${latitude}&lon=${longitude}&bounded=1&viewbox=${viewbox}&limit=15`;
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      let signal: AbortSignal | undefined = undefined;
+      let timeoutId: any;
+      if (typeof AbortController !== 'undefined') {
+        const controller = new AbortController();
+        signal = controller.signal;
+        timeoutId = setTimeout(() => controller.abort(), 4000);
+      }
+      
+      const startTime = Date.now();
       const nomRes = await fetch(nomUrl, {
         headers: { 'User-Agent': 'RescueLink/1.0 (Emergency Response App)' },
-        signal: controller.signal,
+        signal,
       });
-      clearTimeout(timeoutId);
+      
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      console.log(`[DEBUG_HOSPITAL] Nominatim HTTP status: ${nomRes.status}, Response time: ${Date.now() - startTime}ms`);
 
       if (nomRes.ok) {
         hasSuccessfulApiCall = true;
@@ -211,13 +261,17 @@ export async function fetchNearbyHospitalsOverpass(
             });
           }
         }
+      } else {
+        console.warn(`[DEBUG_HOSPITAL] Nominatim API HTTP Error ${nomRes.status}`);
       }
-    } catch (err) {
-      console.warn('[RescueLink Nominatim API] Fallback search error:', err);
+    } catch (err: any) {
+      console.warn('[DEBUG_HOSPITAL] Nominatim API Fallback search error:', err);
+      console.log(`[DEBUG_HOSPITAL] Nominatim Error name: ${err?.name}, message: ${err?.message}`);
     }
   }
 
   if (!hasSuccessfulApiCall) {
+    console.log('[DEBUG_HOSPITAL_SHEET] Final API_FAILURE reason: All API endpoints (Overpass + Nominatim) failed or timed out.');
     throw new Error('API_FAILURE');
   }
 
