@@ -383,8 +383,8 @@ export const GoogleMapsNavigationMode: React.FC<GoogleMapsNavigationModeProps> =
 
   if (!userPos || !renderedPos) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-950 text-white p-6 text-center select-none">
-        <Loader2 className="w-9 h-9 text-emerald-400 animate-spin mb-3" />
+      <div className="w-full h-full flex flex-col items-center justify-center bg-primary text-white p-6 text-center select-none">
+        <Loader2 className="w-9 h-9 text-white animate-spin mb-3" />
         <h3 className="text-sm font-black text-white">{t('nav.acquiringResponderLocation')}</h3>
         <p className="text-xs text-slate-400 mt-1 max-w-xs leading-relaxed">
           Connecting to device GPS positioning. Please ensure location services are enabled.
