@@ -38,6 +38,8 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const { isOnline } = useNetworkSync();
   const { t } = useTranslation();
@@ -53,6 +55,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
     routeFetchedRef.current = new Set();
     setRouteMap({});
     setLocationError(null);
+    setApiError(false);
 
     async function loadHospitals() {
       setLoading(true);
@@ -73,13 +76,20 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
         return;
       }
 
-      const list = await fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude);
-      if (!isMounted) return;
-      setHospitals(list);
-      if (list.length > 0) {
-        localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
+      try {
+        const list = await fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude);
+        if (!isMounted) return;
+        setHospitals(list);
+        if (list.length > 0) {
+          localStorage.setItem('rescuelink_cached_hospitals', JSON.stringify(list));
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        setApiError(true);
+        setHospitals([]);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-      setLoading(false);
     }
 
     loadHospitals();
@@ -87,7 +97,7 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, accidentLatitude, accidentLongitude]);
+  }, [isOpen, accidentLatitude, accidentLongitude, retryCount]);
 
   // Separate effect to calculate routes once hospitals and volunteerPosition are available
   useEffect(() => {
@@ -234,19 +244,21 @@ export const HospitalSelectorSheet: React.FC<HospitalSelectorSheetProps> = ({
               <HospitalSkeleton />
               <HospitalSkeleton />
             </div>
+          ) : apiError ? (
+            <EmptyState
+              icon={Loader2}
+              title={t('hospitalSelector.apiErrorTitle')}
+              description={t('hospitalSelector.apiErrorDesc')}
+              actionText={t('hospitalSelector.retry')}
+              onAction={() => setRetryCount(c => c + 1)}
+            />
           ) : hospitals.length === 0 ? (
             <EmptyState
               icon={HospitalIcon}
               title={t('hospitalSelector.noNearbyHospitalsFound')}
               description={t('hospitalSelector.couldNotLocateHospitals')}
               actionText={t('hospitalSelector.retry')}
-              onAction={() => {
-                setLoading(true);
-                fetchNearbyHospitalsOverpass(accidentLatitude, accidentLongitude).then((list) => {
-                  setHospitals(list);
-                  setLoading(false);
-                });
-              }}
+              onAction={() => setRetryCount(c => c + 1)}
             />
           ) : (
             sortedHospitals.map((hosp) => {

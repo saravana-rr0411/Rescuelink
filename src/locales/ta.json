@@ -254,7 +254,9 @@
     "gettingLocation": "இருப்பிடத்தைப் பெறுகிறது...",
     "routeUnavailable": "பாதை கிடைக்கவில்லை",
     "straightLine": "நேர்கோடு",
-    "selectHospital": "மருத்துவமனையைத் தேர்ந்தெடுக்கவும்"
+    "selectHospital": "மருத்துவமனையைத் தேர்ந்தெடுக்கவும்",
+    "apiErrorTitle": "Unable to load nearby hospitals",
+    "apiErrorDesc": "Tap to retry"
   },
   "volunteerDashboard": {
     "history": {

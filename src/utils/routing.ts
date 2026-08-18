@@ -102,6 +102,7 @@ export async function fetchNearbyHospitalsOverpass(
 ): Promise<Hospital[]> {
   const results: Hospital[] = [];
   const seenIds = new Set<string>();
+  let hasSuccessfulApiCall = false;
 
   // 1. Query OpenStreetMap Overpass API for real hospitals within 5 km (5000 m) radius
   try {
@@ -113,6 +114,7 @@ export async function fetchNearbyHospitalsOverpass(
     });
 
     if (res.ok) {
+      hasSuccessfulApiCall = true;
       const data = await res.json();
       if (data.elements && Array.isArray(data.elements)) {
         for (const el of data.elements) {
@@ -163,6 +165,7 @@ export async function fetchNearbyHospitalsOverpass(
       });
 
       if (nomRes.ok) {
+        hasSuccessfulApiCall = true;
         const nomData = await nomRes.json();
         if (Array.isArray(nomData)) {
           for (const item of nomData) {
@@ -200,6 +203,10 @@ export async function fetchNearbyHospitalsOverpass(
     } catch (err) {
       console.warn('[RescueLink Nominatim API] Fallback search error:', err);
     }
+  }
+
+  if (!hasSuccessfulApiCall) {
+    throw new Error('API_FAILURE');
   }
 
   // 3. Return ONLY real hospitals sorted by nearest distance. If none exist, returns empty array.

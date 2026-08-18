@@ -254,7 +254,9 @@
     "gettingLocation": "स्थान प्राप्त कर रहा है...",
     "routeUnavailable": "मार्ग अनुपलब्ध है",
     "straightLine": "सीधी रेखा",
-    "selectHospital": "अस्पताल का चयन करें"
+    "selectHospital": "अस्पताल का चयन करें",
+    "apiErrorTitle": "Unable to load nearby hospitals",
+    "apiErrorDesc": "Tap to retry"
   },
   "volunteerDashboard": {
     "history": {

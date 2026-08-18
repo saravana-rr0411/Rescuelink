@@ -254,7 +254,9 @@
     "gettingLocation": "Getting location...",
     "routeUnavailable": "Route unavailable",
     "straightLine": "Straight-line",
-    "selectHospital": "Select Hospital"
+    "selectHospital": "Select Hospital",
+    "apiErrorTitle": "Unable to load nearby hospitals",
+    "apiErrorDesc": "Tap to retry"
   },
   "volunteerDashboard": {
     "history": {
